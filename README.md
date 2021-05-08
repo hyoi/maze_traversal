@@ -6,7 +6,8 @@ Note: Japanese text only.
 ▲を操って、出口（◆がくるくるしてるとこ）を目指してください。
 ## 操作方法
 カーソルキーで上下左右に移動。（使い道はないけどEscで一時停止）。   
-Alt＋Enterでフルスクリーンとウインドウモード切替（Not WASM版）。
+Alt＋Enterでフルスクリーンとウインドウモード切替（Not WASM版）。  
+小さな黒いウィンドウで迷路が隠れてしまう場合は、マウスで移動してください。
 ## WASM版
 https://hyoi.github.io/maze_traversal/
 ## Rustのコンパイル版
