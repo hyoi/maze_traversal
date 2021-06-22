@@ -1,64 +1,69 @@
 use super::*;
 
-//Plugin
+//Pluginの手続き
 pub struct PluginGamePlay;
-
-#[derive(Clone,Debug,Eq,PartialEq,Hash,SystemLabel)]
-struct MarkerLabel;
-
 impl Plugin for PluginGamePlay
 {	fn build( &self, app: &mut AppBuilder )
 	{	app
-		//--------------------------------------------------------------------------------
-			//GameState::GameStart
-			.add_system_set
-			(	SystemSet::on_enter( GameState::GameStart )		// on_enter()
+		//------------------------------------------------------------------------------------------
+		.add_system_set											//GameState::GameStart
+		(	SystemSet::on_enter( GameState::GameStart )			// on_enter()
 				.label( MarkerLabel )
 				.with_system( spawn_sprite_new_map.system() )	// 新マップを生成して表示
-			)
-			.add_system_set
-			(	SystemSet::on_enter( GameState::GameStart )		// on_enter()
+		)
+		.add_system_set											//GameState::GameStart
+		(	SystemSet::on_enter( GameState::GameStart )			// on_enter()
 				.after( MarkerLabel )
 				.with_system( spawn_sprite_player.system() )	// マップ生成後に自機を配置
-			)
-			.add_system_set
-			(	SystemSet::on_update( GameState::GameStart )	// on_update()
+		)
+		.add_system_set											//GameState::GameStart
+		(	SystemSet::on_update( GameState::GameStart )		// on_update()
 				.with_system( goto_gameplay_state.system() )	// 無条件にGamePlayへ遷移
-			)
-		//--------------------------------------------------------------------------------
-			//GameState::GamePlay
-			.add_system_set
-			(	SystemSet::on_update( GameState::GamePlay )		// on_update()
+		)
+		//------------------------------------------------------------------------------------------
+		.add_system_set											//GameState::GamePlay
+		(	SystemSet::on_update( GameState::GamePlay )			// on_update()
 				.label( MarkerLabel )
 				.with_system( move_sprite_player.system() )		// 自機の移動
 				.with_system( animate_goal_sprite.system() )	// ゴールスプライトのアニメーション
-			)
-			.add_system_set
-			(	SystemSet::on_update( GameState::GamePlay )		// on_update()
+		)
+		.add_system_set											//GameState::GamePlay
+		(	SystemSet::on_update( GameState::GamePlay )			// on_update()
 				.after( MarkerLabel )
 				.with_system( goto_state_event_queue.system() )	// eventにセットされたsutateへ遷移
-			)
-		//--------------------------------------------------------------------------------
-			//GameState::GameClear
-			.add_system_set
-			(	SystemSet::on_enter( GameState::GameClear )		// on_enter()
+		)
+		//------------------------------------------------------------------------------------------
+		.add_system_set											//GameState::GameClear
+		(	SystemSet::on_enter( GameState::GameClear )			// on_enter()
 				.with_system( show_message_clear.system() )		// クリアメッセージを表示する
-			)
-			.add_system_set
-			(	SystemSet::on_update( GameState::GameClear )	// on_update()
+		)
+		.add_system_set											//GameState::GameClear
+		(	SystemSet::on_update( GameState::GameClear )		// on_update()
 				.with_system( countdown_gameclear.system() )	// カウントダウン後にGameStartへ遷移
-			)
-			.add_system_set
-			(	SystemSet::on_exit( GameState::GameClear )		// on_exit()
+		)
+		.add_system_set											//GameState::GameClear
+		(	SystemSet::on_exit( GameState::GameClear )			// on_exit()
 				.with_system( hide_message_clear.system() )		// クリアメッセージを隠す
 				.with_system( despawn_sprite_map.system() )		// マップを削除
 				.with_system( despawn_sprite_player.system() )	// 自機を削除
-			)
+		)
+		//------------------------------------------------------------------------------------------
 		;
 	}
 }
 
-////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//定義と定数
+
+#[derive(Clone,Debug,Eq,PartialEq,Hash,SystemLabel)]
+struct MarkerLabel;
+
+//CountdownTimer
+#[derive(Default)]
+struct CountDown { timer: Timer }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //無条件にGameState::GamePlayへ遷移する
 fn goto_gameplay_state( mut state: ResMut<State<GameState>> )
@@ -79,16 +84,12 @@ pub fn conv_sprite_coordinates( x: usize, y: usize ) -> ( f32, f32 )
 	( x, y )
 }
 
-////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //クリアメッセージを表示
 fn show_message_clear( mut q_ui: Query<&mut Visible, With<MessageClear>> )
 {	if let Ok( mut ui ) = q_ui.single_mut() { ui.is_visible = true }
 }
-
-//CountdownTimer
-#[derive(Default)]
-struct CountDown { timer: Timer }
 
 //ゲームクリアのカウントダウン
 fn countdown_gameclear
