@@ -1,5 +1,34 @@
 use super::*;
 
+//Pluginの手続き
+pub struct PluginPlayer;
+impl Plugin for PluginPlayer
+{	fn build( &self, app: &mut AppBuilder )
+	{	app
+		//------------------------------------------------------------------------------------------
+		.add_system_set											// GameState::Start
+		(	SystemSet::on_exit( GameState::Start )				// on_exit()
+				.with_system( spawn_sprite_player.system() )	// マップ生成後に自機を配置
+		)
+		//------------------------------------------------------------------------------------------
+		.add_system_set											// GameState::Play
+		(	SystemSet::on_update( GameState::Play )				// on_update()
+				.with_system( move_sprite_player.system() )		// 自機の移動、ゴール⇒GameState::Clearへ
+		)
+		//------------------------------------------------------------------------------------------
+		.add_system_set											// GameState::Clear
+		(	SystemSet::on_exit( GameState::Clear )				// on_exit()
+				.with_system( despawn_sprite_player.system() )	// 自機を削除
+		)
+		//------------------------------------------------------------------------------------------
+		;
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//定義と定数
+
 //移動ウェイト
 const PLAYER_WAIT: f32 = 0.09;
 
@@ -18,18 +47,23 @@ enum Direction
 //自機のComponent
 pub struct Player
 {	wait: Timer,
-	map_location: ( usize, usize ),
+	map_location: ( i32, i32 ),
 	sprite_location: ( f32, f32 ),
 	direction: Direction,
 	new_direction: Direction,
 	stop: bool,
 }
 
+//Sprite
+const SPRITE_DEPTH_PLAYER: f32 = 20.0;
+const PLAYER_PIXEL: f32   = PIXEL_PER_GRID / 2.5;
+const PLAYER_COLOR: Color = Color::YELLOW;
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //自機のスプライトを初期位置に配置する
-pub fn spawn_sprite_player( stage : Res<GameStage>, mut cmds: Commands )
-{	let ( map_x, map_y ) = stage.start_xy;
+pub fn spawn_sprite_player( maze : Res<GameStage>, mut cmds: Commands )
+{	let ( map_x, map_y ) = maze.start_xy;
 	let ( sprite_x, sprite_y ) = conv_sprite_coordinates( map_x, map_y );
 
 	let player = Player
@@ -50,14 +84,14 @@ pub fn spawn_sprite_player( stage : Res<GameStage>, mut cmds: Commands )
 
 //自機のスプライトを移動する
 pub fn move_sprite_player
-(	mut q_player: Query<( &mut Player, &mut Transform )>,
-	( mut stage, mut record ): ( ResMut<GameStage>, ResMut<GameRecord> ),
-	mut event: EventWriter<GameState>,
+(	mut q: Query<( &mut Player, &mut Transform )>,
+	( mut maze, mut record ): ( ResMut<GameStage>, ResMut<GameRecord> ),
+	mut state : ResMut<State<GameState>>,
 	mut cmds: Commands,
 	( time, inkey ): ( Res<Time>, Res<Input<KeyCode>> ),
 )
 {	let time_delta = time.delta();
-	let ( mut player, mut transform ) = q_player.single_mut().unwrap();
+	let ( mut player, mut transform ) = q.single_mut().unwrap();
 
 	if ! player.wait.tick( time_delta ).finished()
 	{	//停止中なら何も処理しない
@@ -65,14 +99,14 @@ pub fn move_sprite_player
 
 		//スプライトを滑らかに移動させるための中割アニメーション
 		let delta = PLAYER_MOVE_COEF * time_delta.as_secs_f32();
-		let locate = &mut transform.translation;
+		let position = &mut transform.translation;
 		match player.direction
-		{	Direction::Up    => locate.y += delta,
-			Direction::Left  => locate.x -= delta,
-			Direction::Right => locate.x += delta,
-			Direction::Down  => locate.y -= delta,
+		{	Direction::Up    => position.y += delta,
+			Direction::Left  => position.x -= delta,
+			Direction::Right => position.x += delta,
+			Direction::Down  => position.y -= delta,
 		}
-		player.sprite_location = ( locate.x, locate.y );
+		player.sprite_location = ( position.x, position.y );
 
 		//スプライト(三角形)の表示向きを更新する
 		if player.direction != player.new_direction
@@ -86,10 +120,10 @@ pub fn move_sprite_player
 	{	//スプライトの表示位置を更新する
 		let ( mut map_x, mut map_y ) = player.map_location;
 		let ( sprite_x, sprite_y ) = conv_sprite_coordinates( map_x, map_y );
-		let locate = &mut transform.translation;
-		locate.x = sprite_x;
-		locate.y = sprite_y;
-		player.sprite_location = ( locate.x, locate.y );
+		let position = &mut transform.translation;
+		position.x = sprite_x;
+		position.y = sprite_y;
+		player.sprite_location = ( position.x, position.y );
 
 		//スプライト(三角形)の表示向きを更新する
 		if player.direction != player.new_direction
@@ -100,20 +134,17 @@ pub fn move_sprite_player
 		}
 
 		//ドット獲得判定
-		if let MapObj::Dot1( opt_dot ) = stage.map[ map_x ][ map_y ]
+		if let MapObj::Dot1( opt_dot ) = maze.map[ map_x as usize ][ map_y as usize ]
 		{	cmds.entity( opt_dot.unwrap() ).despawn();
-			stage.map[ map_x ][ map_y ] = MapObj::Space;
+			maze.map[ map_x as usize ][ map_y as usize ] = MapObj::Space;
 			record.score += 1;
 		}
 
-		//ゴールしたので、eventをセットして関数から脱出
-		if ( map_x, map_y ) == stage.goal_xy
-		{	event.send( GameState::GameClear );
+		//ゴールしたので、Clearへ遷移する
+		if ( map_x, map_y ) == maze.goal_xy
+		{	let _ = state.overwrite_set( GameState::Clear );
 			return;
 		}
-
-		//上下左右にあるものを取り出す
-		let ( up, left, right, down ) = get_map_obj_ulrd( ( map_x, map_y ), &stage );
 
 		//キー入力を取得する
 		let key_left  = inkey.pressed( KeyCode::Left  );
@@ -122,24 +153,25 @@ pub fn move_sprite_player
 		let key_down  = inkey.pressed( KeyCode::Down  );
 
 		//カーソルキーの入力により自機の向きを変える
+		let objs = maze.enclosure( map_x, map_y );
 		if key_left
 		{	player.new_direction = Direction::Left;
-			player.stop = matches!( left, MapObj::Wall(_) );
+			player.stop = matches!( objs.middle_left, MapObj::Wall(_) );
 			if ! player.stop { map_x -= 1 }
 		}
 		else if key_right
 		{	player.new_direction = Direction::Right;
-			player.stop = matches!( right, MapObj::Wall(_) );
+			player.stop = matches!( objs.middle_right, MapObj::Wall(_) );
 			if ! player.stop { map_x += 1 }
 		}
 		else if key_up
 		{	player.new_direction = Direction::Up;
-			player.stop = matches!( up, MapObj::Wall(_) );
+			player.stop = matches!( objs.top_center, MapObj::Wall(_) );
 			if ! player.stop { map_y -= 1 }
 		}
 		else if key_down
 		{	player.new_direction = Direction::Down;
-			player.stop = matches!( down, MapObj::Wall(_) );
+			player.stop = matches!( objs.bottom_center, MapObj::Wall(_) );
 			if ! player.stop { map_y += 1 }
 		}
 		else
@@ -152,44 +184,29 @@ pub fn move_sprite_player
 	}
 }
 
-//マップの上下左右にあるものを取り出す
-pub fn get_map_obj_ulrd
-(	( x, y ): ( usize, usize ),
-	stage: &GameStage
-) -> ( MapObj, MapObj, MapObj, MapObj )
-{	let get_map_obj = | dx, dy | { stage.map[( x as i32 + dx ) as usize][( y as i32 + dy ) as usize] };
-
-	let up    = if y >= 1     { get_map_obj(  0, -1 ) } else { MapObj::Wall( None ) };
-	let left  = if x >= 1     { get_map_obj( -1,  0 ) } else { MapObj::Wall( None ) };
-	let right = if x <= MAX_X { get_map_obj(  1,  0 ) } else { MapObj::Wall( None ) };
-	let down  = if y <= MAX_Y { get_map_obj(  0,  1 ) } else { MapObj::Wall( None ) };
-
-	( up, left, right, down )
-}
-
 //自機(三角形)の新旧の向きから、表示角度差分を決める
 fn decide_angle( old: Direction, new: Direction ) -> f32
 {	match old
 	{	Direction::Up =>
-		{	if matches!( new, Direction::Left  ) { return  90. }
-			if matches!( new, Direction::Right ) { return -90. }
+		{	if matches!( new, Direction::Left  ) { return  90.0 }
+			if matches!( new, Direction::Right ) { return -90.0 }
 		}
 		Direction::Left =>
-		{	if matches!( new, Direction::Down  ) { return  90. }
-			if matches!( new, Direction::Up    ) { return -90. }
+		{	if matches!( new, Direction::Down  ) { return  90.0 }
+			if matches!( new, Direction::Up    ) { return -90.0 }
 		}
 		Direction::Right =>
-		{	if matches!( new, Direction::Up    ) { return  90. }
-			if matches!( new, Direction::Down  ) { return -90. }
+		{	if matches!( new, Direction::Up    ) { return  90.0 }
+			if matches!( new, Direction::Down  ) { return -90.0 }
 		}
 		Direction::Down =>
-		{	if matches!( new, Direction::Right ) { return  90. }
-			if matches!( new, Direction::Left  ) { return -90. }
+		{	if matches!( new, Direction::Right ) { return  90.0 }
+			if matches!( new, Direction::Left  ) { return -90.0 }
 		}
 	}
 
 	//呼出側でold != newが保証されているので、±90°以外はすべて180°
-	180.
+	180.0
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -201,6 +218,25 @@ pub fn despawn_sprite_player
 )
 {	let player = q_player.single_mut().unwrap();
 	cmds.entity( player ).despawn();
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//自機のスプライトバンドルを生成
+pub fn sprite_player( ( x, y ): ( f32, f32 ) ) -> ShapeBundle
+{	let locate = Vec3::new( x, y, SPRITE_DEPTH_PLAYER );
+
+	let triangle = &shapes::RegularPolygon
+	{	sides: 3,
+		feature: shapes::RegularPolygonFeature::Radius( PLAYER_PIXEL ),
+		..shapes::RegularPolygon::default()
+	};
+	GeometryBuilder::build_as
+	(	triangle,
+		ShapeColors::new( PLAYER_COLOR ),
+        DrawMode::Fill( FillOptions::default() ),
+		Transform::from_translation( locate )
+	)
 }
 
 //End of code.
