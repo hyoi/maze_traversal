@@ -45,7 +45,7 @@ enum Direction
 }
 
 //自機のComponent
-pub struct Player
+struct Player
 {	wait: Timer,
 	map_location: ( i32, i32 ),
 	sprite_location: ( f32, f32 ),
@@ -62,7 +62,7 @@ const PLAYER_COLOR: Color = Color::YELLOW;
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //自機のスプライトを初期位置に配置する
-pub fn spawn_sprite_player( maze : Res<GameStage>, mut cmds: Commands )
+fn spawn_sprite_player( maze: Res<GameStage>, mut cmds: Commands )
 {	let ( map_x, map_y ) = maze.start_xy;
 	let ( sprite_x, sprite_y ) = conv_sprite_coordinates( map_x, map_y );
 
@@ -80,10 +80,8 @@ pub fn spawn_sprite_player( maze : Res<GameStage>, mut cmds: Commands )
 	cmds.spawn_bundle( sprite ).insert( player );
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
 //自機のスプライトを移動する
-pub fn move_sprite_player
+fn move_sprite_player
 (	mut q: Query<( &mut Player, &mut Transform )>,
 	( mut maze, mut record ): ( ResMut<GameStage>, ResMut<GameRecord> ),
 	mut state : ResMut<State<GameState>>,
@@ -166,12 +164,12 @@ pub fn move_sprite_player
 		}
 		else if key_up
 		{	player.new_direction = Direction::Up;
-			player.stop = matches!( objs.top_center, MapObj::Wall(_) );
+			player.stop = matches!( objs.upper_center, MapObj::Wall(_) );
 			if ! player.stop { map_y -= 1 }
 		}
 		else if key_down
 		{	player.new_direction = Direction::Down;
-			player.stop = matches!( objs.bottom_center, MapObj::Wall(_) );
+			player.stop = matches!( objs.lower_center, MapObj::Wall(_) );
 			if ! player.stop { map_y += 1 }
 		}
 		else
@@ -209,33 +207,24 @@ fn decide_angle( old: Direction, new: Direction ) -> f32
 	180.0
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
 //自機のスプライトを削除する
-pub fn despawn_sprite_player
-(	mut q_player: Query<Entity, With<Player>>,
-	mut cmds: Commands,
-)
-{	let player = q_player.single_mut().unwrap();
-	cmds.entity( player ).despawn();
+fn despawn_sprite_player( mut q: Query<Entity, With<Player>>, mut cmds: Commands )
+{	cmds.entity( q.single_mut().unwrap() ).despawn();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //自機のスプライトバンドルを生成
-pub fn sprite_player( ( x, y ): ( f32, f32 ) ) -> ShapeBundle
-{	let locate = Vec3::new( x, y, SPRITE_DEPTH_PLAYER );
-
-	let triangle = &shapes::RegularPolygon
-	{	sides: 3,
-		feature: shapes::RegularPolygonFeature::Radius( PLAYER_PIXEL ),
-		..shapes::RegularPolygon::default()
-	};
-	GeometryBuilder::build_as
-	(	triangle,
+fn sprite_player( ( x, y ): ( f32, f32 ) ) -> ShapeBundle
+{	GeometryBuilder::build_as
+	(	&shapes::RegularPolygon
+		{	sides: 3,
+			feature: shapes::RegularPolygonFeature::Radius( PLAYER_PIXEL ),
+			..shapes::RegularPolygon::default()
+		},
 		ShapeColors::new( PLAYER_COLOR ),
         DrawMode::Fill( FillOptions::default() ),
-		Transform::from_translation( locate )
+		Transform::from_translation( Vec3::new( x, y, SPRITE_DEPTH_PLAYER ) )
 	)
 }
 

@@ -85,28 +85,28 @@ impl GameStage
 		};
 	
 		Encloser
-		{	top_left     : get_map_obj( -1, -1 ),
-			top_center   : get_map_obj(  0, -1 ),
-			top_right    : get_map_obj(  1, -1 ),
-			middle_left  : get_map_obj( -1,  0 ),
-			middle_right : get_map_obj(  1,  0 ),
-			bottom_left  : get_map_obj( -1,  1 ),
-			bottom_center: get_map_obj(  0,  1 ),
-			bottom_right : get_map_obj(  1,  1 ),
+		{	upper_left  : get_map_obj( -1, -1 ),
+			upper_center: get_map_obj(  0, -1 ),
+			upper_right : get_map_obj(  1, -1 ),
+			middle_left : get_map_obj( -1,  0 ),
+			middle_right: get_map_obj(  1,  0 ),
+			lower_left  : get_map_obj( -1,  1 ),
+			lower_center: get_map_obj(  0,  1 ),
+			lower_right : get_map_obj(  1,  1 ),
 		}
 	}
 }
 
 //周囲８マスのオブジェクトをまとめる型
 pub struct Encloser
-{	pub top_left     : MapObj,
-	pub top_center   : MapObj,
-	pub top_right    : MapObj,
-	pub middle_left  : MapObj,
-	pub middle_right : MapObj,
-	pub bottom_left  : MapObj,
-	pub bottom_center: MapObj,
-	pub bottom_right : MapObj,
+{	pub upper_left  : MapObj,
+	pub upper_center: MapObj,
+	pub upper_right : MapObj,
+	pub middle_left : MapObj,
+	pub middle_right: MapObj,
+	pub lower_left  : MapObj,
+	pub lower_center: MapObj,
+	pub lower_right : MapObj,
 }
 
 //マップ座標の上下左右を表す定数
@@ -140,7 +140,7 @@ fn spawn_sprite_new_map
 	asset_svr: Res<AssetServer>,
 )
 {	//mapを初期化する
-	maze.map.iter_mut().for_each( |x| (*x).fill( MapObj::Wall( None ) ) );
+	maze.map.iter_mut().for_each( | x | ( *x ).fill( MapObj::Wall( None ) ) );
 	maze.count_dots = 0;
 	maze.level += 1;
 
@@ -222,8 +222,8 @@ fn animate_goal_sprite
 	let color_matl = color_matl.get_mut( handle ).unwrap();
 
 	//回転させる
-	let angle = 360. * time.delta().as_secs_f32();
-	let quat  = Quat::from_rotation_z( angle.to_radians() );
+	let angle = 360.0 * time.delta().as_secs_f32();
+	let quat = Quat::from_rotation_z( angle.to_radians() );
 	transform.rotate( quat );
 
 	//色を変える
@@ -247,8 +247,20 @@ fn despawn_sprite_map( maze: Res<GameStage>, mut cmds: Commands )
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+//迷路作成関数（internal modules）
+mod dig_and_dig_and_dig;
+use dig_and_dig_and_dig::*;
+
+mod dig_and_back_and_dig;
+use dig_and_back_and_dig::*;
+
+mod find_and_destroy_digable_walls;
+use find_and_destroy_digable_walls::*;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 //ドット用のスプライトバンドルを生成
-pub fn sprite_dot( ( x, y ): ( f32, f32 ) ) -> ShapeBundle
+fn sprite_dot( ( x, y ): ( f32, f32 ) ) -> ShapeBundle
 {	GeometryBuilder::build_as
 	(	&shapes::Circle { radius: DOT_RAIDUS, ..shapes::Circle::default() },
 		ShapeColors::new( DOT_COLOR ),
@@ -258,7 +270,7 @@ pub fn sprite_dot( ( x, y ): ( f32, f32 ) ) -> ShapeBundle
 }
 
 //ゴールのスプライトバンドルを生成
-pub fn sprite_goal( ( x, y ): ( f32, f32 ), color_matl: &mut ResMut<Assets<ColorMaterial>> ) -> SpriteBundle
+fn sprite_goal( ( x, y ): ( f32, f32 ), color_matl: &mut ResMut<Assets<ColorMaterial>> ) -> SpriteBundle
 {	let mut sprite = SpriteBundle
 	{	material : color_matl.add( GOAL_COLOR.into() ),
 		transform: Transform::from_translation( Vec3::new( x, y, SPRITE_DEPTH_MAZE ) ),
@@ -271,7 +283,7 @@ pub fn sprite_goal( ( x, y ): ( f32, f32 ), color_matl: &mut ResMut<Assets<Color
 }
 
 //壁用のスプライトバンドルを生成
-pub fn sprite_wall
+fn sprite_wall
 (	( x, y ): ( f32, f32 ),
 	color_matl: &mut ResMut<Assets<ColorMaterial>>,
 	asset_svr: &Res<AssetServer>,
@@ -282,249 +294,6 @@ pub fn sprite_wall
 		sprite   : Sprite::new( Vec2::new( WALL_PIXEL, WALL_PIXEL ) ),
 		..Default::default()
 	}
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-//一型迷路：ランダムに掘り進み、貫通する壁は確率で破壊する
-fn dig_and_dig_and_dig( maze: &mut GameStage )
-{	let mut map_xy = maze.start_xy;
-	map_xy.1 -= 1; //maze.start_xyの直上(y-1)がトンネル掘りの開始座標
-
-	loop
-	{	//ランダムに上下左右へ進む方向を決める
-		let ( dx, dy ) = DIRECTION[ maze.rng.gen_range( 0..DIRECTION.len() ) ];
-		let tmp_x = map_xy.0 + dx;
-		let tmp_y = map_xy.1 + dy;
-
-		//上端に達したら迷路完成
-		if tmp_y == 0 { break }
-
-		//掘れないならループ先頭に戻る
-		if ! DIGABLE_X.contains( &( tmp_x ) )
-		|| ! DIGABLE_Y.contains( &( tmp_y ) )
-		|| ! is_dig_or_not( maze, tmp_x, tmp_y ) { continue }
-
-		//一歩進む
-		maze.map[ tmp_x as usize ][ tmp_y as usize ] = MapObj::Dot1( None );
-		map_xy = ( tmp_x, tmp_y );
-	}
-}
-
-//さいころを振って、進むか(true)、やり直すか(false)決める
-fn is_dig_or_not( maze: &mut GameStage, x: i32, y: i32 ) -> bool
-{	//そもそも壁じゃないならtrue
-	if ! matches!( maze.map[ x as usize ][ y as usize ], MapObj::Wall(_) ) { return true }
-
-	//座標の周囲のオブジェクトを取り出す
-	let objs = maze.enclosure( x, y );
-
-	//上下左右のオブジェクトで壁ではないものを数える
-	let mut count = 0;
-	if ! matches!( objs.top_center   , MapObj::Wall(_) ) { count += 1 }
-	if ! matches!( objs.middle_left  , MapObj::Wall(_) ) { count += 1 }
-	if ! matches!( objs.middle_right , MapObj::Wall(_) ) { count += 1 }
-	if ! matches!( objs.bottom_center, MapObj::Wall(_) ) { count += 1 }
-
-	//２以上なら掘ると道になるので、貫通させるか確率で決める
-	let dice = maze.rng.gen_range( 0..100 );	//百面ダイスを振って‥‥
-	if count == 2 && dice < 70 { return false }	//通路になる   ⇒ 70%の確率でfalse
-	if count == 3 && dice < 90 { return false }	//Ｔ字路になる ⇒ 90%の確率でfalse
-	if count == 4 && dice < 95 { return false }	//十字路になる ⇒ 95%の確率でfalse
-
-	//壁を掘り進む
-	true
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-//二型迷路：ランダムに掘り進み、貫通せず、行き止まりでは後戻りして掘り尽くすまで未掘削の場所を探す
-fn dig_and_back_and_dig( maze: &mut GameStage )
-{	let mut map_xy = maze.start_xy;
-	map_xy.1 -= 1; //maze.start_xyの直上(y-1)がトンネル掘りの開始座標
-
-	//トンネルを掘る
-	let mut digable_walls = Vec::new();
-	let mut backtrack;
-	loop
-	{	//上下左右にある掘削候補と戻り路を記録する
-		digable_walls.clear();
-		backtrack = ( 0, 0 );
-		for ( dx, dy ) in DIRECTION.iter()
-		{	let tmp_x = map_xy.0 + dx;
-			let tmp_y = map_xy.1 + dy;
-			let tmp_xy = ( tmp_x, tmp_y ); 
-
-			//外壁は掘れない
-			if ! DIGABLE_X.contains( &tmp_x ) || ! DIGABLE_Y.contains( &tmp_y ) { continue }
-	
-			//上下左右の座標のオブジェクトを調べる
-			match maze.map[ tmp_x as usize ][ tmp_y as usize ]
-			{	MapObj::Dot1(_)
-					=> backtrack = tmp_xy,
-				MapObj::Wall(_) if is_digable_wall( maze, tmp_xy, ( *dx, *dy ) )
-					=> digable_walls.push( tmp_xy ),
-				_	=> {}
-			}
-		}
-
-		//掘れる壁が見つからないなら迷路完成
-		if digable_walls.is_empty() && backtrack == ( 0, 0 ) { break }
-
-		if ! digable_walls.is_empty()
-		{	//掘削する方向をランダムに決めて、掘る
-			map_xy = digable_walls[ maze.rng.gen_range( 0..digable_walls.len() ) ];
-			maze.map[ map_xy.0 as usize ][ map_xy.1 as usize ] = MapObj::Dot1( None );
-		}
-		else
-		{	//掘れる壁がないので現在位置に行き止まり情報「dot2」を書き込み、後戻りする
-			maze.map[ map_xy.0 as usize ][ map_xy.1 as usize ] = MapObj::Dot2( None );
-			map_xy = backtrack;
-		}
-	}
-
-	//三型迷路の作成関数を流用して、道幅拡張工事
-	find_and_destroy_digable_walls( maze );
-} 
-
-//進行方向の壁が掘れるか調べる
-fn is_digable_wall( maze: &GameStage, ( x, y ): ( i32, i32 ), direction: ( i32, i32 ) ) -> bool
-{	let objs = maze.enclosure( x, y );
-	match direction
-	{	UP    if matches!( objs.top_left     , MapObj::Wall(_) )
-			  && matches!( objs.top_center   , MapObj::Wall(_) )	// 壁壁壁
-			  && matches!( objs.top_right    , MapObj::Wall(_) )	// 壁Ｘ壁
-			  && matches!( objs.middle_left  , MapObj::Wall(_) )
-			  && matches!( objs.middle_right , MapObj::Wall(_) ) => return true,
-		LEFT  if matches!( objs.top_left     , MapObj::Wall(_) )	// 壁壁
-			  && matches!( objs.top_center   , MapObj::Wall(_) )	// 壁Ｘ
-			  && matches!( objs.middle_left  , MapObj::Wall(_) )	// 壁壁
-			  && matches!( objs.bottom_left  , MapObj::Wall(_) )
-			  && matches!( objs.bottom_center, MapObj::Wall(_) ) => return true,
-		RIGHT if matches!( objs.top_center   , MapObj::Wall(_) )	// 壁壁
-			  && matches!( objs.top_right    , MapObj::Wall(_) )	// Ｘ壁
-			  && matches!( objs.middle_right , MapObj::Wall(_) )	// 壁壁
-			  && matches!( objs.bottom_center, MapObj::Wall(_) )
-			  && matches!( objs.bottom_right , MapObj::Wall(_) ) => return true,
-		DOWN  if matches!( objs.middle_left  , MapObj::Wall(_) )
-			  && matches!( objs.middle_right , MapObj::Wall(_) )	// 壁Ｘ壁
-			  && matches!( objs.bottom_left  , MapObj::Wall(_) )	// 壁壁壁
-			  && matches!( objs.bottom_center, MapObj::Wall(_) )
-			  && matches!( objs.bottom_right , MapObj::Wall(_) ) => return true,
-		_ => {}
-	}
-
-	false
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-//三型迷路：マップを全面走査して、壊すと迷路を拡張可能な壁を探し、壊し尽くすまで壊しまくる
-fn find_and_destroy_digable_walls( maze: &mut GameStage )
-{	let mut digable_walls = Vec::new();
-	loop
-	{	//マップを全面走査して拡張条件を満たす壁を探す
-		digable_walls.clear();
-		for ( x, ary ) in maze.map.iter().enumerate()	//xはusize
-		{	for ( y, _obj ) in ary.iter().enumerate()	//yはusize
-			{	if ! DIGABLE_X.contains( &( x as i32 ) )
-				|| ! DIGABLE_Y.contains( &( y as i32 ) )
-				|| ! matches!( maze.map[ x ][ y ], MapObj::Wall(_) ) { continue }
-
-				//条件を満たす壁を記録する
-				if is_maze_expandable( maze, x, y ) { digable_walls.push( ( x, y ) ) }
-			}
-		}
-
-		//条件を満たす壁が見つからなければ迷路完成
-		if digable_walls.is_empty() { break }
-
-		//複数候補の中からランダムに壊す壁を決め、道にする
-		let ( x, y ) = digable_walls[ maze.rng.gen_range( 0..digable_walls.len() ) ];
-		maze.map[ x ][ y ] = MapObj::Dot1( None );
-	}
-}
-
-//迷路拡張条件を満たす壁か？
-fn is_maze_expandable( maze: &GameStage, x:usize, y:usize ) -> bool
-{	let objs = maze.enclosure( x as i32, y as i32 );
-
-	//下向き凸の削り許可
-	if   matches!( objs.top_left     , MapObj::Wall(_) ) &&
-	     matches!( objs.top_center   , MapObj::Wall(_) ) &&
-	     matches!( objs.top_right    , MapObj::Wall(_) ) &&
-	   ! matches!( objs.middle_left  , MapObj::Wall(_) ) &&
-	   ! matches!( objs.middle_right , MapObj::Wall(_) ) &&
-	   ! matches!( objs.bottom_left  , MapObj::Wall(_) ) &&
-	   ! matches!( objs.bottom_center, MapObj::Wall(_) ) &&
-	   ! matches!( objs.bottom_right , MapObj::Wall(_) ) { return true }
-
-	//右向き凸の削り許可
-	if   matches!( objs.top_left     , MapObj::Wall(_) ) &&
-	   ! matches!( objs.top_center   , MapObj::Wall(_) ) &&
-	   ! matches!( objs.top_right    , MapObj::Wall(_) ) &&
-	     matches!( objs.middle_left  , MapObj::Wall(_) ) &&
-	   ! matches!( objs.middle_right , MapObj::Wall(_) ) &&
-	     matches!( objs.bottom_left  , MapObj::Wall(_) ) &&
-	   ! matches!( objs.bottom_center, MapObj::Wall(_) ) &&
-	   ! matches!( objs.bottom_right , MapObj::Wall(_) ) { return true }
-
-	//左向き凸の削り許可
-	if ! matches!( objs.top_left     , MapObj::Wall(_) ) &&
-	   ! matches!( objs.top_center   , MapObj::Wall(_) ) &&
-	     matches!( objs.top_right    , MapObj::Wall(_) ) &&
-	   ! matches!( objs.middle_left  , MapObj::Wall(_) ) &&
-	     matches!( objs.middle_right , MapObj::Wall(_) ) &&
-	   ! matches!( objs.bottom_left  , MapObj::Wall(_) ) &&
-	   ! matches!( objs.bottom_center, MapObj::Wall(_) ) &&
-	     matches!( objs.bottom_right , MapObj::Wall(_) ) { return true }
-
-	//上向き凸の削り許可
-	if ! matches!( objs.top_left     , MapObj::Wall(_) ) &&
-	   ! matches!( objs.top_center   , MapObj::Wall(_) ) &&
-	   ! matches!( objs.top_right    , MapObj::Wall(_) ) &&
-	   ! matches!( objs.middle_left  , MapObj::Wall(_) ) &&
-	   ! matches!( objs.middle_right , MapObj::Wall(_) ) &&
-	     matches!( objs.bottom_left  , MapObj::Wall(_) ) &&
-	     matches!( objs.bottom_center, MapObj::Wall(_) ) &&
-	     matches!( objs.bottom_right , MapObj::Wall(_) ) { return true }
-
-	//縦の貫通路になる場合はfalse
-	if ! matches!( objs.top_center   , MapObj::Wall(_) ) &&
-	   ! matches!( objs.bottom_center, MapObj::Wall(_) ) { return false }
-
-	//横の貫通路になる場合はfalse
-	if ! matches!( objs.middle_left , MapObj::Wall(_) ) &&
-	   ! matches!( objs.middle_right, MapObj::Wall(_) ) { return false }
-
-	//左上が壁でなく、上と左が壁ならfalse
-	if ! matches!( objs.top_left   , MapObj::Wall(_) ) &&
-		 matches!( objs.top_center , MapObj::Wall(_) ) &&
-		 matches!( objs.middle_left, MapObj::Wall(_) ) { return false }
-
-	//右上が壁でなく、上と右が壁ならfalse
-	if ! matches!( objs.top_right   , MapObj::Wall(_) ) &&
-		 matches!( objs.top_center  , MapObj::Wall(_) ) &&
-		 matches!( objs.middle_right, MapObj::Wall(_) ) { return false }
-
-	//左下が壁でなく、下と左が壁ならfalse
-	if ! matches!( objs.bottom_left  , MapObj::Wall(_) ) &&
-		 matches!( objs.middle_left  , MapObj::Wall(_) ) &&
-		 matches!( objs.bottom_center, MapObj::Wall(_) ) { return false }
-
-	//右下が壁でなく、下と右が壁ならfalse
-	if ! matches!( objs.bottom_right , MapObj::Wall(_) ) &&
-		 matches!( objs.middle_right , MapObj::Wall(_) ) &&
-		 matches!( objs.bottom_center, MapObj::Wall(_) ) { return false }
-
-	//上下左右がすべて壁はfalse（掘ると飛び地になる）
-	if matches!( objs.top_center   , MapObj::Wall(_) ) &&
-	   matches!( objs.middle_left  , MapObj::Wall(_) ) &&
-	   matches!( objs.middle_right , MapObj::Wall(_) ) &&
-	   matches!( objs.bottom_center, MapObj::Wall(_) ) { return false }
-
-	//掘削できる壁
-	true
 }
 
 //End of code.
