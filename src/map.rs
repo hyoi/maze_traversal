@@ -19,6 +19,10 @@ impl Plugin for PluginMap
 		)
 		//------------------------------------------------------------------------------------------
 		.add_system_set											// GameState::Clear
+		(	SystemSet::on_enter( GameState::Clear )				// on_enter()
+				.with_system( show_whole_map.system() )			// 地図の全体像を見せる
+		)
+		.add_system_set											// GameState::Clear
 		(	SystemSet::on_exit( GameState::Clear )				// on_exit()
 				.with_system( despawn_sprite_map.system() )		// マップを削除
 		)
@@ -75,25 +79,52 @@ impl Default for GameStage
 }
 impl GameStage
 {	pub fn enclosure( &self, x: i32, y: i32 ) -> Encloser
-	{	let get_map_obj = | dx, dy |
-		{	let tmp_x = x + dx;
-			let tmp_y = y + dy;
-			if ! ( 0..MAP_WIDTH  ).contains( &tmp_x ) 
-			|| ! ( 0..MAP_HEIGHT ).contains( &tmp_y ) { return MapObj::Wall( None ) }
+	{	let get_map_obj = | x, y |
+		{	if ! ( 0..MAP_WIDTH  ).contains( &x ) 
+			|| ! ( 0..MAP_HEIGHT ).contains( &y ) { return MapObj::Wall( None ) }
 
-			self.map[ tmp_x as usize ][ tmp_y as usize ]
+			self.map[ x as usize ][ y as usize ]
 		};
 	
 		Encloser
-		{	upper_left  : get_map_obj( -1, -1 ),
-			upper_center: get_map_obj(  0, -1 ),
-			upper_right : get_map_obj(  1, -1 ),
-			middle_left : get_map_obj( -1,  0 ),
-			middle_right: get_map_obj(  1,  0 ),
-			lower_left  : get_map_obj( -1,  1 ),
-			lower_center: get_map_obj(  0,  1 ),
-			lower_right : get_map_obj(  1,  1 ),
+		{	upper_left  : get_map_obj( x - 1, y - 1 ),
+			upper_center: get_map_obj( x    , y - 1 ),
+			upper_right : get_map_obj( x + 1, y - 1 ),
+			middle_left : get_map_obj( x - 1, y     ),
+			middle_right: get_map_obj( x + 1, y     ),
+			lower_left  : get_map_obj( x - 1, y + 1 ),
+			lower_center: get_map_obj( x    , y + 1 ),
+			lower_right : get_map_obj( x + 1, y + 1 ),
 		}
+	}
+
+	pub fn show_enclosure( &self, x: i32, y: i32, mut q: Query<&mut Visible> )
+	{	let show_map_obj = | x, y, q: &mut Query<&mut Visible> |
+		{	if ! ( 0..MAP_WIDTH  ).contains( &x )
+			|| ! ( 0..MAP_HEIGHT ).contains( &y ) { return }
+	
+			match self.map[ x as usize ][ y as usize ]
+			{	MapObj::Wall( Some( id ) )
+					=> q.get_component_mut::<Visible>( id ).unwrap().is_visible = true,
+//				MapObj::Dot1( Some( id ) )
+//					=> q.get_component_mut::<Visible>( id ).unwrap().is_visible = true,
+				_	=> {}
+			};
+		};
+	
+		show_map_obj( x - 1, y - 1, &mut q );
+		show_map_obj( x    , y - 1, &mut q );
+		show_map_obj( x + 1, y - 1, &mut q );
+		show_map_obj( x - 1, y    , &mut q );
+		show_map_obj( x    , y    , &mut q );
+		show_map_obj( x + 1, y    , &mut q );
+		show_map_obj( x - 1, y + 1, &mut q );
+		show_map_obj( x    , y + 1, &mut q );
+		show_map_obj( x + 1, y + 1, &mut q );
+//		show_map_obj( x    , y - 2, &mut q );
+//		show_map_obj( x - 2, y    , &mut q );
+//		show_map_obj( x + 2, y    , &mut q );
+//		show_map_obj( x    , y + 2, &mut q );
 	}
 }
 
@@ -176,14 +207,14 @@ fn spawn_sprite_new_map
 			match obj
 			{	MapObj::Dot1(_) =>
 				{	let id = cmds
-						.spawn_bundle( sprite_dot( xy ) )
+						.spawn_bundle( sprite_dot( xy, &mut color_matl ) )
 						.id(); 
 					*obj = MapObj::Dot1( Some( id ) );
 					count += 1;
 				}
 				MapObj::Dot2(_) =>
 				{	let id = cmds
-						.spawn_bundle( sprite_dot( xy ) )
+						.spawn_bundle( sprite_dot( xy, &mut color_matl ) )
 						.id(); 
 					*obj = MapObj::Dot1( Some( id ) ); //Dot2もDot1へ変換する
 					count += 1;
@@ -232,13 +263,29 @@ fn animate_goal_sprite
 	color_matl.color = Color::Hsla{ hue, saturation, lightness, alpha };
 }
 
+//地図の全体像を見せる
+fn show_whole_map
+(	mut q: Query<&mut Visible>,
+	maze: Res<GameStage>,
+)
+{	for ary in maze.map.iter()
+	{	for obj in ary.iter()
+		{	match obj
+			{	MapObj::Wall( Some( id ) ) => q.get_component_mut::<Visible>( *id ).unwrap().is_visible = true,
+				MapObj::Dot1( Some( id ) ) => q.get_component_mut::<Visible>( *id ).unwrap().is_visible = true,
+				_ => {}
+			}
+		}
+	}
+}
+
 //スプライトを削除する
 fn despawn_sprite_map( maze: Res<GameStage>, mut cmds: Commands )
 {	for ary in maze.map.iter()
 	{	for obj in ary.iter()
 		{	match obj
-			{	MapObj::Dot1( opt_entity ) => cmds.entity( opt_entity.unwrap() ).despawn(),
-				MapObj::Wall( opt_entity ) => cmds.entity( opt_entity.unwrap() ).despawn(),
+			{	MapObj::Dot1( Some( id ) ) => cmds.entity( *id ).despawn(),
+				MapObj::Wall( Some( id ) ) => cmds.entity( *id ).despawn(),
 				_ => {}
 			}
 		}
@@ -260,13 +307,25 @@ use find_and_destroy_digable_walls::*;
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //ドット用のスプライトバンドルを生成
-fn sprite_dot( ( x, y ): ( f32, f32 ) ) -> ShapeBundle
-{	GeometryBuilder::build_as
-	(	&shapes::Circle { radius: DOT_RAIDUS, ..shapes::Circle::default() },
-		ShapeColors::new( DOT_COLOR ),
-        DrawMode::Fill( FillOptions::default() ),
-        Transform::from_translation( Vec3::new( x, y, SPRITE_DEPTH_MAZE ) ),
-    )
+fn sprite_dot
+(	( x, y ): ( f32, f32 ),
+	color_matl: &mut ResMut<Assets<ColorMaterial>>,
+) -> SpriteBundle
+//) -> ShapeBundle
+// {	GeometryBuilder::build_as
+// 	(	&shapes::Circle { radius: DOT_RAIDUS, ..shapes::Circle::default() },
+// 		ShapeColors::new( DOT_COLOR ),
+//         DrawMode::Fill( FillOptions::default() ),
+//         Transform::from_translation( Vec3::new( x, y, SPRITE_DEPTH_MAZE ) ),
+//     )
+// }
+{	SpriteBundle
+	{	material : color_matl.add( DOT_COLOR.into() ),
+		transform: Transform::from_translation( Vec3::new( x, y, SPRITE_DEPTH_MAZE ) ),
+		sprite   : Sprite::new( Vec2::new( DOT_RAIDUS, DOT_RAIDUS ) * 2.0 ),
+		visible  : Visible { is_visible: false, ..Default::default() },
+		..Default::default()
+	}
 }
 
 //ゴールのスプライトバンドルを生成
@@ -292,6 +351,7 @@ fn sprite_wall
 	{	material : color_matl.add( asset_svr.load( WALL_SPRITE_FILE ).into() ),
 		transform: Transform::from_translation( Vec3::new( x, y, SPRITE_DEPTH_MAZE ) ),
 		sprite   : Sprite::new( Vec2::new( WALL_PIXEL, WALL_PIXEL ) ),
+		visible  : Visible { is_visible: false, ..Default::default() },
 		..Default::default()
 	}
 }
