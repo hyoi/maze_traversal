@@ -83,6 +83,7 @@ fn spawn_sprite_player( maze: Res<GameStage>, mut cmds: Commands )
 //自機のスプライトを移動する
 fn move_sprite_player
 (	mut q: Query<( &mut Player, &mut Transform )>,
+	q_visible: Query<&mut Visible>,
 	( mut maze, mut record ): ( ResMut<GameStage>, ResMut<GameRecord> ),
 	mut state : ResMut<State<GameState>>,
 	mut cmds: Commands,
@@ -176,6 +177,9 @@ fn move_sprite_player
 		{	player.stop = true
 		}
 		player.map_location = ( map_x, map_y );
+
+		//Dark Modeでプレイヤーの周囲を視覚化する
+		maze.show_enclosure( map_x, map_y, q_visible );
 
 		//ウェイトをリセットする
 		player.wait.reset();

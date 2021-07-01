@@ -125,7 +125,7 @@ fn change_state_after_countdown
 {	if let Ok( mut ui ) = q.single_mut()
 	{	if *count <= 0											 //カウンターが未初期化なら
 		{	countdown.timer = Timer::from_seconds( 1.0, false ); //タイマーセット
-			*count = 4;											 //カウンター初期化
+			*count = 6;											 //カウンター初期化
 		}
 		else if countdown.timer.tick( time.delta() ).finished()	 //1秒経過したら
 		{	countdown.timer.reset();							 //タイマー再セット
