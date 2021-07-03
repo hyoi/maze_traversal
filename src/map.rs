@@ -55,14 +55,22 @@ pub enum MapObj
 	Space,
 }
 
+//MAPのマスの状態の制御に使うbit
+const BIT_ALL_CLEAR  : usize = 0b0;
+const BIT1_IS_VISIBLE: usize = 0b1;
+const BIT1_SHOW      : usize = 0b1;
+const BIT1_HIDE      : usize = 0b0;
+
 //MAP情報のResource
 pub struct GameStage
 {	pub rng: rand::prelude::StdRng,	//再現性がある乱数を使いたいので
 	pub level: usize,
-	pub map: [ [ MapObj; MAP_HEIGHT as usize ]; MAP_WIDTH as usize ],
-	pub count_dots: usize,
+	pub map : [ [ MapObj; MAP_HEIGHT as usize ]; MAP_WIDTH as usize ],
+	pub stat: [ [ usize ; MAP_HEIGHT as usize ]; MAP_WIDTH as usize ],
 	pub start_xy: ( i32, i32 ),
 	pub goal_xy : ( i32, i32 ),
+	pub count_dots: usize,
+	pub is_darkmode: bool,
 }
 impl Default for GameStage
 {	fn default() -> Self
@@ -70,10 +78,12 @@ impl Default for GameStage
 		{	rng: StdRng::seed_from_u64( rand::thread_rng().gen::<u64>() ),	//本番用
 		//	rng: StdRng::seed_from_u64( 1234567890 ),	//開発用：再現性がある乱数を使いたい場合
 			level: 0,
-			map: [ [ MapObj::None; MAP_HEIGHT as usize ]; MAP_WIDTH as usize ],
+			map : [ [ MapObj::None ; MAP_HEIGHT as usize ]; MAP_WIDTH as usize ],
+			stat: [ [ BIT_ALL_CLEAR; MAP_HEIGHT as usize ]; MAP_WIDTH as usize ],
 			start_xy: ( 0, 0 ),
 			goal_xy : ( 0, 0 ),
 			count_dots: 0,
+			is_darkmode: true,
 		}
 	}
 }
@@ -98,17 +108,16 @@ impl GameStage
 		}
 	}
 
-	pub fn show_enclosure( &self, x: i32, y: i32, mut q: Query<&mut Visible> )
-	{	let show_map_obj = | x, y, q: &mut Query<&mut Visible> |
+	pub fn show_enclosure( &mut self, x: i32, y: i32, mut q: Query<&mut Visible> )
+	{	let mut show_map_obj = | x, y, q: &mut Query<&mut Visible> |
 		{	if ! ( 0..MAP_WIDTH  ).contains( &x )
 			|| ! ( 0..MAP_HEIGHT ).contains( &y ) { return }
-	
+
+			self.stat[ x as usize ][ y as usize ] |= BIT1_SHOW;
 			match self.map[ x as usize ][ y as usize ]
-			{	MapObj::Wall( Some( id ) )
-					=> q.get_component_mut::<Visible>( id ).unwrap().is_visible = true,
-//				MapObj::Dot1( Some( id ) )
-//					=> q.get_component_mut::<Visible>( id ).unwrap().is_visible = true,
-				_	=> {}
+			{	MapObj::Wall( Some( id ) ) => q.get_component_mut::<Visible>( id ).unwrap().is_visible = true,
+				MapObj::Dot1( Some( id ) ) => q.get_component_mut::<Visible>( id ).unwrap().is_visible = true,
+				_ => {}
 			};
 		};
 	
@@ -128,7 +137,7 @@ impl GameStage
 	}
 }
 
-//周囲８マスのオブジェクトをまとめる型
+//周囲８マスをまとめて格納する型
 pub struct Encloser
 {	pub upper_left  : MapObj,
 	pub upper_center: MapObj,
@@ -141,23 +150,23 @@ pub struct Encloser
 }
 
 //マップ座標の上下左右を表す定数
-const UP   : ( i32, i32 ) = (  0, -1 );
-const LEFT : ( i32, i32 ) = ( -1,  0 );
-const RIGHT: ( i32, i32 ) = (  1,  0 );
-const DOWN : ( i32, i32 ) = (  0,  1 );
-
+const UP       :   ( i32, i32 )      = (  0, -1 );
+const LEFT     :   ( i32, i32 )      = ( -1,  0 );
+const RIGHT    :   ( i32, i32 )      = (  1,  0 );
+const DOWN     :   ( i32, i32 )      = (  0,  1 );
 const DIRECTION: [ ( i32, i32 ); 4 ] = [ UP, LEFT, RIGHT, DOWN ];
-
-//Component
-struct GoalSprite;
 
 //Sprite
 const SPRITE_DEPTH_MAZE: f32 = 10.0;
-const WALL_PIXEL: f32   = PIXEL_PER_GRID;
+
+const WALL_PIXEL: f32 = PIXEL_PER_GRID;
 pub const WALL_SPRITE_FILE: &str = "sprites/wall.png";
-const DOT_RAIDUS: f32   = PIXEL_PER_GRID / 14.0;
-const DOT_COLOR : Color = Color::WHITE;
-const GOAL_PIXEL: f32   = PIXEL_PER_GRID / 2.0;
+
+const DOT_RAIDUS: f32 = PIXEL_PER_GRID / 14.0;
+const DOT_COLOR: Color = Color::WHITE;
+
+struct GoalSprite;
+const GOAL_PIXEL: f32 = PIXEL_PER_GRID / 2.0;
 const GOAL_COLOR: Color = Color::YELLOW;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -171,7 +180,8 @@ fn spawn_sprite_new_map
 	asset_svr: Res<AssetServer>,
 )
 {	//mapを初期化する
-	maze.map.iter_mut().for_each( | x | ( *x ).fill( MapObj::Wall( None ) ) );
+	maze.map .iter_mut().for_each( | x | ( *x ).fill( MapObj::Wall( None ) ) );
+	maze.stat.iter_mut().for_each( | x | ( *x ).fill( BIT_ALL_CLEAR        ) );
 	maze.count_dots = 0;
 	maze.level += 1;
 
@@ -201,20 +211,21 @@ fn spawn_sprite_new_map
 
 	//スプライトをspawnしてEntity IDを記録する
 	let mut count = 0;
+	let darkmode = maze.is_darkmode;
 	for ( x, ary ) in maze.map.iter_mut().enumerate()
 	{	for ( y, obj ) in ary.iter_mut().enumerate()
 		{	let xy = conv_sprite_coordinates( x as i32, y as i32);
 			match obj
 			{	MapObj::Dot1(_) =>
 				{	let id = cmds
-						.spawn_bundle( sprite_dot( xy, &mut color_matl ) )
+						.spawn_bundle( sprite_dot( xy, &mut color_matl, darkmode ) )
 						.id(); 
 					*obj = MapObj::Dot1( Some( id ) );
 					count += 1;
 				}
 				MapObj::Dot2(_) =>
 				{	let id = cmds
-						.spawn_bundle( sprite_dot( xy, &mut color_matl ) )
+						.spawn_bundle( sprite_dot( xy, &mut color_matl, darkmode ) )
 						.id(); 
 					*obj = MapObj::Dot1( Some( id ) ); //Dot2もDot1へ変換する
 					count += 1;
@@ -224,12 +235,12 @@ fn spawn_sprite_new_map
 						.spawn_bundle( sprite_goal( xy, &mut color_matl ) )
 						.insert( GoalSprite )
 						.id(); 
-					*obj = MapObj::Dot1( Some( id ) );	//GoalはDot1へ変換する
+					*obj = MapObj::Goal( Some( id ) );
 					count += 1;
 				}
 				MapObj::Wall(_) =>
 				{	let id = cmds
-						.spawn_bundle( sprite_wall( xy, &mut color_matl, &asset_svr ) )
+						.spawn_bundle( sprite_wall( xy, &mut color_matl, &asset_svr, darkmode ) )
 						.id();
 					*obj = MapObj::Wall( Some( id ) );
 				}
@@ -264,15 +275,32 @@ fn animate_goal_sprite
 }
 
 //地図の全体像を見せる
-fn show_whole_map
+pub fn show_whole_map
 (	mut q: Query<&mut Visible>,
-	maze: Res<GameStage>,
+	maze: ResMut<GameStage>,
 )
 {	for ary in maze.map.iter()
 	{	for obj in ary.iter()
 		{	match obj
 			{	MapObj::Wall( Some( id ) ) => q.get_component_mut::<Visible>( *id ).unwrap().is_visible = true,
 				MapObj::Dot1( Some( id ) ) => q.get_component_mut::<Visible>( *id ).unwrap().is_visible = true,
+				_ => {}
+			}
+		}
+	}
+}
+
+//地図のまだオープンになっていないマスを隠す
+pub fn hide_whole_map
+(	mut q: Query<&mut Visible>,
+	maze: ResMut<GameStage>,
+)
+{	for ( x, ary ) in maze.map.iter().enumerate()
+	{	for ( y, obj ) in ary.iter().enumerate()
+		{	if maze.stat[ x ][ y ] & BIT1_IS_VISIBLE != BIT1_HIDE { continue }
+			match obj
+			{	MapObj::Wall( Some( id ) ) => q.get_component_mut::<Visible>( *id ).unwrap().is_visible = false,
+				MapObj::Dot1( Some( id ) ) => q.get_component_mut::<Visible>( *id ).unwrap().is_visible = false,
 				_ => {}
 			}
 		}
@@ -310,6 +338,7 @@ use find_and_destroy_digable_walls::*;
 fn sprite_dot
 (	( x, y ): ( f32, f32 ),
 	color_matl: &mut ResMut<Assets<ColorMaterial>>,
+	darkmode: bool,
 ) -> SpriteBundle
 //) -> ShapeBundle
 // {	GeometryBuilder::build_as
@@ -323,7 +352,7 @@ fn sprite_dot
 	{	material : color_matl.add( DOT_COLOR.into() ),
 		transform: Transform::from_translation( Vec3::new( x, y, SPRITE_DEPTH_MAZE ) ),
 		sprite   : Sprite::new( Vec2::new( DOT_RAIDUS, DOT_RAIDUS ) * 2.0 ),
-		visible  : Visible { is_visible: false, ..Default::default() },
+		visible  : Visible { is_visible: ! darkmode, ..Default::default() },
 		..Default::default()
 	}
 }
@@ -346,12 +375,13 @@ fn sprite_wall
 (	( x, y ): ( f32, f32 ),
 	color_matl: &mut ResMut<Assets<ColorMaterial>>,
 	asset_svr: &Res<AssetServer>,
+	darkmode: bool,
 ) -> SpriteBundle
 {	SpriteBundle
 	{	material : color_matl.add( asset_svr.load( WALL_SPRITE_FILE ).into() ),
 		transform: Transform::from_translation( Vec3::new( x, y, SPRITE_DEPTH_MAZE ) ),
 		sprite   : Sprite::new( Vec2::new( WALL_PIXEL, WALL_PIXEL ) ),
-		visible  : Visible { is_visible: false, ..Default::default() },
+		visible  : Visible { is_visible: ! darkmode, ..Default::default() },
 		..Default::default()
 	}
 }

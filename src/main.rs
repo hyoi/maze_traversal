@@ -203,12 +203,28 @@ fn conv_sprite_coordinates( x: i32, y: i32 ) -> ( f32, f32 )
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //ステージ数とスコアの表示
-fn egui_window( egui: Res<EguiContext>, stage: Res<GameStage>, record: Res<GameRecord> )
-{	egui::Window::new( APP_TITLE ).show
+fn egui_window
+(	egui: Res<EguiContext>,
+	mut maze: ResMut<GameStage>,
+	record: Res<GameRecord>,
+	q: Query<&mut Visible>,
+)
+{	let tmp = maze.is_darkmode;
+
+	egui::Window::new( "Console" ).show
 	(	egui.ctx(), |ui|
-		{	ui.label( format!( "Stage: {}\nScore: {}", stage.level, record.score ) );
+		{	let label = format!( "Stage: {}\nScore: {}", maze.level, record.score );
+			ui.label( label );
+			ui.checkbox( &mut maze.is_darkmode, "Dark mode" );
 		}
 	);
+
+	if tmp != maze.is_darkmode
+	{	match maze.is_darkmode
+		{	true  => hide_whole_map( q, maze ),
+			false => show_whole_map( q, maze ),
+		}
+	}
 }
 
 //End of code.

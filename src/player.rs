@@ -133,7 +133,7 @@ fn move_sprite_player
 		}
 
 		//ドット獲得判定
-		if let MapObj::Dot1( opt_dot ) = maze.map[ map_x as usize ][ map_y as usize ]
+		if let MapObj::Dot1( opt_dot ) | MapObj::Goal( opt_dot ) = maze.map[ map_x as usize ][ map_y as usize ]
 		{	cmds.entity( opt_dot.unwrap() ).despawn();
 			maze.map[ map_x as usize ][ map_y as usize ] = MapObj::Space;
 			record.score += 1;
