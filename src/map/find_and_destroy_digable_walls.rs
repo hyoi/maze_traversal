@@ -8,8 +8,8 @@ pub fn find_and_destroy_digable_walls( maze: &mut GameStage )
 		digable_walls.clear();
 		for ( x, ary ) in maze.map.iter().enumerate()	//xはusize
 		{	for ( y, _obj ) in ary.iter().enumerate()	//yはusize
-			{	if ! DIGABLE_X.contains( &( x as i32 ) )
-				|| ! DIGABLE_Y.contains( &( y as i32 ) )
+			{	if ! MAP_DIGABLE_X.contains( &( x as i32 ) )
+				|| ! MAP_DIGABLE_Y.contains( &( y as i32 ) )
 				|| ! matches!( maze.map[ x ][ y ], MapObj::Wall(_) ) { continue }
 
 				//条件を満たす壁を記録する

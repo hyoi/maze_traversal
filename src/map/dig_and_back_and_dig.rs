@@ -18,8 +18,8 @@ pub fn dig_and_back_and_dig( maze: &mut GameStage )
 			let tmp_xy = ( tmp_x, tmp_y ); 
 
 			//外壁は掘れない
-			if ! DIGABLE_X.contains( &tmp_x )
-			|| ! DIGABLE_Y.contains( &tmp_y ) { continue }
+			if ! MAP_DIGABLE_X.contains( &tmp_x )
+			|| ! MAP_DIGABLE_Y.contains( &tmp_y ) { continue }
 	
 			//上下左右の座標のオブジェクトを調べる
 			match maze.map[ tmp_x as usize ][ tmp_y as usize ]

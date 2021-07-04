@@ -15,8 +15,8 @@ pub fn dig_and_dig_and_dig( maze: &mut GameStage )
 		if tmp_y == 0 { break }
 
 		//掘れないならループ先頭に戻る
-		if ! DIGABLE_X.contains( &tmp_x )
-		|| ! DIGABLE_Y.contains( &tmp_y )
+		if ! MAP_DIGABLE_X.contains( &tmp_x )
+		|| ! MAP_DIGABLE_Y.contains( &tmp_y )
 		|| ! is_dig_or_not( maze, tmp_x, tmp_y ) { continue }
 
 		//一歩進む

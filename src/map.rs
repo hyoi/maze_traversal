@@ -52,10 +52,12 @@ impl Plugin for PluginMap
 pub const MAP_WIDTH : i32 = 66;
 pub const MAP_HEIGHT: i32 = 37;
 
-//マップの座標で、掘削可能な終端（最外壁は掘れない）
+//MAPのレンジ
 use std::ops::RangeInclusive;
-const DIGABLE_X: RangeInclusive<i32> = 1..= MAP_WIDTH  - 2;
-const DIGABLE_Y: RangeInclusive<i32> = 1..= MAP_HEIGHT - 2;
+const MAP_INDEX_X  : RangeInclusive<i32> = 0..= MAP_WIDTH  - 1;	//MAP配列の添え字のレンジ
+const MAP_INDEX_Y  : RangeInclusive<i32> = 0..= MAP_HEIGHT - 1;	//MAP配列の添え字のレンジ
+const MAP_DIGABLE_X: RangeInclusive<i32> = 1..= MAP_WIDTH  - 2;	//掘削可能なレンジ（最外壁は掘れない）
+const MAP_DIGABLE_Y: RangeInclusive<i32> = 1..= MAP_HEIGHT - 2;	//掘削可能なレンジ（最外壁は掘れない）
 
 //MAPのマスの種類
 #[derive(Copy,Clone,PartialEq)]
@@ -103,8 +105,8 @@ impl Default for GameStage
 impl GameStage
 {	pub fn enclosure( &self, x: i32, y: i32 ) -> Encloser
 	{	let get_map_obj = | x, y |
-		{	if ! ( 0..MAP_WIDTH  ).contains( &x ) 
-			|| ! ( 0..MAP_HEIGHT ).contains( &y ) { return MapObj::Wall( None ) }
+		{	if ! MAP_INDEX_X.contains( &x ) 
+			|| ! MAP_INDEX_Y.contains( &y ) { return MapObj::Wall( None ) }
 
 			self.map[ x as usize ][ y as usize ]
 		};
@@ -123,8 +125,8 @@ impl GameStage
 
 	pub fn show_enclosure( &mut self, x: i32, y: i32, mut q: Query<&mut Visible> )
 	{	let mut show_map_obj = | x, y, q: &mut Query<&mut Visible> |
-		{	if ! ( 0..MAP_WIDTH  ).contains( &x )
-			|| ! ( 0..MAP_HEIGHT ).contains( &y ) { return }
+		{	if ! MAP_INDEX_X.contains( &x )
+			|| ! MAP_INDEX_Y.contains( &y ) { return }
 
 			self.stat[ x as usize ][ y as usize ] |= BIT1_SHOW;
 			match self.map[ x as usize ][ y as usize ]
@@ -199,7 +201,7 @@ fn spawn_sprite_new_map
 	maze.level += 1;
 
 	//入口を掘る
-	let x = maze.rng.gen_range( DIGABLE_X );
+	let x = maze.rng.gen_range( MAP_DIGABLE_X );
 	maze.map[ x as usize ][ ( MAP_HEIGHT - 2 ) as usize ] = MapObj::Dot1( None );
 	maze.map[ x as usize ][ ( MAP_HEIGHT - 1 ) as usize ] = MapObj::Dot2( None ); //入口は行き止まり扱い
 	maze.start_xy = ( x, MAP_HEIGHT - 1 );
@@ -215,7 +217,7 @@ fn spawn_sprite_new_map
 	//出口を掘れる場所を探し、乱数で決める
 	let mut exit_x = Vec::new();
 	for ( x, ary ) in maze.map.iter().enumerate() //enumerate()が生成するxの型はusize
-	{	if DIGABLE_X.contains( &( x as i32 ) )
+	{	if MAP_DIGABLE_X.contains( &( x as i32 ) )
 		&& ! matches!( ary[ 1 ], MapObj::Wall(_) ) { exit_x.push( x ) }
 	}
 	let x = exit_x[ maze.rng.gen_range( 0..exit_x.len() ) ];
