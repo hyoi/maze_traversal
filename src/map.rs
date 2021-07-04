@@ -1,5 +1,18 @@
 use super::*;
 
+//internal modules
+mod util;
+pub use util::*;
+
+mod dig_and_dig_and_dig;
+use dig_and_dig_and_dig::*;				//迷路作成関数
+mod dig_and_back_and_dig;
+use dig_and_back_and_dig::*;			//迷路作成関数
+mod find_and_destroy_digable_walls;
+use find_and_destroy_digable_walls::*;	//迷路作成関数
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 //Pluginの手続き
 pub struct PluginMap;
 impl Plugin for PluginMap
@@ -36,8 +49,8 @@ impl Plugin for PluginMap
 //定義と定数
 
 //迷路の縦横のマス数
-pub const MAP_WIDTH : i32 = 30;
-pub const MAP_HEIGHT: i32 = 35;
+pub const MAP_WIDTH : i32 = 66;
+pub const MAP_HEIGHT: i32 = 37;
 
 //マップの座標で、掘削可能な終端（最外壁は掘れない）
 use std::ops::RangeInclusive;
@@ -319,18 +332,6 @@ fn despawn_sprite_map( maze: Res<GameStage>, mut cmds: Commands )
 		}
 	}
 }
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-//迷路作成関数（internal modules）
-mod dig_and_dig_and_dig;
-use dig_and_dig_and_dig::*;
-
-mod dig_and_back_and_dig;
-use dig_and_back_and_dig::*;
-
-mod find_and_destroy_digable_walls;
-use find_and_destroy_digable_walls::*;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
