@@ -1,7 +1,7 @@
 use super::*;
 
 //一型迷路：ランダムに掘り進み、壊すと合流する壁は、確率で破壊する
-pub fn dig_and_dig_and_dig( maze: &mut GameStage )
+pub fn dig_and_dig_and_dig( maze: &mut GameMap )
 {	let mut map_xy = maze.start_xy;
 	map_xy.1 -= 1; //maze.start_xyの直上(y-1)がトンネル掘りの開始座標
 
@@ -26,7 +26,7 @@ pub fn dig_and_dig_and_dig( maze: &mut GameStage )
 }
 
 //さいころを振って、進むか(true)、やり直すか(false)決める
-fn is_dig_or_not( maze: &mut GameStage, x: i32, y: i32 ) -> bool
+fn is_dig_or_not( maze: &mut GameMap, x: i32, y: i32 ) -> bool
 {	//そもそも壁じゃないならtrue
 	if ! matches!( maze.map[ x as usize ][ y as usize ], MapObj::Wall(_) ) { return true }
 

@@ -1,7 +1,7 @@
 use super::*;
 
 //二型迷路：ランダムに掘り進み、行き止まりは後戻りして掘れる場所を探す。掘り尽くすまで掘りまくる
-pub fn dig_and_back_and_dig( maze: &mut GameStage )
+pub fn dig_and_back_and_dig( maze: &mut GameMap )
 {	let mut map_xy = maze.start_xy;
 	map_xy.1 -= 1; //maze.start_xyの直上(y-1)がトンネル掘りの開始座標
 
@@ -51,7 +51,7 @@ pub fn dig_and_back_and_dig( maze: &mut GameStage )
 } 
 
 //進行方向の壁が掘れるか調べる
-fn is_digable_wall( maze: &GameStage, ( x, y ): ( i32, i32 ), direction: ( i32, i32 ) ) -> bool
+fn is_digable_wall( maze: &GameMap, ( x, y ): ( i32, i32 ), direction: ( i32, i32 ) ) -> bool
 {	let objs = maze.enclosure( x, y );
 	match direction
 	{	UP    if matches!( objs.upper_left  , MapObj::Wall(_) )

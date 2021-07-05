@@ -19,7 +19,7 @@ impl Plugin for PluginMap
 {	fn build( &self, app: &mut AppBuilder )
 	{	app
 		//------------------------------------------------------------------------------------------
-		.init_resource::<GameStage>()							// MAP情報のResource
+		.init_resource::<GameMap>()							// MAP情報のResource
 		//------------------------------------------------------------------------------------------
 		.add_system_set											// GameState::Start
 		(	SystemSet::on_enter( GameState::Start )				// on_enter()
@@ -52,13 +52,6 @@ impl Plugin for PluginMap
 pub const MAP_WIDTH : i32 = 66;
 pub const MAP_HEIGHT: i32 = 37;
 
-//MAPのレンジ
-use std::ops::RangeInclusive;
-const MAP_INDEX_X  : RangeInclusive<i32> = 0..= MAP_WIDTH  - 1;	//MAP配列の添え字のレンジ
-const MAP_INDEX_Y  : RangeInclusive<i32> = 0..= MAP_HEIGHT - 1;	//MAP配列の添え字のレンジ
-const MAP_DIGABLE_X: RangeInclusive<i32> = 1..= MAP_WIDTH  - 2;	//掘削可能なレンジ（最外壁は掘れない）
-const MAP_DIGABLE_Y: RangeInclusive<i32> = 1..= MAP_HEIGHT - 2;	//掘削可能なレンジ（最外壁は掘れない）
-
 //MAPのマスの種類
 #[derive(Copy,Clone,PartialEq)]
 pub enum MapObj
@@ -77,7 +70,7 @@ const BIT1_SHOW      : usize = 0b1;
 const BIT1_HIDE      : usize = 0b0;
 
 //MAP情報のResource
-pub struct GameStage
+pub struct GameMap
 {	pub rng: rand::prelude::StdRng,	//再現性がある乱数を使いたいので
 	pub level: usize,
 	pub map : [ [ MapObj; MAP_HEIGHT as usize ]; MAP_WIDTH as usize ],
@@ -87,11 +80,11 @@ pub struct GameStage
 	pub count_dots: usize,
 	pub is_darkmode: bool,
 }
-impl Default for GameStage
+impl Default for GameMap
 {	fn default() -> Self
 	{	Self
-		{	rng: StdRng::seed_from_u64( rand::thread_rng().gen::<u64>() ),	//本番用
-		//	rng: StdRng::seed_from_u64( 1234567890 ),	//開発用：再現性がある乱数を使いたい場合
+		{//	rng: StdRng::seed_from_u64( rand::thread_rng().gen::<u64>() ),	//本番用
+			rng: StdRng::seed_from_u64( 1234567890 ),	//開発用：再現性がある乱数を使いたい場合
 			level: 0,
 			map : [ [ MapObj::None ; MAP_HEIGHT as usize ]; MAP_WIDTH as usize ],
 			stat: [ [ BIT_ALL_CLEAR; MAP_HEIGHT as usize ]; MAP_WIDTH as usize ],
@@ -101,67 +94,6 @@ impl Default for GameStage
 			is_darkmode: true,
 		}
 	}
-}
-impl GameStage
-{	pub fn enclosure( &self, x: i32, y: i32 ) -> Encloser
-	{	let get_map_obj = | x, y |
-		{	if ! MAP_INDEX_X.contains( &x ) 
-			|| ! MAP_INDEX_Y.contains( &y ) { return MapObj::Wall( None ) }
-
-			self.map[ x as usize ][ y as usize ]
-		};
-	
-		Encloser
-		{	upper_left  : get_map_obj( x - 1, y - 1 ),
-			upper_center: get_map_obj( x    , y - 1 ),
-			upper_right : get_map_obj( x + 1, y - 1 ),
-			middle_left : get_map_obj( x - 1, y     ),
-			middle_right: get_map_obj( x + 1, y     ),
-			lower_left  : get_map_obj( x - 1, y + 1 ),
-			lower_center: get_map_obj( x    , y + 1 ),
-			lower_right : get_map_obj( x + 1, y + 1 ),
-		}
-	}
-
-	pub fn show_enclosure( &mut self, x: i32, y: i32, mut q: Query<&mut Visible> )
-	{	let mut show_map_obj = | x, y, q: &mut Query<&mut Visible> |
-		{	if ! MAP_INDEX_X.contains( &x )
-			|| ! MAP_INDEX_Y.contains( &y ) { return }
-
-			self.stat[ x as usize ][ y as usize ] |= BIT1_SHOW;
-			match self.map[ x as usize ][ y as usize ]
-			{	MapObj::Wall( Some( id ) ) => q.get_component_mut::<Visible>( id ).unwrap().is_visible = true,
-				MapObj::Dot1( Some( id ) ) => q.get_component_mut::<Visible>( id ).unwrap().is_visible = true,
-				_ => {}
-			};
-		};
-	
-		show_map_obj( x - 1, y - 1, &mut q );
-		show_map_obj( x    , y - 1, &mut q );
-		show_map_obj( x + 1, y - 1, &mut q );
-		show_map_obj( x - 1, y    , &mut q );
-		show_map_obj( x    , y    , &mut q );
-		show_map_obj( x + 1, y    , &mut q );
-		show_map_obj( x - 1, y + 1, &mut q );
-		show_map_obj( x    , y + 1, &mut q );
-		show_map_obj( x + 1, y + 1, &mut q );
-//		show_map_obj( x    , y - 2, &mut q );
-//		show_map_obj( x - 2, y    , &mut q );
-//		show_map_obj( x + 2, y    , &mut q );
-//		show_map_obj( x    , y + 2, &mut q );
-	}
-}
-
-//周囲８マスをまとめて格納する型
-pub struct Encloser
-{	pub upper_left  : MapObj,
-	pub upper_center: MapObj,
-	pub upper_right : MapObj,
-	pub middle_left : MapObj,
-	pub middle_right: MapObj,
-	pub lower_left  : MapObj,
-	pub lower_center: MapObj,
-	pub lower_right : MapObj,
 }
 
 //マップ座標の上下左右を表す定数
@@ -188,7 +120,7 @@ const GOAL_COLOR: Color = Color::YELLOW;
 
 //新しい迷路を作り表示して、Playへ遷移する
 fn spawn_sprite_new_map
-(	mut maze: ResMut<GameStage>,
+(	mut maze: ResMut<GameMap>,
 	mut state : ResMut<State<GameState>>,
 	mut cmds: Commands,
 	mut color_matl: ResMut<Assets<ColorMaterial>>,
@@ -292,7 +224,7 @@ fn animate_goal_sprite
 //地図の全体像を見せる
 pub fn show_whole_map
 (	mut q: Query<&mut Visible>,
-	maze: ResMut<GameStage>,
+	maze: ResMut<GameMap>,
 )
 {	for ary in maze.map.iter()
 	{	for obj in ary.iter()
@@ -308,7 +240,7 @@ pub fn show_whole_map
 //地図のまだオープンになっていないマスを隠す
 pub fn hide_whole_map
 (	mut q: Query<&mut Visible>,
-	maze: ResMut<GameStage>,
+	maze: ResMut<GameMap>,
 )
 {	for ( x, ary ) in maze.map.iter().enumerate()
 	{	for ( y, obj ) in ary.iter().enumerate()
@@ -323,7 +255,7 @@ pub fn hide_whole_map
 }
 
 //スプライトを削除する
-fn despawn_sprite_map( maze: Res<GameStage>, mut cmds: Commands )
+fn despawn_sprite_map( maze: Res<GameMap>, mut cmds: Commands )
 {	for ary in maze.map.iter()
 	{	for obj in ary.iter()
 		{	match obj

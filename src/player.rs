@@ -62,7 +62,7 @@ const PLAYER_COLOR: Color = Color::YELLOW;
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //自機のスプライトを初期位置に配置する
-fn spawn_sprite_player( maze: Res<GameStage>, mut cmds: Commands )
+fn spawn_sprite_player( maze: Res<GameMap>, mut cmds: Commands )
 {	let ( map_x, map_y ) = maze.start_xy;
 	let ( sprite_x, sprite_y ) = conv_sprite_coordinates( map_x, map_y );
 
@@ -84,7 +84,7 @@ fn spawn_sprite_player( maze: Res<GameStage>, mut cmds: Commands )
 fn move_sprite_player
 (	mut q: Query<( &mut Player, &mut Transform )>,
 	q_visible: Query<&mut Visible>,
-	( mut maze, mut record ): ( ResMut<GameStage>, ResMut<GameRecord> ),
+	( mut maze, mut record ): ( ResMut<GameMap>, ResMut<GameRecord> ),
 	mut state : ResMut<State<GameState>>,
 	mut cmds: Commands,
 	( time, inkey ): ( Res<Time>, Res<Input<KeyCode>> ),
@@ -179,7 +179,7 @@ fn move_sprite_player
 		player.map_location = ( map_x, map_y );
 
 		//Dark Modeでプレイヤーの周囲を視覚化する
-		maze.show_enclosure( map_x, map_y, q_visible );
+		maze.make_enclosure_visible( map_x, map_y, q_visible );
 
 		//ウェイトをリセットする
 		player.wait.reset();

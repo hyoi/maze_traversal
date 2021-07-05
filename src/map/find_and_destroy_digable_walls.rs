@@ -1,7 +1,7 @@
 use super::*;
 
 //三型迷路：マップを全面走査して、壊すと道を拡張できる壁を探し、壊し尽くすまで壊しまくる
-pub fn find_and_destroy_digable_walls( maze: &mut GameStage )
+pub fn find_and_destroy_digable_walls( maze: &mut GameMap )
 {	let mut digable_walls = Vec::new();
 	loop
 	{	//マップを全面走査して拡張条件を満たす壁を探す
@@ -27,7 +27,7 @@ pub fn find_and_destroy_digable_walls( maze: &mut GameStage )
 }
 
 //迷路拡張条件を満たす壁か？
-fn is_maze_expandable( maze: &GameStage, x:usize, y:usize ) -> bool
+fn is_maze_expandable( maze: &GameMap, x:usize, y:usize ) -> bool
 {	let objs = maze.enclosure( x as i32, y as i32 );
 
 	//下向き凸の削り許可

@@ -196,7 +196,7 @@ fn handle_esc_key_for_pause
 //ステージ数とスコアの表示
 fn egui_window
 (	egui: Res<EguiContext>,
-	mut maze: ResMut<GameStage>,
+	mut maze: ResMut<GameMap>,
 	record: Res<GameRecord>,
 	q: Query<&mut Visible>,
 )
