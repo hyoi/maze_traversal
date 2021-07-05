@@ -15,19 +15,17 @@ pub fn dig_and_back_and_dig( maze: &mut GameMap )
 		for ( dx, dy ) in DIRECTION.iter()
 		{	let tmp_x = map_xy.0 + dx;
 			let tmp_y = map_xy.1 + dy;
-			let tmp_xy = ( tmp_x, tmp_y ); 
 
 			//外壁は掘れない
-			if ! MAP_DIGABLE_X.contains( &tmp_x )
-			|| ! MAP_DIGABLE_Y.contains( &tmp_y ) { continue }
+			if ! MAP_DIGABLE_X.contains( &tmp_x ) || ! MAP_DIGABLE_Y.contains( &tmp_y ) { continue }
 	
 			//上下左右の座標のオブジェクトを調べる
+			let tmp_xy = ( tmp_x, tmp_y );
+			let direct = ( *dx, *dy );
 			match maze.map[ tmp_x as usize ][ tmp_y as usize ]
-			{	MapObj::Dot1(_)
-					=> backtrack = tmp_xy,
-				MapObj::Wall(_) if is_digable_wall( maze, tmp_xy, ( *dx, *dy ) )
-					=> digable_walls.push( tmp_xy ),
-				_	=> {}
+			{	MapObj::Dot1(_) => backtrack = tmp_xy,
+				MapObj::Wall(_) if is_digable_wall( maze, tmp_xy, direct ) => digable_walls.push( tmp_xy ),
+				_ => {}
 			}
 		}
 

@@ -4,16 +4,14 @@ use super::*;
 pub fn find_and_destroy_digable_walls( maze: &mut GameMap )
 {	let mut digable_walls = Vec::new();
 	loop
-	{	//マップを全面走査して拡張条件を満たす壁を探す
+	{	//マップを全面走査して拡張条件を満たす壁を記録する
 		digable_walls.clear();
-		for ( x, ary ) in maze.map.iter().enumerate()	//xはusize
-		{	for ( y, _obj ) in ary.iter().enumerate()	//yはusize
-			{	if ! MAP_DIGABLE_X.contains( &( x as i32 ) )
-				|| ! MAP_DIGABLE_Y.contains( &( y as i32 ) )
-				|| ! matches!( maze.map[ x ][ y ], MapObj::Wall(_) ) { continue }
-
-				//条件を満たす壁を記録する
-				if is_maze_expandable( maze, x, y ) { digable_walls.push( ( x, y ) ) }
+		for ( x, ary ) in maze.map.iter().enumerate()
+		{	for ( y, _obj ) in ary.iter().enumerate()
+			{	if MAP_DIGABLE_X.contains( &( x as i32 ) )
+				&& MAP_DIGABLE_Y.contains( &( y as i32 ) )
+				&& matches!( maze.map[ x ][ y ], MapObj::Wall(_) )
+				&& is_maze_expandable( maze, x, y ) { digable_walls.push( ( x, y ) ) }
 			}
 		}
 

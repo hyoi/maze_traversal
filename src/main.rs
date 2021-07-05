@@ -22,7 +22,7 @@ const APP_TITLE: &str = "maze traversal";
 const SCREEN_SCALING: usize = 3;
 const PIXEL_PER_GRID: f32   = ( 8 * SCREEN_SCALING ) as f32;
 const SCREEN_WIDTH  : f32   = PIXEL_PER_GRID * MAP_WIDTH  as f32;
-const SCREEN_HEIGHT : f32   = PIXEL_PER_GRID * MAP_HEIGHT as f32;
+const SCREEN_HEIGHT : f32   = PIXEL_PER_GRID * ( MAP_HEIGHT as f32 + 1.0 );
 const SCREEN_BGCOLOR: Color = Color::rgb_linear( 0.025, 0.025, 0.04 );
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

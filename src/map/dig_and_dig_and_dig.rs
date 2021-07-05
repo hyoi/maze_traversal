@@ -14,14 +14,13 @@ pub fn dig_and_dig_and_dig( maze: &mut GameMap )
 		//上端に達したら迷路完成
 		if tmp_y == 0 { break }
 
-		//掘れないならループ先頭に戻る
-		if ! MAP_DIGABLE_X.contains( &tmp_x )
-		|| ! MAP_DIGABLE_Y.contains( &tmp_y )
-		|| ! is_dig_or_not( maze, tmp_x, tmp_y ) { continue }
-
-		//一歩進む
-		maze.map[ tmp_x as usize ][ tmp_y as usize ] = MapObj::Dot1( None );
-		map_xy = ( tmp_x, tmp_y );
+		//掘れるなら一歩進む
+		if MAP_DIGABLE_X.contains( &tmp_x )
+		&& MAP_DIGABLE_Y.contains( &tmp_y )
+		&& is_dig_or_not( maze, tmp_x, tmp_y )
+		{	maze.map[ tmp_x as usize ][ tmp_y as usize ] = MapObj::Dot1( None );
+			map_xy = ( tmp_x, tmp_y );
+		}
 	}
 }
 

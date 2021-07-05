@@ -50,7 +50,7 @@ impl Plugin for PluginMap
 
 //迷路の縦横のマス数
 pub const MAP_WIDTH : i32 = 66;
-pub const MAP_HEIGHT: i32 = 37;
+pub const MAP_HEIGHT: i32 = 36;
 
 //MAPのマスの種類
 #[derive(Copy,Clone,PartialEq)]
@@ -126,9 +126,9 @@ fn spawn_sprite_new_map
 	mut color_matl: ResMut<Assets<ColorMaterial>>,
 	asset_svr: Res<AssetServer>,
 )
-{	//mapを初期化する
-	maze.map .iter_mut().for_each( | x | ( *x ).fill( MapObj::Wall( None ) ) );
-	maze.stat.iter_mut().for_each( | x | ( *x ).fill( BIT_ALL_CLEAR        ) );
+{	//map配列を初期化する
+	maze.map .iter_mut().for_each( | x | x.fill( MapObj::Wall( None ) ) );
+	maze.stat.iter_mut().for_each( | x | x.fill( BIT_ALL_CLEAR        ) );
 	maze.count_dots = 0;
 	maze.level += 1;
 
