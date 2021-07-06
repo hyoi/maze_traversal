@@ -8,7 +8,6 @@ use rand::prelude::*;
 mod ui;
 mod map;
 mod player;
-
 use ui::*;
 use map::*;
 use player::*;
@@ -105,8 +104,9 @@ fn main()
 pub struct GameRecord { pub score: usize }
 
 //Assetsのプリロードとハンドルの保存
-const PRELOAD_ASSET_FILES: [ &str; 2 ] =
-[	CENTER_TEXT_FONT,	//定義はui.rs
+const PRELOAD_ASSET_FILES: [ &str; 3 ] =
+[	FONT_MESSAGE_TEXT,	//定義はui.rs
+	FONT_TITLE_TEXT, 	//定義はui.rs
 	WALL_SPRITE_FILE,	//定義はmap.rs
 ];
 struct LoadedAssets { preload: Vec<HandleUntyped> }
