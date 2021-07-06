@@ -64,7 +64,7 @@ const UI_UPPER_LEFT: [ MessageSect; 2 ] =
 struct UiUpperRight;
 const UI_UPPER_RIGHT: [ MessageSect; 2 ] =
 [	( APP_TITLE, FONT_TITLE_TEXT, PIXEL_PER_GRID * 1.3, Color::ORANGE ),
-	( "迷図踏破", FONT_TITLE_TEXT, PIXEL_PER_GRID * 1.6, Color::WHITE  ),
+	( "迷路踏破", FONT_TITLE_TEXT, PIXEL_PER_GRID * 1.6, Color::WHITE  ),
 ];
 
 //Countdown Timer

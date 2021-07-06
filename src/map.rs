@@ -11,6 +11,9 @@ use dig_and_back_and_dig::*;			//迷路作成関数
 mod find_and_destroy_digable_walls;
 use find_and_destroy_digable_walls::*;	//迷路作成関数
 
+mod find_passageway;
+use find_passageway::*;
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //Pluginの手続き
@@ -64,10 +67,13 @@ pub enum MapObj
 }
 
 //MAPのマスの状態の制御に使うbit
-const BIT_ALL_CLEAR  : usize = 0b0;
-const BIT1_IS_VISIBLE: usize = 0b1;
-const BIT1_SHOW      : usize = 0b1;
-const BIT1_HIDE      : usize = 0b0;
+const BIT_ALL_CLEAR  : usize = 0b00;
+
+const BIT1_IS_VISIBLE: usize = 0b01;
+const BIT1_SHOW      : usize = 0b01;
+const BIT1_HIDE      : usize = 0b00;
+
+const BIT2_PASSAGEWAY: usize = 0b10;
 
 //MAP情報のResource
 pub struct GameMap
@@ -104,7 +110,8 @@ const DOWN     :   ( i32, i32 )      = (  0,  1 );
 const DIRECTION: [ ( i32, i32 ); 4 ] = [ UP, LEFT, RIGHT, DOWN ];
 
 //Sprite
-const SPRITE_DEPTH_MAZE: f32 = 10.0;
+const SPRITE_DEPTH_MAZE   : f32 = 10.0;
+const SPRITE_DEPTH_SYSTILE: f32 =  5.0;
 
 const WALL_PIXEL: f32 = PIXEL_PER_GRID;
 pub const WALL_SPRITE_FILE: &str = "sprites/wall.png";
@@ -115,6 +122,10 @@ const DOT_COLOR: Color = Color::WHITE;
 struct GoalSprite;
 const GOAL_PIXEL: f32 = PIXEL_PER_GRID / 2.0;
 const GOAL_COLOR: Color = Color::YELLOW;
+
+struct SysTileSprite;
+const SYSTILE_PIXEL: f32 = PIXEL_PER_GRID;
+const SYSTILE_COLOR: Color = Color::DARK_GRAY;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -155,6 +166,19 @@ fn spawn_sprite_new_map
 	let x = exit_x[ maze.rng.gen_range( 0..exit_x.len() ) ];
 	maze.map[ x ][ 0 ] = MapObj::Goal( None );
 	maze.goal_xy = ( x as i32, 0 );
+
+	//迷路の構造解析
+	find_passageway( &mut maze );
+	for x in MAP_DIGABLE_X
+	{	for y in MAP_DIGABLE_Y
+		{	if maze.stat[ x as usize ][ y as usize ] & BIT2_PASSAGEWAY != 0
+			{	let xy = conv_sprite_coordinates( x, y );
+				cmds.spawn_bundle( sprite_system_tile( xy, &mut color_matl ) )
+					.insert( SysTileSprite );
+			}
+		}
+
+	}
 
 	//スプライトをspawnしてEntity IDを記録する
 	let mut count = 0;
@@ -255,7 +279,11 @@ pub fn hide_whole_map
 }
 
 //スプライトを削除する
-fn despawn_sprite_map( maze: Res<GameMap>, mut cmds: Commands )
+fn despawn_sprite_map
+(	maze: Res<GameMap>,
+	mut cmds: Commands,
+	q: Query<Entity, With<SysTileSprite>>,
+)
 {	for ary in maze.map.iter()
 	{	for obj in ary.iter()
 		{	match obj
@@ -265,6 +293,7 @@ fn despawn_sprite_map( maze: Res<GameMap>, mut cmds: Commands )
 			}
 		}
 	}
+	q.for_each( | id | cmds.entity( id ).despawn() );
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -317,6 +346,20 @@ fn sprite_wall
 		transform: Transform::from_translation( Vec3::new( x, y, SPRITE_DEPTH_MAZE ) ),
 		sprite   : Sprite::new( Vec2::new( WALL_PIXEL, WALL_PIXEL ) ),
 		visible  : Visible { is_visible: ! darkmode, ..Default::default() },
+		..Default::default()
+	}
+}
+
+fn sprite_system_tile
+(	( x, y ): ( f32, f32 ),
+	color_matl: &mut ResMut<Assets<ColorMaterial>>,
+//	darkmode: bool,
+) -> SpriteBundle
+{	SpriteBundle
+	{	material : color_matl.add( SYSTILE_COLOR.into() ),
+		transform: Transform::from_translation( Vec3::new( x, y, SPRITE_DEPTH_SYSTILE ) ),
+		sprite   : Sprite::new( Vec2::new( SYSTILE_PIXEL, SYSTILE_PIXEL ) ),
+//		visible  : Visible { is_visible: ! darkmode, ..Default::default() },
 		..Default::default()
 	}
 }
