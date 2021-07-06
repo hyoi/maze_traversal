@@ -29,5 +29,7 @@ cargo make --profile release serve
   - [Unofficial Bevy Cheat Book](https://bevy-cheatbook.github.io/)
 - [Google Fonts](https://fonts.google.com/)
   - [Orbitron](https://fonts.google.com/specimen/Orbitron)
+  - [Reggae One](https://fonts.google.com/specimen/Reggae+One?subset=japanese)
+
 ## 宿題
 - 宝箱とかコボルトとか、配置したらRPGにできそう…
