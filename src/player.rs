@@ -152,25 +152,24 @@ fn move_sprite_player
 		let key_down  = inkey.pressed( KeyCode::Down  );
 
 		//カーソルキーの入力により自機の向きを変える
-		let objs = maze.enclosure( map_x, map_y );
 		if key_left
 		{	player.new_direction = Direction::Left;
-			player.stop = matches!( objs.middle_left, MapObj::Wall(_) );
+			player.stop = maze.is_wall_middle_left( map_x, map_y );
 			if ! player.stop { map_x -= 1 }
 		}
 		else if key_right
 		{	player.new_direction = Direction::Right;
-			player.stop = matches!( objs.middle_right, MapObj::Wall(_) );
+			player.stop = maze.is_wall_middle_right( map_x, map_y );
 			if ! player.stop { map_x += 1 }
 		}
 		else if key_up
 		{	player.new_direction = Direction::Up;
-			player.stop = matches!( objs.upper_center, MapObj::Wall(_) );
+			player.stop = maze.is_wall_upper_center( map_x, map_y );
 			if ! player.stop { map_y -= 1 }
 		}
 		else if key_down
 		{	player.new_direction = Direction::Down;
-			player.stop = matches!( objs.lower_center, MapObj::Wall(_) );
+			player.stop = maze.is_wall_lower_center( map_x, map_y );
 			if ! player.stop { map_y += 1 }
 		}
 		else

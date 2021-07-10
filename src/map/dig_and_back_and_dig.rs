@@ -30,18 +30,19 @@ impl GameMap
 				}
 			}
 
-			//掘れる壁が見つからないなら迷路完成
-			if digable_walls.is_empty() && backtrack == ( 0, 0 ) { break }
+			//掘れる壁が見つからないか？
+			if digable_walls.is_empty()
+			{	//戻り路も見つからないなら迷路完成
+				if backtrack == ( 0, 0 ) { break }
 
-			if ! digable_walls.is_empty()
-			{	//掘削する方向をランダムに決めて、掘る
-				map_xy = digable_walls[ self.rng.gen_range( 0..digable_walls.len() ) ];
-				self.map[ map_xy.0 as usize ][ map_xy.1 as usize ] = MapObj::Dot1( None );
-			}
-			else
-			{	//掘れる壁がないので現在位置に行き止まり情報「dot2」を書き込み、後戻りする
+				//現在位置に行き止まり情報「dot2」を書き込み、後戻りする
 				self.map[ map_xy.0 as usize ][ map_xy.1 as usize ] = MapObj::Dot2( None );
 				map_xy = backtrack;
+			}
+			else
+			{	//掘れる壁が見つかったので、方向をランダムに決めて、掘る
+				map_xy = digable_walls[ self.rng.gen_range( 0..digable_walls.len() ) ];
+				self.map[ map_xy.0 as usize ][ map_xy.1 as usize ] = MapObj::Dot1( None );
 			}
 		}
 
@@ -51,32 +52,29 @@ impl GameMap
 
 	//進行方向の壁が掘れるか調べる
 	fn is_digable_wall( &self, ( x, y ): ( i32, i32 ), direction: ( i32, i32 ) ) -> bool
-	{	let objs = self.enclosure( x, y );
-		match direction
-		{	UP    if matches!( objs.upper_left  , MapObj::Wall(_) )
-				  && matches!( objs.upper_center, MapObj::Wall(_) )	// 壁壁壁
-				  && matches!( objs.upper_right , MapObj::Wall(_) )	// 壁Ｘ壁
-				  && matches!( objs.middle_left , MapObj::Wall(_) )
-				  && matches!( objs.middle_right, MapObj::Wall(_) ) => return true,
-			LEFT  if matches!( objs.upper_left  , MapObj::Wall(_) )	// 壁壁
-				  && matches!( objs.upper_center, MapObj::Wall(_) )	// 壁Ｘ
-				  && matches!( objs.middle_left , MapObj::Wall(_) )	// 壁壁
-				  && matches!( objs.lower_left  , MapObj::Wall(_) )
-				  && matches!( objs.lower_center, MapObj::Wall(_) ) => return true,
-			RIGHT if matches!( objs.upper_center, MapObj::Wall(_) )	// 壁壁
-				  && matches!( objs.upper_right , MapObj::Wall(_) )	// Ｘ壁
-				  && matches!( objs.middle_right, MapObj::Wall(_) )	// 壁壁
-				  && matches!( objs.lower_center, MapObj::Wall(_) )
-				  && matches!( objs.lower_right , MapObj::Wall(_) ) => return true,
-			DOWN  if matches!( objs.middle_left , MapObj::Wall(_) )
-				  && matches!( objs.middle_right, MapObj::Wall(_) )	// 壁Ｘ壁
-				  && matches!( objs.lower_left  , MapObj::Wall(_) )	// 壁壁壁
-				  && matches!( objs.lower_center, MapObj::Wall(_) )
-				  && matches!( objs.lower_right , MapObj::Wall(_) ) => return true,
-			_ => {}
+	{	match direction
+		{	UP    if self.is_wall_upper_left   ( x, y )
+				  && self.is_wall_upper_center ( x, y )	// 壁壁壁
+				  && self.is_wall_upper_right  ( x, y )	// 壁Ｘ壁
+				  && self.is_wall_middle_left  ( x, y )
+				  && self.is_wall_middle_right ( x, y ) => return true,
+			LEFT  if self.is_wall_upper_left   ( x, y )	// 壁壁
+				  && self.is_wall_upper_center ( x, y )	// 壁Ｘ
+				  && self.is_wall_middle_left  ( x, y )	// 壁壁
+				  && self.is_wall_lower_left   ( x, y )
+				  && self.is_wall_lower_center ( x, y ) => return true,
+			RIGHT if self.is_wall_upper_center ( x, y )	// 壁壁
+				  && self.is_wall_upper_right  ( x, y )	// Ｘ壁
+				  && self.is_wall_middle_right ( x, y )	// 壁壁
+				  && self.is_wall_lower_center ( x, y )
+				  && self.is_wall_lower_right  ( x, y ) => return true,
+			DOWN  if self.is_wall_middle_left  ( x, y )
+				  && self.is_wall_middle_right ( x, y )	// 壁Ｘ壁
+				  && self.is_wall_lower_left   ( x, y )	// 壁壁壁
+				  && self.is_wall_lower_center ( x, y )
+				  && self.is_wall_lower_right  ( x, y ) => return true,
+			_ => { false }
 		}
-
-		false
 	}
 }
 

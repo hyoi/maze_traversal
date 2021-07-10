@@ -28,17 +28,14 @@ impl GameMap
 	//さいころを振って、進むか(true)、やり直すか(false)決める
 	fn is_dig_or_not( &mut self, x: i32, y: i32 ) -> bool
 	{	//そもそも壁じゃないならtrue
-		if ! matches!( self.map[ x as usize ][ y as usize ], MapObj::Wall(_) ) { return true }
-
-		//座標の周囲のオブジェクトを取り出す
-		let objs = self.enclosure( x, y );
+		if ! self.is_wall( x, y ) { return true }
 
 		//上下左右のオブジェクトで壁ではないものを数える
 		let mut count = 0;
-		if ! matches!( objs.upper_center, MapObj::Wall(_) ) { count += 1 }
-		if ! matches!( objs.middle_left , MapObj::Wall(_) ) { count += 1 }
-		if ! matches!( objs.middle_right, MapObj::Wall(_) ) { count += 1 }
-		if ! matches!( objs.lower_center, MapObj::Wall(_) ) { count += 1 }
+		if ! self.is_wall_upper_center( x, y ) { count += 1 }
+		if ! self.is_wall_middle_left ( x, y ) { count += 1 }
+		if ! self.is_wall_middle_right( x, y ) { count += 1 }
+		if ! self.is_wall_lower_center( x, y ) { count += 1 }
 
 		//２以上なら掘ると道になるので、貫通させるか確率で決める
 		let dice = self.rng.gen_range( 0..100 );	//百面ダイスを振って‥‥

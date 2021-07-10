@@ -7,11 +7,10 @@ impl GameMap
 		loop
 		{	//マップを全面走査して拡張条件を満たす壁を記録する
 			digable_walls.clear();
-			for ( x, ary ) in self.map.iter().enumerate()
-			{	for ( y, _obj ) in ary.iter().enumerate()
-				{	if MAP_DIGABLE_X.contains( &( x as i32 ) )
-					&& MAP_DIGABLE_Y.contains( &( y as i32 ) )
-					&& matches!( self.map[ x ][ y ], MapObj::Wall(_) )
+			for ( x, ary ) in ( 0i32.. ).zip( self.map.iter() )	// i32の.enumerate()
+			{	for ( y, _obj ) in ( 0i32.. ).zip( ary.iter() )	// i32の.enumerate()
+				{	if MAP_DIGABLE_X.contains( &x )
+					&& MAP_DIGABLE_Y.contains( &y )
 					&& self.is_maze_expandable( x, y ) { digable_walls.push( ( x, y ) ) }
 				}
 			}
@@ -21,87 +20,88 @@ impl GameMap
 
 			//複数候補の中からランダムに壊す壁を決め、道にする
 			let ( x, y ) = digable_walls[ self.rng.gen_range( 0..digable_walls.len() ) ];
-			self.map[ x ][ y ] = MapObj::Dot1( None );
+			self.map[ x as usize ][ y as usize ] = MapObj::Dot1( None );
 		}
 	}
 
 	//迷路拡張条件を満たす壁か？
-	fn is_maze_expandable( &self, x:usize, y:usize ) -> bool
-	{	let objs = self.enclosure( x as i32, y as i32 );
+	fn is_maze_expandable( &self, x: i32, y: i32 ) -> bool
+	{	//そもそも壁ではないので掘れない
+		if ! self.is_wall( x, y ) { return false }
 
 		//下向き凸の削り許可
-		if   matches!( objs.upper_left  , MapObj::Wall(_) )
-		&&   matches!( objs.upper_center, MapObj::Wall(_) )
-		&&   matches!( objs.upper_right , MapObj::Wall(_) )
-		&& ! matches!( objs.middle_left , MapObj::Wall(_) )
-		&& ! matches!( objs.middle_right, MapObj::Wall(_) )
-		&& ! matches!( objs.lower_left  , MapObj::Wall(_) )
-		&& ! matches!( objs.lower_center, MapObj::Wall(_) )
-		&& ! matches!( objs.lower_right , MapObj::Wall(_) ) { return true }
+		if   self.is_wall_upper_left   ( x, y )
+		&&   self.is_wall_upper_center ( x, y )
+		&&   self.is_wall_upper_right  ( x, y )
+		&& ! self.is_wall_middle_left  ( x, y )
+		&& ! self.is_wall_middle_right ( x, y )
+		&& ! self.is_wall_lower_left   ( x, y )
+		&& ! self.is_wall_lower_center ( x, y )
+		&& ! self.is_wall_lower_right  ( x, y ) { return true }
 
 		//右向き凸の削り許可
-		if   matches!( objs.upper_left  , MapObj::Wall(_) )
-		&& ! matches!( objs.upper_center, MapObj::Wall(_) )
-		&& ! matches!( objs.upper_right , MapObj::Wall(_) )
-		&&   matches!( objs.middle_left , MapObj::Wall(_) )
-		&& ! matches!( objs.middle_right, MapObj::Wall(_) )
-		&&   matches!( objs.lower_left  , MapObj::Wall(_) )
-		&& ! matches!( objs.lower_center, MapObj::Wall(_) )
-		&& ! matches!( objs.lower_right , MapObj::Wall(_) ) { return true }
+		if   self.is_wall_upper_left   ( x, y )
+		&& ! self.is_wall_upper_center ( x, y )
+		&& ! self.is_wall_upper_right  ( x, y )
+		&&   self.is_wall_middle_left  ( x, y )
+		&& ! self.is_wall_middle_right ( x, y )
+		&&   self.is_wall_lower_left   ( x, y )
+		&& ! self.is_wall_lower_center ( x, y )
+		&& ! self.is_wall_lower_right  ( x, y ) { return true }
 
 		//左向き凸の削り許可
-		if ! matches!( objs.upper_left  , MapObj::Wall(_) )
-		&& ! matches!( objs.upper_center, MapObj::Wall(_) )
-		&&   matches!( objs.upper_right , MapObj::Wall(_) )
-		&& ! matches!( objs.middle_left , MapObj::Wall(_) )
-		&&   matches!( objs.middle_right, MapObj::Wall(_) )
-		&& ! matches!( objs.lower_left  , MapObj::Wall(_) )
-		&& ! matches!( objs.lower_center, MapObj::Wall(_) )
-		&&   matches!( objs.lower_right , MapObj::Wall(_) ) { return true }
+		if ! self.is_wall_upper_left   ( x, y )
+		&& ! self.is_wall_upper_center ( x, y )
+		&&   self.is_wall_upper_right  ( x, y )
+		&& ! self.is_wall_middle_left  ( x, y )
+		&&   self.is_wall_middle_right ( x, y )
+		&& ! self.is_wall_lower_left   ( x, y )
+		&& ! self.is_wall_lower_center ( x, y )
+		&&   self.is_wall_lower_right  ( x, y ) { return true }
 
 		//上向き凸の削り許可
-		if ! matches!( objs.upper_left  , MapObj::Wall(_) )
-		&& ! matches!( objs.upper_center, MapObj::Wall(_) )
-		&& ! matches!( objs.upper_right , MapObj::Wall(_) )
-		&& ! matches!( objs.middle_left , MapObj::Wall(_) )
-		&& ! matches!( objs.middle_right, MapObj::Wall(_) )
-		&&   matches!( objs.lower_left  , MapObj::Wall(_) )
-		&&   matches!( objs.lower_center, MapObj::Wall(_) )
-		&&   matches!( objs.lower_right , MapObj::Wall(_) ) { return true }
+		if ! self.is_wall_upper_left   ( x, y )
+		&& ! self.is_wall_upper_center ( x, y )
+		&& ! self.is_wall_upper_right  ( x, y )
+		&& ! self.is_wall_middle_left  ( x, y )
+		&& ! self.is_wall_middle_right ( x, y )
+		&&   self.is_wall_lower_left   ( x, y )
+		&&   self.is_wall_lower_center ( x, y )
+		&&   self.is_wall_lower_right  ( x, y ) { return true }
 
 		//縦の貫通路になる場合はfalse
-		if ! matches!( objs.upper_center, MapObj::Wall(_) )
-		&& ! matches!( objs.lower_center, MapObj::Wall(_) ) { return false }
+		if ! self.is_wall_upper_center ( x, y )
+		&& ! self.is_wall_lower_center ( x, y ) { return false }
 
 		//横の貫通路になる場合はfalse
-		if ! matches!( objs.middle_left , MapObj::Wall(_) )
-		&& ! matches!( objs.middle_right, MapObj::Wall(_) ) { return false }
+		if ! self.is_wall_middle_left  ( x, y )
+		&& ! self.is_wall_middle_right ( x, y ) { return false }
 
 		//左上が壁でなく、上と左が壁ならfalse
-		if ! matches!( objs.upper_left  , MapObj::Wall(_) )
-		&&	 matches!( objs.upper_center, MapObj::Wall(_) )
-		&&	 matches!( objs.middle_left , MapObj::Wall(_) ) { return false }
+		if ! self.is_wall_upper_left   ( x, y )
+		&&	 self.is_wall_upper_center ( x, y )
+		&&	 self.is_wall_middle_left  ( x, y ) { return false }
 
 		//右上が壁でなく、上と右が壁ならfalse
-		if ! matches!( objs.upper_right , MapObj::Wall(_) )
-		&&	 matches!( objs.upper_center, MapObj::Wall(_) )
-		&&	 matches!( objs.middle_right, MapObj::Wall(_) ) { return false }
+		if ! self.is_wall_upper_right  ( x, y )
+		&&	 self.is_wall_upper_center ( x, y )
+		&&	 self.is_wall_middle_right ( x, y ) { return false }
 
 		//左下が壁でなく、下と左が壁ならfalse
-		if ! matches!( objs.lower_left  , MapObj::Wall(_) )
-		&&	 matches!( objs.middle_left , MapObj::Wall(_) )
-		&&	 matches!( objs.lower_center, MapObj::Wall(_) ) { return false }
+		if ! self.is_wall_lower_left   ( x, y )
+		&&	 self.is_wall_middle_left  ( x, y )
+		&&	 self.is_wall_lower_center ( x, y ) { return false }
 
 		//右下が壁でなく、下と右が壁ならfalse
-		if ! matches!( objs.lower_right , MapObj::Wall(_) )
-		&&	 matches!( objs.middle_right, MapObj::Wall(_) )
-		&&	 matches!( objs.lower_center, MapObj::Wall(_) ) { return false }
+		if ! self.is_wall_lower_right  ( x, y )
+		&&	 self.is_wall_middle_right ( x, y )
+		&&	 self.is_wall_lower_center ( x, y ) { return false }
 
 		//上下左右がすべて壁はfalse（掘ると飛び地になる）
-		if	 matches!( objs.upper_center, MapObj::Wall(_) )
-		&&	 matches!( objs.middle_left , MapObj::Wall(_) )
-		&&	 matches!( objs.middle_right, MapObj::Wall(_) )
-		&&	 matches!( objs.lower_center, MapObj::Wall(_) ) { return false }
+		if	 self.is_wall_upper_center ( x, y )
+		&&	 self.is_wall_middle_left  ( x, y )
+		&&	 self.is_wall_middle_right ( x, y )
+		&&	 self.is_wall_lower_center ( x, y ) { return false }
 
 		//掘削できる壁
 		true

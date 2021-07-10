@@ -6,7 +6,7 @@ impl GameMap
 	{	//通路をマーキングして広間と分ける。更に行き止まりをマーキングする
 		for ( x, ary ) in self.map.iter().enumerate()
 		{	for ( y, _obj ) in ary.iter().enumerate()
-			{	if matches!( self.map[ x ][ y ], MapObj::Wall(_) ) { continue }
+			{	if self.is_wall_xy( x as i32, y as i32 ) { continue }
 	
 				let ( passageway, count ) = is_passageway( self, x, y );
 				if passageway

@@ -1,13 +1,49 @@
 use super::*;
 
-//定数
+impl GameMap
+{	//is_wall()系 -> true: 壁である、false: 壁ではない
+	pub fn is_wall( &self, x: i32, y: i32 ) -> bool
+	{	if ! MAP_INDEX_X.contains( &x ) || ! MAP_INDEX_Y.contains( &y ) { return true } //配列の添字外は壁
+		matches!( self.map[ x as usize ][ y as usize ], MapObj::Wall(_) )
+	}
+	pub fn is_wall_upper_left   ( &self, x: i32, y: i32 ) -> bool { self.is_wall( x - 1, y - 1 ) }
+	pub fn is_wall_upper_center ( &self, x: i32, y: i32 ) -> bool { self.is_wall( x    , y - 1 ) }
+	pub fn is_wall_upper_right  ( &self, x: i32, y: i32 ) -> bool { self.is_wall( x + 1, y - 1 ) }
+	pub fn is_wall_middle_left  ( &self, x: i32, y: i32 ) -> bool { self.is_wall( x - 1, y     ) }
+	pub fn is_wall_middle_right ( &self, x: i32, y: i32 ) -> bool { self.is_wall( x + 1, y     ) }
+	pub fn is_wall_lower_left   ( &self, x: i32, y: i32 ) -> bool { self.is_wall( x - 1, y + 1 ) }
+	pub fn is_wall_lower_center ( &self, x: i32, y: i32 ) -> bool { self.is_wall( x    , y + 1 ) }
+	pub fn is_wall_lower_right  ( &self, x: i32, y: i32 ) -> bool { self.is_wall( x + 1, y + 1 ) }
+}
 
-//MAPのレンジ
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//MAPのレンジ定数
 use std::ops::RangeInclusive;
 pub const MAP_INDEX_X  : RangeInclusive<i32> = 0..= MAP_WIDTH  - 1;	//MAP配列の添え字のレンジ
 pub const MAP_INDEX_Y  : RangeInclusive<i32> = 0..= MAP_HEIGHT - 1;	//MAP配列の添え字のレンジ
 pub const MAP_DIGABLE_X: RangeInclusive<i32> = 1..= MAP_WIDTH  - 2;	//掘削可能なレンジ（最外壁は掘れない）
 pub const MAP_DIGABLE_Y: RangeInclusive<i32> = 1..= MAP_HEIGHT - 2;	//掘削可能なレンジ（最外壁は掘れない）
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//MAPのマスの状態の制御に使うbit
+pub const BIT_ALL_CLEAR  : usize = 0b0000;
+
+const BIT1_IS_VISIBLE: usize = 0b0001;
+const BIT1_SHOW      : usize = 0b0001;
+const BIT1_HIDE      : usize = 0b0000;
+
+const BIT2_PASSAGEWAY: usize = 0b0010;
+const BIT3_DAED_END  : usize = 0b0100;
+const BIT4_ALCOVE    : usize = 0b1000;
+
+impl GameMap
+{	//true: 見せる、false: 見せない
+	pub fn is_visible( &self, x: i32, y: i32 ) -> bool
+	{	self.stat[ x as usize ][ y as usize ] & BIT1_IS_VISIBLE != 0
+	}
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -66,10 +102,6 @@ impl GameMap
 		show_map_obj( x - 1, y + 1, &mut q );
 		show_map_obj( x    , y + 1, &mut q );
 		show_map_obj( x + 1, y + 1, &mut q );
-//		show_map_obj( x    , y - 2, &mut q );
-//		show_map_obj( x - 2, y    , &mut q );
-//		show_map_obj( x + 2, y    , &mut q );
-//		show_map_obj( x    , y + 2, &mut q );
 	}
 }
 

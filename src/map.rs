@@ -8,7 +8,7 @@ mod dig_and_dig_and_dig;			//迷路作成関数
 mod dig_and_back_and_dig;			//迷路作成関数
 mod find_and_destroy_digable_walls;	//迷路作成関数
 
-mod find_passageway;
+//mod find_passageway;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -61,17 +61,6 @@ pub enum MapObj
 	Goal ( Option<Entity> ),
 	Space,
 }
-
-//MAPのマスの状態の制御に使うbit
-const BIT_ALL_CLEAR  : usize = 0b0000;
-
-const BIT1_IS_VISIBLE: usize = 0b0001;
-const BIT1_SHOW      : usize = 0b0001;
-const BIT1_HIDE      : usize = 0b0000;
-
-const BIT2_PASSAGEWAY: usize = 0b0010;
-const BIT3_DAED_END  : usize = 0b0100;
-const BIT4_ALCOVE    : usize = 0b1000;
 
 //MAP情報のResource
 pub struct GameMap
@@ -156,24 +145,24 @@ fn spawn_sprite_new_map
 
 	//出口を掘れる場所を探し、乱数で決める
 	let mut exit_x = Vec::new();
-	for ( x, ary ) in maze.map.iter().enumerate() //enumerate()が生成するxの型はusize
-	{	if MAP_DIGABLE_X.contains( &( x as i32 ) )
+	for ( x, ary ) in ( 0i32.. ).zip( maze.map.iter() )	// i32の.enumerate()
+	{	if MAP_DIGABLE_X.contains( &x )
 		&& ! matches!( ary[ 1 ], MapObj::Wall(_) ) { exit_x.push( x ) }
 	}
 	let x = exit_x[ maze.rng.gen_range( 0..exit_x.len() ) ];
-	maze.map[ x ][ 0 ] = MapObj::Goal( None );
-	maze.goal_xy = ( x as i32, 0 );
+	maze.map[ x as usize ][ 0 ] = MapObj::Goal( None );
+	maze.goal_xy = ( x, 0 );
 
-	//迷路の構造解析
-	maze.identify_halls_and_passageways();
-	maze.spawn_sprite_systile( &mut cmds, &mut color_matl );
+	// //迷路の構造解析
+	// maze.identify_halls_and_passageways();
+	// maze.spawn_sprite_systile( &mut cmds, &mut color_matl );
 
 	//スプライトをspawnしてEntity IDを記録する
 	let mut count = 0;
 	let darkmode = maze.is_darkmode;
-	for ( x, ary ) in maze.map.iter_mut().enumerate()
-	{	for ( y, obj ) in ary.iter_mut().enumerate()
-		{	let xy = conv_sprite_coordinates( x as i32, y as i32);
+	for ( x, ary ) in ( 0i32.. ).zip( maze.map.iter_mut() )	// i32の.enumerate()
+	{	for ( y, obj ) in ( 0i32.. ).zip( ary.iter_mut() )	// i32の.enumerate()
+		{	let xy = conv_sprite_coordinates( x, y );
 			match obj
 			{	MapObj::Dot1(_) =>
 				{	let id = cmds
@@ -254,9 +243,9 @@ pub fn hide_whole_map
 (	mut q: Query<&mut Visible>,
 	maze: ResMut<GameMap>,
 )
-{	for ( x, ary ) in maze.map.iter().enumerate()
-	{	for ( y, obj ) in ary.iter().enumerate()
-		{	if maze.stat[ x ][ y ] & BIT1_IS_VISIBLE != BIT1_HIDE { continue }
+{	for ( x, ary ) in ( 0i32.. ).zip( maze.map.iter() )	// i32の.enumerate()
+	{	for ( y, obj ) in ( 0i32.. ).zip( ary.iter() )	// i32の.enumerate()
+		{	if maze.is_visible( x, y ) { continue }
 			match obj
 			{	MapObj::Wall( Some( id ) ) => q.get_component_mut::<Visible>( *id ).unwrap().is_visible = false,
 				MapObj::Dot1( Some( id ) ) => q.get_component_mut::<Visible>( *id ).unwrap().is_visible = false,
