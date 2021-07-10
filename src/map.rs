@@ -4,15 +4,11 @@ use super::*;
 mod util;
 pub use util::*;
 
-mod dig_and_dig_and_dig;
-use dig_and_dig_and_dig::*;				//迷路作成関数
-mod dig_and_back_and_dig;
-use dig_and_back_and_dig::*;			//迷路作成関数
-mod find_and_destroy_digable_walls;
-use find_and_destroy_digable_walls::*;	//迷路作成関数
+mod dig_and_dig_and_dig;			//迷路作成関数
+mod dig_and_back_and_dig;			//迷路作成関数
+mod find_and_destroy_digable_walls;	//迷路作成関数
 
 mod find_passageway;
-use find_passageway::*;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -22,7 +18,7 @@ impl Plugin for PluginMap
 {	fn build( &self, app: &mut AppBuilder )
 	{	app
 		//------------------------------------------------------------------------------------------
-		.init_resource::<GameMap>()							// MAP情報のResource
+		.init_resource::<GameMap>()								// MAP情報のResource
 		//------------------------------------------------------------------------------------------
 		.add_system_set											// GameState::Start
 		(	SystemSet::on_enter( GameState::Start )				// on_enter()
@@ -67,13 +63,15 @@ pub enum MapObj
 }
 
 //MAPのマスの状態の制御に使うbit
-const BIT_ALL_CLEAR  : usize = 0b00;
+const BIT_ALL_CLEAR  : usize = 0b0000;
 
-const BIT1_IS_VISIBLE: usize = 0b01;
-const BIT1_SHOW      : usize = 0b01;
-const BIT1_HIDE      : usize = 0b00;
+const BIT1_IS_VISIBLE: usize = 0b0001;
+const BIT1_SHOW      : usize = 0b0001;
+const BIT1_HIDE      : usize = 0b0000;
 
-const BIT2_PASSAGEWAY: usize = 0b10;
+const BIT2_PASSAGEWAY: usize = 0b0010;
+const BIT3_DAED_END  : usize = 0b0100;
+const BIT4_ALCOVE    : usize = 0b1000;
 
 //MAP情報のResource
 pub struct GameMap
@@ -125,7 +123,6 @@ const GOAL_COLOR: Color = Color::YELLOW;
 
 struct SysTileSprite;
 const SYSTILE_PIXEL: f32 = PIXEL_PER_GRID;
-const SYSTILE_COLOR: Color = Color::DARK_GRAY;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -151,9 +148,9 @@ fn spawn_sprite_new_map
 
 	//呼び出す関数を乱数で決め、迷路を掘らせる
 	match maze.rng.gen_range( 0..3 )
-	{	0 => dig_and_dig_and_dig( &mut maze ),				//一型迷路
-		1 => dig_and_back_and_dig( &mut maze ),				//二型迷路
-		2 => find_and_destroy_digable_walls( &mut maze ),	//三型迷路
+	{	0 => maze.dig_and_dig_and_dig(),			//一型迷路
+		1 => maze.dig_and_back_and_dig(),			//二型迷路
+		2 => maze.find_and_destroy_digable_walls(),	//三型迷路
 		_ => {}
 	}
 
@@ -168,17 +165,8 @@ fn spawn_sprite_new_map
 	maze.goal_xy = ( x as i32, 0 );
 
 	//迷路の構造解析
-	find_passageway( &mut maze );
-	for x in MAP_DIGABLE_X
-	{	for y in MAP_DIGABLE_Y
-		{	if maze.stat[ x as usize ][ y as usize ] & BIT2_PASSAGEWAY != 0
-			{	let xy = conv_sprite_coordinates( x, y );
-				cmds.spawn_bundle( sprite_system_tile( xy, &mut color_matl ) )
-					.insert( SysTileSprite );
-			}
-		}
-
-	}
+	maze.identify_halls_and_passageways();
+	maze.spawn_sprite_systile( &mut cmds, &mut color_matl );
 
 	//スプライトをspawnしてEntity IDを記録する
 	let mut count = 0;
@@ -346,20 +334,6 @@ fn sprite_wall
 		transform: Transform::from_translation( Vec3::new( x, y, SPRITE_DEPTH_MAZE ) ),
 		sprite   : Sprite::new( Vec2::new( WALL_PIXEL, WALL_PIXEL ) ),
 		visible  : Visible { is_visible: ! darkmode, ..Default::default() },
-		..Default::default()
-	}
-}
-
-fn sprite_system_tile
-(	( x, y ): ( f32, f32 ),
-	color_matl: &mut ResMut<Assets<ColorMaterial>>,
-//	darkmode: bool,
-) -> SpriteBundle
-{	SpriteBundle
-	{	material : color_matl.add( SYSTILE_COLOR.into() ),
-		transform: Transform::from_translation( Vec3::new( x, y, SPRITE_DEPTH_SYSTILE ) ),
-		sprite   : Sprite::new( Vec2::new( SYSTILE_PIXEL, SYSTILE_PIXEL ) ),
-//		visible  : Visible { is_visible: ! darkmode, ..Default::default() },
 		..Default::default()
 	}
 }
