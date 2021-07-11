@@ -74,7 +74,6 @@ fn main()
 	//----------------------------------------------------------------------------------------------
 	.add_startup_system( spawn_camera.system() )					// bevyのカメラ設置
 	.add_system( handle_esc_key_for_pause.system() )				// [Esc]でpause処理
-	.add_system( update_console_window.system() )					// コンソールウィンドウの表示
 	//----------------------------------------------------------------------------------------------
 	.add_plugin( PluginUi )
 	.add_plugin( PluginMap )
@@ -188,45 +187,6 @@ fn handle_esc_key_for_pause
 			_                => { ui.is_visible = true ; let _ = state.push( GameState::Pause ); }
 		}
 		inkey.reset( KeyCode::Escape ); // https://bevy-cheatbook.github.io/programming/states.html#with-input
-	}
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-//コンソールウィンドウの表示
-fn update_console_window
-(	mut q_visible: Query<&mut Visible>,
-	q_sysinfo_id: Query<Entity, With<SysinfoObj>>,
-	mut maze: ResMut<GameMap>,
-	record: Res<GameRecord>,
-	egui: Res<EguiContext>,
-)
-{	let tmp_darkmode = maze.is_darkmode;
-	let tmp_sysinfo  = maze.is_sysinfo;
-
-	//コンソールウィンドウを更新する
-	egui::Window::new( "Console" ).show
-	(	egui.ctx(), |ui|
-		{	ui.label( format!( "Stage: {}\nScore: {}", maze.level, record.score ) );
-			ui.checkbox( &mut maze.is_darkmode, "Dark mode"   );
-			ui.checkbox( &mut maze.is_sysinfo , "System info" );
-		}
-	);
-
-	//Dark modeのチェックボックスが切り替わったら
-	if maze.is_darkmode != tmp_darkmode
-	{	match maze.is_darkmode
-		{	true  => maze.hide_whole_map( &mut q_visible ),	//⇒隠す
-			false => maze.show_whole_map( &mut q_visible ),	//⇒全体表示
-		}
-	}
-
-	//System infoのチェックボックスが切り替わったら
-	if maze.is_sysinfo != tmp_sysinfo
-	{	match maze.is_sysinfo
-		{	true  => maze.show_sysinfo( &mut q_visible, q_sysinfo_id ),	//⇒表示
-			false => maze.hide_sysinfo( &mut q_visible, q_sysinfo_id ),	//⇒隠す
-		}
 	}
 }
 

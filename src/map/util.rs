@@ -34,7 +34,7 @@ pub const MAP_INDEX_Y  : RangeInclusive<i32> = 0..= MAP_HEIGHT - 1;	//MAP配列�
 pub const MAP_DIGABLE_X: RangeInclusive<i32> = 1..= MAP_WIDTH  - 2;	//掘削可能なレンジ（最外壁は掘れない）
 pub const MAP_DIGABLE_Y: RangeInclusive<i32> = 1..= MAP_HEIGHT - 2;	//掘削可能なレンジ（最外壁は掘れない）
 
-//マップ座標の上下左右を表す定数
+//MAP座標の上下左右を表す定数
 pub const UP   : ( i32, i32 ) = (  0, -1 );
 pub const LEFT : ( i32, i32 ) = ( -1,  0 );
 pub const RIGHT: ( i32, i32 ) = (  1,  0 );

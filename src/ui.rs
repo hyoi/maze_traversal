@@ -6,26 +6,27 @@ impl Plugin for PluginUi
 {	fn build( &self, app: &mut AppBuilder )
 	{	app
 		//------------------------------------------------------------------------------------------
-		.add_system_set													// GameState::Init
-		(	SystemSet::on_exit( GameState::Init )						// on_exit()
+		.add_system_set													// ＜GameState::Init＞
+		(	SystemSet::on_exit( GameState::Init )						// ＜on_exit()＞
 				.with_system( spawn_text_ui_message.system() )			// UIを非表示で生成
 		)
 		//------------------------------------------------------------------------------------------
-		.add_system_set													// GameState::Clear
-		(	SystemSet::on_enter( GameState::Clear )						// on_enter()
+		.add_system_set													// ＜GameState::Clear＞
+		(	SystemSet::on_enter( GameState::Clear )						// ＜on_enter()＞
 				.with_system( show_clear_message.system() )				// CLEARメッセージを表示する
 		)
-		.add_system_set													// GameState::Clear
-		(	SystemSet::on_update( GameState::Clear )					// on_update()
+		.add_system_set													// ＜GameState::Clear＞
+		(	SystemSet::on_update( GameState::Clear )					// ＜on_update()＞
 				.with_system( change_state_after_countdown.system() )	// CD完了⇒GameState::Startへ
 		)
-		.add_system_set													// GameState::Clear
-		(	SystemSet::on_exit( GameState::Clear )						// on_exit()
+		.add_system_set													// ＜GameState::Clear＞
+		(	SystemSet::on_exit( GameState::Clear )						// ＜on_exit()＞
 				.with_system( hide_clear_message.system() )				// CLEARメッセージを隠す
 		)
 		//------------------------------------------------------------------------------------------
 		.add_system( update_ui_upper_left.system() )					// 情報を更新
-		//--------------------------------------------------------------------------------
+		.add_system( update_console_window.system() )					// コンソールウィンドウの表示
+		//------------------------------------------------------------------------------------------
 		;
 	}
 }
@@ -163,6 +164,45 @@ fn update_ui_upper_left
 			}
 		} else { NA_STR3.to_string() };
 		ui.sections[ 1 ].value = fps_avr;
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//コンソールウィンドウを更新する
+fn update_console_window
+(	mut q_visible: Query<&mut Visible>,
+	q_sysinfo_id: Query<Entity, With<SysinfoObj>>,
+	mut maze: ResMut<GameMap>,
+	record: Res<GameRecord>,
+	egui: Res<EguiContext>,
+)
+{	let tmp_darkmode = maze.is_darkmode;
+	let tmp_sysinfo  = maze.is_sysinfo;
+
+	//コンソールウィンドウを更新する
+	egui::Window::new( "Console" ).show
+	(	egui.ctx(), |ui|
+		{	ui.label( format!( "Stage: {}\nScore: {}", maze.level, record.score ) );
+			ui.checkbox( &mut maze.is_darkmode, "Dark mode"   );
+			ui.checkbox( &mut maze.is_sysinfo , "System info" );
+		}
+	);
+
+	//Dark modeのチェックボックスが切り替わったら
+	if maze.is_darkmode != tmp_darkmode
+	{	match maze.is_darkmode
+		{	true  => maze.hide_whole_map( &mut q_visible ),	//⇒隠す
+			false => maze.show_whole_map( &mut q_visible ),	//⇒全体表示
+		}
+	}
+
+	//System infoのチェックボックスが切り替わったら
+	if maze.is_sysinfo != tmp_sysinfo
+	{	match maze.is_sysinfo
+		{	true  => maze.show_sysinfo( &mut q_visible, q_sysinfo_id ),	//⇒表示
+			false => maze.hide_sysinfo( &mut q_visible, q_sysinfo_id ),	//⇒隠す
+		}
 	}
 }
 
