@@ -63,18 +63,18 @@ fn main()
 	.add_state( GameState::Init )									// 状態遷移のState初期値
 	.init_resource::<GameRecord>()									// ゲームレコード
 	//----------------------------------------------------------------------------------------------
-	.add_system_set													// GameState::Init
-	(	SystemSet::on_enter( GameState::Init )						// on_enter()
-			.with_system( start_preload_assets.system() )			// Assetのロード開始
+	.add_system_set													// ＜GameState::Init＞
+	(	SystemSet::on_enter( GameState::Init )						// ＜on_enter()＞
+			.with_system( start_preload_assets.system() )			// Assetの事前ロード開始
 	)
-	.add_system_set													// GameState::Init
-	(	SystemSet::on_update( GameState::Init )						// on_update()
+	.add_system_set													// ＜GameState::Init＞
+	(	SystemSet::on_update( GameState::Init )						// ＜on_update()＞
 			.with_system( change_state_after_loading.system() )		// ロード完了⇒GameState::Startへ
 	)
 	//----------------------------------------------------------------------------------------------
 	.add_startup_system( spawn_camera.system() )					// bevyのカメラ設置
 	.add_system( handle_esc_key_for_pause.system() )				// [Esc]でpause処理
-	.add_system( egui_window.system() )								// ステージ数とスコアの表示
+	.add_system( update_console_window.system() )					// コンソールウィンドウの表示
 	//----------------------------------------------------------------------------------------------
 	.add_plugin( PluginUi )
 	.add_plugin( PluginMap )
@@ -193,27 +193,39 @@ fn handle_esc_key_for_pause
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-//ステージ数とスコアの表示
-fn egui_window
-(	egui: Res<EguiContext>,
+//コンソールウィンドウの表示
+fn update_console_window
+(	mut q_visible: Query<&mut Visible>,
+	q_sysinfo_id: Query<Entity, With<SysinfoObj>>,
 	mut maze: ResMut<GameMap>,
 	record: Res<GameRecord>,
-	q: Query<&mut Visible>,
+	egui: Res<EguiContext>,
 )
-{	let tmp = maze.is_darkmode;
+{	let tmp_darkmode = maze.is_darkmode;
+	let tmp_sysinfo  = maze.is_sysinfo;
 
+	//コンソールウィンドウを更新する
 	egui::Window::new( "Console" ).show
 	(	egui.ctx(), |ui|
-		{	let label = format!( "Stage: {}\nScore: {}", maze.level, record.score );
-			ui.label( label );
-			ui.checkbox( &mut maze.is_darkmode, "Dark mode" );
+		{	ui.label( format!( "Stage: {}\nScore: {}", maze.level, record.score ) );
+			ui.checkbox( &mut maze.is_darkmode, "Dark mode"   );
+			ui.checkbox( &mut maze.is_sysinfo , "System info" );
 		}
 	);
 
-	if tmp != maze.is_darkmode
+	//Dark modeのチェックボックスが切り替わったら
+	if maze.is_darkmode != tmp_darkmode
 	{	match maze.is_darkmode
-		{	true  => hide_whole_map( q, maze ),
-			false => show_whole_map( q, maze ),
+		{	true  => maze.hide_whole_map( &mut q_visible ),	//⇒隠す
+			false => maze.show_whole_map( &mut q_visible ),	//⇒全体表示
+		}
+	}
+
+	//System infoのチェックボックスが切り替わったら
+	if maze.is_sysinfo != tmp_sysinfo
+	{	match maze.is_sysinfo
+		{	true  => maze.show_sysinfo( &mut q_visible, q_sysinfo_id ),	//⇒表示
+			false => maze.hide_sysinfo( &mut q_visible, q_sysinfo_id ),	//⇒隠す
 		}
 	}
 }

@@ -178,7 +178,7 @@ fn move_sprite_player
 		player.map_location = ( map_x, map_y );
 
 		//Dark Modeでプレイヤーの周囲を視覚化する
-		maze.make_enclosure_visible( map_x, map_y, q_visible );
+		maze.show_enclosure_obj( map_x, map_y, q_visible );
 
 		//ウェイトをリセットする
 		player.wait.reset();

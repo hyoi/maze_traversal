@@ -8,7 +8,8 @@ mod dig_and_dig_and_dig;			//迷路作成関数
 mod dig_and_back_and_dig;			//迷路作成関数
 mod find_and_destroy_digable_walls;	//迷路作成関数
 
-//mod find_passageway;
+mod analyze_structure;
+pub use analyze_structure::*;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -32,7 +33,7 @@ impl Plugin for PluginMap
 		//------------------------------------------------------------------------------------------
 		.add_system_set											// GameState::Clear
 		(	SystemSet::on_enter( GameState::Clear )				// on_enter()
-				.with_system( show_whole_map.system() )			// 地図の全体像を見せる
+				.with_system( show_cleared_map.system() )		// 地図の全体像を見せる
 		)
 		.add_system_set											// GameState::Clear
 		(	SystemSet::on_exit( GameState::Clear )				// on_exit()
@@ -66,12 +67,14 @@ pub enum MapObj
 pub struct GameMap
 {	pub rng: rand::prelude::StdRng,	//再現性がある乱数を使いたいので
 	pub level: usize,
-	pub map : [ [ MapObj; MAP_HEIGHT as usize ]; MAP_WIDTH as usize ],
-	pub stat: [ [ usize ; MAP_HEIGHT as usize ]; MAP_WIDTH as usize ],
+	pub map  : [ [ MapObj; MAP_HEIGHT as usize ]; MAP_WIDTH as usize ],
+	pub stat : [ [ usize ; MAP_HEIGHT as usize ]; MAP_WIDTH as usize ],
+	pub count: [ [ usize ; MAP_HEIGHT as usize ]; MAP_WIDTH as usize ],
 	pub start_xy: ( i32, i32 ),
 	pub goal_xy : ( i32, i32 ),
 	pub count_dots: usize,
 	pub is_darkmode: bool,
+	pub is_sysinfo : bool,
 }
 impl Default for GameMap
 {	fn default() -> Self
@@ -79,22 +82,17 @@ impl Default for GameMap
 		{//	rng: StdRng::seed_from_u64( rand::thread_rng().gen::<u64>() ),	//本番用
 			rng: StdRng::seed_from_u64( 1234567890 ),	//開発用：再現性がある乱数を使いたい場合
 			level: 0,
-			map : [ [ MapObj::None ; MAP_HEIGHT as usize ]; MAP_WIDTH as usize ],
-			stat: [ [ BIT_ALL_CLEAR; MAP_HEIGHT as usize ]; MAP_WIDTH as usize ],
+			map  : [ [ MapObj::None ; MAP_HEIGHT as usize ]; MAP_WIDTH as usize ],
+			stat : [ [ BIT_ALL_CLEAR; MAP_HEIGHT as usize ]; MAP_WIDTH as usize ],
+			count: [ [ 0            ; MAP_HEIGHT as usize ]; MAP_WIDTH as usize ],
 			start_xy: ( 0, 0 ),
 			goal_xy : ( 0, 0 ),
 			count_dots: 0,
 			is_darkmode: true,
+			is_sysinfo : false,
 		}
 	}
 }
-
-//マップ座標の上下左右を表す定数
-const UP       :   ( i32, i32 )      = (  0, -1 );
-const LEFT     :   ( i32, i32 )      = ( -1,  0 );
-const RIGHT    :   ( i32, i32 )      = (  1,  0 );
-const DOWN     :   ( i32, i32 )      = (  0,  1 );
-const DIRECTION: [ ( i32, i32 ); 4 ] = [ UP, LEFT, RIGHT, DOWN ];
 
 //Sprite
 const SPRITE_DEPTH_MAZE   : f32 = 10.0;
@@ -110,9 +108,6 @@ struct GoalSprite;
 const GOAL_PIXEL: f32 = PIXEL_PER_GRID / 2.0;
 const GOAL_COLOR: Color = Color::YELLOW;
 
-struct SysTileSprite;
-const SYSTILE_PIXEL: f32 = PIXEL_PER_GRID;
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //新しい迷路を作り表示して、Playへ遷移する
@@ -124,8 +119,9 @@ fn spawn_sprite_new_map
 	asset_svr: Res<AssetServer>,
 )
 {	//map配列を初期化する
-	maze.map .iter_mut().for_each( | x | x.fill( MapObj::Wall( None ) ) );
-	maze.stat.iter_mut().for_each( | x | x.fill( BIT_ALL_CLEAR        ) );
+	maze.map  .iter_mut().for_each( | x | x.fill( MapObj::Wall( None ) ) );
+	maze.stat .iter_mut().for_each( | x | x.fill( BIT_ALL_CLEAR        ) );
+	maze.count.iter_mut().for_each( | x | x.fill( 0                    ) );
 	maze.count_dots = 0;
 	maze.level += 1;
 
@@ -145,55 +141,56 @@ fn spawn_sprite_new_map
 
 	//出口を掘れる場所を探し、乱数で決める
 	let mut exit_x = Vec::new();
-	for ( x, ary ) in ( 0i32.. ).zip( maze.map.iter() )	// i32の.enumerate()
-	{	if MAP_DIGABLE_X.contains( &x )
-		&& ! matches!( ary[ 1 ], MapObj::Wall(_) ) { exit_x.push( x ) }
-	}
+	MAP_DIGABLE_X.for_each( | x |
+		if ! matches!( maze.map[ x as usize ][ 1 ], MapObj::Wall(_) ) { exit_x.push( x ) }
+	);
 	let x = exit_x[ maze.rng.gen_range( 0..exit_x.len() ) ];
 	maze.map[ x as usize ][ 0 ] = MapObj::Goal( None );
 	maze.goal_xy = ( x, 0 );
 
-	// //迷路の構造解析
-	// maze.identify_halls_and_passageways();
-	// maze.spawn_sprite_systile( &mut cmds, &mut color_matl );
+	//迷路の構造解析
+	maze.identify_halls_and_passageways();
+	maze.count_deadend_passageway_length();
+	maze.spawn_sysinfo_obj( &mut cmds, &mut color_matl, &asset_svr );
 
 	//スプライトをspawnしてEntity IDを記録する
 	let mut count = 0;
 	let darkmode = maze.is_darkmode;
-	for ( x, ary ) in ( 0i32.. ).zip( maze.map.iter_mut() )	// i32の.enumerate()
-	{	for ( y, obj ) in ( 0i32.. ).zip( ary.iter_mut() )	// i32の.enumerate()
+	for x in MAP_INDEX_X
+	{	for y in MAP_INDEX_Y
 		{	let xy = conv_sprite_coordinates( x, y );
-			match obj
+			let obj = &mut maze.map[ x as usize ][ y as usize ];
+			*obj = match obj
 			{	MapObj::Dot1(_) =>
 				{	let id = cmds
 						.spawn_bundle( sprite_dot( xy, &mut color_matl, darkmode ) )
 						.id(); 
-					*obj = MapObj::Dot1( Some( id ) );
 					count += 1;
+					MapObj::Dot1( Some( id ) )
 				}
 				MapObj::Dot2(_) =>
 				{	let id = cmds
 						.spawn_bundle( sprite_dot( xy, &mut color_matl, darkmode ) )
 						.id(); 
-					*obj = MapObj::Dot1( Some( id ) ); //Dot2もDot1へ変換する
 					count += 1;
+					MapObj::Dot1( Some( id ) ) //Dot2もDot1へ変換する
 				}
 				MapObj::Goal(_) =>
 				{	let id = cmds
 						.spawn_bundle( sprite_goal( xy, &mut color_matl ) )
 						.insert( GoalSprite )
 						.id(); 
-					*obj = MapObj::Goal( Some( id ) );
 					count += 1;
+					MapObj::Goal( Some( id ) )
 				}
 				MapObj::Wall(_) =>
 				{	let id = cmds
 						.spawn_bundle( sprite_wall( xy, &mut color_matl, &asset_svr, darkmode ) )
 						.id();
-					*obj = MapObj::Wall( Some( id ) );
+					MapObj::Wall( Some( id ) )
 				}
-				_ => { *obj = MapObj::Space }
-			}
+				_ => { MapObj::Space }
+			};
 		}
 	}
 	maze.count_dots = count;
@@ -222,34 +219,14 @@ fn animate_goal_sprite
 	color_matl.color = Color::Hsla{ hue, saturation, lightness, alpha };
 }
 
-//地図の全体像を見せる
-pub fn show_whole_map
-(	mut q: Query<&mut Visible>,
-	maze: ResMut<GameMap>,
-)
-{	for ary in maze.map.iter()
-	{	for obj in ary.iter()
-		{	match obj
-			{	MapObj::Wall( Some( id ) ) => q.get_component_mut::<Visible>( *id ).unwrap().is_visible = true,
-				MapObj::Dot1( Some( id ) ) => q.get_component_mut::<Visible>( *id ).unwrap().is_visible = true,
-				_ => {}
-			}
-		}
-	}
-}
-
-//地図のまだオープンになっていないマスを隠す
-pub fn hide_whole_map
-(	mut q: Query<&mut Visible>,
-	maze: ResMut<GameMap>,
-)
-{	for ( x, ary ) in ( 0i32.. ).zip( maze.map.iter() )	// i32の.enumerate()
-	{	for ( y, obj ) in ( 0i32.. ).zip( ary.iter() )	// i32の.enumerate()
-		{	if maze.is_visible( x, y ) { continue }
-			match obj
-			{	MapObj::Wall( Some( id ) ) => q.get_component_mut::<Visible>( *id ).unwrap().is_visible = false,
-				MapObj::Dot1( Some( id ) ) => q.get_component_mut::<Visible>( *id ).unwrap().is_visible = false,
-				_ => {}
+//クリアした地図の全体像を見せる
+pub fn show_cleared_map( maze: ResMut<GameMap>, mut q: Query<&mut Visible> )
+{	for x in MAP_INDEX_X
+	{	for y in MAP_INDEX_Y
+		{	match maze.map[ x as usize ][ y as usize ]
+			{	MapObj::Wall( Some( id ) ) | MapObj::Dot1( Some( id ) )
+					=> q.get_component_mut::<Visible>( id ).unwrap().is_visible = true,
+				_	=> {}
 			}
 		}
 	}
@@ -259,14 +236,14 @@ pub fn hide_whole_map
 fn despawn_sprite_map
 (	maze: Res<GameMap>,
 	mut cmds: Commands,
-	q: Query<Entity, With<SysTileSprite>>,
+	q: Query<Entity, With<SysinfoObj>>,
 )
 {	for ary in maze.map.iter()
 	{	for obj in ary.iter()
 		{	match obj
-			{	MapObj::Dot1( Some( id ) ) => cmds.entity( *id ).despawn(),
-				MapObj::Wall( Some( id ) ) => cmds.entity( *id ).despawn(),
-				_ => {}
+			{	MapObj::Dot1( Some( id ) ) | MapObj::Wall( Some( id ) )
+					=> cmds.entity( *id ).despawn(),
+				_	=> {}
 			}
 		}
 	}

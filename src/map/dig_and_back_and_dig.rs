@@ -13,7 +13,7 @@ impl GameMap
 		{	//上下左右にある掘削候補と戻り路を記録する
 			digable_walls.clear();
 			backtrack = ( 0, 0 );
-			for ( dx, dy ) in DIRECTION.iter()
+			for ( dx, dy ) in DIRECTION
 			{	let tmp_x = map_xy.0 + dx;
 				let tmp_y = map_xy.1 + dy;
 
@@ -22,7 +22,7 @@ impl GameMap
 
 				//上下左右の座標のオブジェクトを調べる
 				let tmp_xy = ( tmp_x, tmp_y );
-				let direct = ( *dx, *dy );
+				let direct = ( dx, dy );
 				match self.map[ tmp_x as usize ][ tmp_y as usize ]
 				{	MapObj::Dot1(_) => backtrack = tmp_xy,
 					MapObj::Wall(_) if self.is_digable_wall( tmp_xy, direct ) => digable_walls.push( tmp_xy ),
@@ -57,22 +57,22 @@ impl GameMap
 				  && self.is_wall_upper_center ( x, y )	// 壁壁壁
 				  && self.is_wall_upper_right  ( x, y )	// 壁Ｘ壁
 				  && self.is_wall_middle_left  ( x, y )
-				  && self.is_wall_middle_right ( x, y ) => return true,
+				  && self.is_wall_middle_right ( x, y ) => true,
 			LEFT  if self.is_wall_upper_left   ( x, y )	// 壁壁
 				  && self.is_wall_upper_center ( x, y )	// 壁Ｘ
 				  && self.is_wall_middle_left  ( x, y )	// 壁壁
 				  && self.is_wall_lower_left   ( x, y )
-				  && self.is_wall_lower_center ( x, y ) => return true,
+				  && self.is_wall_lower_center ( x, y ) => true,
 			RIGHT if self.is_wall_upper_center ( x, y )	// 壁壁
 				  && self.is_wall_upper_right  ( x, y )	// Ｘ壁
 				  && self.is_wall_middle_right ( x, y )	// 壁壁
 				  && self.is_wall_lower_center ( x, y )
-				  && self.is_wall_lower_right  ( x, y ) => return true,
+				  && self.is_wall_lower_right  ( x, y ) => true,
 			DOWN  if self.is_wall_middle_left  ( x, y )
 				  && self.is_wall_middle_right ( x, y )	// 壁Ｘ壁
 				  && self.is_wall_lower_left   ( x, y )	// 壁壁壁
 				  && self.is_wall_lower_center ( x, y )
-				  && self.is_wall_lower_right  ( x, y ) => return true,
+				  && self.is_wall_lower_right  ( x, y ) => true,
 			_ => { false }
 		}
 	}
