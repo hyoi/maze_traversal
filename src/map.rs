@@ -21,22 +21,22 @@ impl Plugin for PluginMap
 		//------------------------------------------------------------------------------------------
 		.init_resource::<GameMap>()								// MAP情報のResource
 		//------------------------------------------------------------------------------------------
-		.add_system_set											// GameState::Start
-		(	SystemSet::on_enter( GameState::Start )				// on_enter()
+		.add_system_set											// ＜GameState::Start＞
+		(	SystemSet::on_enter( GameState::Start )				// ＜on_enter()＞
 				.with_system( spawn_sprite_new_map.system() )	// 新マップ表示⇒GameState::Playへ
 		)
 		//------------------------------------------------------------------------------------------
-		.add_system_set											// GameState::Play
-		(	SystemSet::on_update( GameState::Play )				// on_update()
+		.add_system_set											// ＜GameState::Play＞
+		(	SystemSet::on_update( GameState::Play )				// ＜on_update()＞
 				.with_system( animate_goal_sprite.system() )	// ゴールスプライトのアニメーション
 		)
 		//------------------------------------------------------------------------------------------
-		.add_system_set											// GameState::Clear
-		(	SystemSet::on_enter( GameState::Clear )				// on_enter()
+		.add_system_set											// ＜GameState::Clear＞
+		(	SystemSet::on_enter( GameState::Clear )				// ＜on_enter()＞
 				.with_system( show_cleared_map.system() )		// 地図の全体像を見せる
 		)
-		.add_system_set											// GameState::Clear
-		(	SystemSet::on_exit( GameState::Clear )				// on_exit()
+		.add_system_set											// ＜GameState::Clear＞
+		(	SystemSet::on_exit( GameState::Clear )				// ＜on_exit()＞
 				.with_system( despawn_sprite_map.system() )		// マップを削除
 		)
 		//------------------------------------------------------------------------------------------
@@ -57,8 +57,8 @@ pub const MAP_HEIGHT: i32 = 36;
 pub enum MapObj
 {	None,
 	Wall ( Option<Entity> ),
-	Dot1 ( Option<Entity> ),	//通常の道
-	Dot2 ( Option<Entity> ),	//行き止まり目印用
+	Dot1 ,	//通常の道
+	Dot2 ,	//行き止まり目印用
 	Goal ( Option<Entity> ),
 	Space,
 }
@@ -96,15 +96,13 @@ impl Default for GameMap
 
 //Sprite
 const SPRITE_DEPTH_MAZE   : f32 = 10.0;
-const SPRITE_DEPTH_SYSTILE: f32 =  5.0;
+const SPRITE_DEPTH_SYSINFO: f32 =  5.0;
 
+pub struct SpriteWall { pub x: i32, pub y: i32 }
 const WALL_PIXEL: f32 = PIXEL_PER_GRID;
 pub const WALL_SPRITE_FILE: &str = "sprites/wall.png";
 
-const DOT_RAIDUS: f32 = PIXEL_PER_GRID / 14.0;
-const DOT_COLOR: Color = Color::WHITE;
-
-struct GoalSprite;
+struct SpriteGoal;
 const GOAL_PIXEL: f32 = PIXEL_PER_GRID / 2.0;
 const GOAL_COLOR: Color = Color::YELLOW;
 
@@ -127,8 +125,8 @@ fn spawn_sprite_new_map
 
 	//入口を掘る
 	let x = maze.rng.gen_range( MAP_DIGABLE_X );
-	maze.map[ x as usize ][ ( MAP_HEIGHT - 2 ) as usize ] = MapObj::Dot1( None );
-	maze.map[ x as usize ][ ( MAP_HEIGHT - 1 ) as usize ] = MapObj::Dot2( None ); //入口は行き止まり扱い
+	maze.map[ x as usize ][ ( MAP_HEIGHT - 2 ) as usize ] = MapObj::Dot1;
+	maze.map[ x as usize ][ ( MAP_HEIGHT - 1 ) as usize ] = MapObj::Dot2; //入口は行き止まり扱い
 	maze.start_xy = ( x, MAP_HEIGHT - 1 );
 
 	//呼び出す関数を乱数で決め、迷路を掘らせる
@@ -161,24 +159,17 @@ fn spawn_sprite_new_map
 		{	let xy = conv_sprite_coordinates( x, y );
 			let obj = &mut maze.map[ x as usize ][ y as usize ];
 			*obj = match obj
-			{	MapObj::Dot1(_) =>
-				{	let id = cmds
-						.spawn_bundle( sprite_dot( xy, &mut color_matl, darkmode ) )
-						.id(); 
-					count += 1;
-					MapObj::Dot1( Some( id ) )
+			{	MapObj::Dot1 =>
+				{	count += 1;
+					MapObj::Dot1
 				}
-				MapObj::Dot2(_) =>
-				{	let id = cmds
-						.spawn_bundle( sprite_dot( xy, &mut color_matl, darkmode ) )
-						.id(); 
-					count += 1;
-					MapObj::Dot1( Some( id ) ) //Dot2もDot1へ変換する
+				MapObj::Dot2 =>
+				{	MapObj::Dot1 //Dot2もDot1へ変換する
 				}
 				MapObj::Goal(_) =>
 				{	let id = cmds
 						.spawn_bundle( sprite_goal( xy, &mut color_matl ) )
-						.insert( GoalSprite )
+						.insert( SpriteGoal )
 						.id(); 
 					count += 1;
 					MapObj::Goal( Some( id ) )
@@ -186,6 +177,7 @@ fn spawn_sprite_new_map
 				MapObj::Wall(_) =>
 				{	let id = cmds
 						.spawn_bundle( sprite_wall( xy, &mut color_matl, &asset_svr, darkmode ) )
+						.insert( SpriteWall { x, y } )
 						.id();
 					MapObj::Wall( Some( id ) )
 				}
@@ -201,7 +193,7 @@ fn spawn_sprite_new_map
 
 //ゴールのスプライトをアニメーションさせる
 fn animate_goal_sprite
-(	mut q: Query<( &mut Transform, &Handle<ColorMaterial> ), With<GoalSprite>>,
+(	mut q: Query<( &mut Transform, &Handle<ColorMaterial> ), With<SpriteGoal>>,
 	mut color_matl: ResMut<Assets<ColorMaterial>>,
 	time: Res<Time>,
 )
@@ -220,60 +212,26 @@ fn animate_goal_sprite
 }
 
 //クリアした地図の全体像を見せる
-pub fn show_cleared_map( maze: ResMut<GameMap>, mut q: Query<&mut Visible> )
-{	for x in MAP_INDEX_X
-	{	for y in MAP_INDEX_Y
-		{	match maze.map[ x as usize ][ y as usize ]
-			{	MapObj::Wall( Some( id ) ) | MapObj::Dot1( Some( id ) )
-					=> q.get_component_mut::<Visible>( id ).unwrap().is_visible = true,
-				_	=> {}
-			}
-		}
+pub fn show_cleared_map
+(	mut q_visible: Query<&mut Visible>,
+	q_spr_wall_id: Query<Entity, With<SpriteWall>>,
+)
+{	for id in q_spr_wall_id.iter()
+	{	q_visible.get_component_mut::<Visible>( id ).unwrap().is_visible = true;
 	}
 }
 
 //スプライトを削除する
 fn despawn_sprite_map
-(	maze: Res<GameMap>,
+(	q_sprwall: Query<Entity, With<SpriteWall>>,
+	q_sysinfo: Query<Entity, With<SysinfoObj>>,
 	mut cmds: Commands,
-	q: Query<Entity, With<SysinfoObj>>,
 )
-{	for ary in maze.map.iter()
-	{	for obj in ary.iter()
-		{	match obj
-			{	MapObj::Dot1( Some( id ) ) | MapObj::Wall( Some( id ) )
-					=> cmds.entity( *id ).despawn(),
-				_	=> {}
-			}
-		}
-	}
-	q.for_each( | id | cmds.entity( id ).despawn() );
+{	q_sprwall.for_each( | id | cmds.entity( id ).despawn() );
+	q_sysinfo.for_each( | id | cmds.entity( id ).despawn() );
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-
-//ドット用のスプライトバンドルを生成
-fn sprite_dot
-(	( x, y ): ( f32, f32 ),
-	color_matl: &mut ResMut<Assets<ColorMaterial>>,
-	darkmode: bool,
-) -> SpriteBundle
-//) -> ShapeBundle
-// {	GeometryBuilder::build_as
-// 	(	&shapes::Circle { radius: DOT_RAIDUS, ..shapes::Circle::default() },
-// 		ShapeColors::new( DOT_COLOR ),
-//         DrawMode::Fill( FillOptions::default() ),
-//         Transform::from_translation( Vec3::new( x, y, SPRITE_DEPTH_MAZE ) ),
-//     )
-// }
-{	SpriteBundle
-	{	material : color_matl.add( DOT_COLOR.into() ),
-		transform: Transform::from_translation( Vec3::new( x, y, SPRITE_DEPTH_MAZE ) ),
-		sprite   : Sprite::new( Vec2::new( DOT_RAIDUS, DOT_RAIDUS ) * 2.0 ),
-		visible  : Visible { is_visible: ! darkmode, ..Default::default() },
-		..Default::default()
-	}
-}
 
 //ゴールのスプライトバンドルを生成
 fn sprite_goal( ( x, y ): ( f32, f32 ), color_matl: &mut ResMut<Assets<ColorMaterial>> ) -> SpriteBundle

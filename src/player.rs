@@ -6,18 +6,18 @@ impl Plugin for PluginPlayer
 {	fn build( &self, app: &mut AppBuilder )
 	{	app
 		//------------------------------------------------------------------------------------------
-		.add_system_set											// GameState::Start
-		(	SystemSet::on_exit( GameState::Start )				// on_exit()
+		.add_system_set											// ＜GameState::Start＞
+		(	SystemSet::on_exit( GameState::Start )				// ＜on_exit()＞
 				.with_system( spawn_sprite_player.system() )	// マップ生成後に自機を配置
 		)
 		//------------------------------------------------------------------------------------------
-		.add_system_set											// GameState::Play
-		(	SystemSet::on_update( GameState::Play )				// on_update()
+		.add_system_set											// ＜GameState::Play＞
+		(	SystemSet::on_update( GameState::Play )				// ＜on_update()＞
 				.with_system( move_sprite_player.system() )		// 自機の移動、ゴール⇒GameState::Clearへ
 		)
 		//------------------------------------------------------------------------------------------
-		.add_system_set											// GameState::Clear
-		(	SystemSet::on_exit( GameState::Clear )				// on_exit()
+		.add_system_set											// ＜GameState::Clear＞
+		(	SystemSet::on_exit( GameState::Clear )				// ＜on_exit()＞
 				.with_system( despawn_sprite_player.system() )	// 自機を削除
 		)
 		//------------------------------------------------------------------------------------------
@@ -84,7 +84,7 @@ fn spawn_sprite_player( maze: Res<GameMap>, mut cmds: Commands )
 fn move_sprite_player
 (	mut q: Query<( &mut Player, &mut Transform )>,
 	q_visible: Query<&mut Visible>,
-	( mut maze, mut record ): ( ResMut<GameMap>, ResMut<GameRecord> ),
+	mut maze: ResMut<GameMap>,
 	mut state : ResMut<State<GameState>>,
 	mut cmds: Commands,
 	( time, inkey ): ( Res<Time>, Res<Input<KeyCode>> ),
@@ -132,11 +132,11 @@ fn move_sprite_player
 			player.direction = player.new_direction;
 		}
 
-		//ドット獲得判定
-		if let MapObj::Dot1( opt_dot ) | MapObj::Goal( opt_dot ) = maze.map[ map_x as usize ][ map_y as usize ]
+		//GOAL判定
+		if let MapObj::Goal( opt_dot ) = maze.map[ map_x as usize ][ map_y as usize ]
 		{	cmds.entity( opt_dot.unwrap() ).despawn();
-			maze.map[ map_x as usize ][ map_y as usize ] = MapObj::Space;
-			record.score += 1;
+//			maze.map[ map_x as usize ][ map_y as usize ] = MapObj::Space;
+//			record.score += 1;
 		}
 
 		//ゴールしたので、Clearへ遷移する

@@ -64,11 +64,9 @@ impl GameMap
 	{	if ! MAP_INDEX_X.contains( &x ) || ! MAP_INDEX_Y.contains( &y ) { return }
 
 		self.stat[ x as usize ][ y as usize ] |= BIT_IS_VISIBLE;
-		match self.map[ x as usize ][ y as usize ]
-		{	MapObj::Wall( Some( id ) ) | MapObj::Dot1( Some( id ) )
-				=> q.get_component_mut::<Visible>( id ).unwrap().is_visible = true,
-			_	=> {}
-		};
+		if let MapObj::Wall( Some( id ) ) = self.map[ x as usize ][ y as usize ]
+		{	q.get_component_mut::<Visible>( id ).unwrap().is_visible = true;
+		}
 	}
 
 	//指定されたマスと周囲の８マスを可視化する
@@ -77,33 +75,6 @@ impl GameMap
 		( -1..=1 ).for_each( | dy |
 			self.show( x + dx, y + dy, &mut q )
 		) );
-	}
-
-	//地図の全体像を見せる
-	pub fn show_whole_map( &mut self, q: &mut Query<&mut Visible> )
-	{	for x in MAP_INDEX_X
-		{	for y in MAP_INDEX_Y
-			{	match self.map[ x as usize ][ y as usize ]
-				{	MapObj::Wall( Some( id ) ) | MapObj::Dot1( Some( id ) )
-						=> q.get_component_mut::<Visible>( id ).unwrap().is_visible = true,
-					_	=> {}
-				}
-			}
-		}
-	}
-
-	//地図の全体像を隠す（開放済みマスは隠さない）
-	pub fn hide_whole_map( &mut self, q: &mut Query<&mut Visible> )
-	{	for x in MAP_INDEX_X
-		{	for y in MAP_INDEX_Y
-			{	if self.is_visible( x, y ) { continue }
-				match self.map[ x as usize ][ y as usize ]
-				{	MapObj::Wall( Some( id ) ) | MapObj::Dot1( Some( id ) )
-						=> q.get_component_mut::<Visible>( id ).unwrap().is_visible = false,
-					_	=> {}
-				}
-			}
-		}
 	}
 }
 

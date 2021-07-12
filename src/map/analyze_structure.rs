@@ -112,28 +112,6 @@ impl GameMap
 			}
 		}
 	}
-
-	//地図の全体像を見せる
-	pub fn show_sysinfo
-	(	&mut self,
-		q_visible: &mut Query<&mut Visible>,
-		q_sysinfo: Query<Entity, With<SysinfoObj>>,
-	)
-	{	for id in q_sysinfo.iter()
-		{	q_visible.get_component_mut::<Visible>( id ).unwrap().is_visible = true
-		}
-	}
-
-	//地図の全体像を隠す（開放済みマスは隠さない）
-	pub fn hide_sysinfo
-	(	&mut self,
-		q_visible: &mut Query<&mut Visible>,
-		q_sysinfo: Query<Entity, With<SysinfoObj>>,
-	)
-	{	for id in q_sysinfo.iter()
-		{	q_visible.get_component_mut::<Visible>( id ).unwrap().is_visible = false
-		}
-	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -147,7 +125,7 @@ fn sprite_sysinfo
 ) -> SpriteBundle
 {	SpriteBundle
 	{	material : color_matl.add( color.into() ),
-		transform: Transform::from_translation( Vec3::new( x, y, SPRITE_DEPTH_SYSTILE ) ),
+		transform: Transform::from_translation( Vec3::new( x, y, SPRITE_DEPTH_SYSINFO ) ),
 		sprite   : Sprite::new( Vec2::new( SYSTILE_PIXEL, SYSTILE_PIXEL ) ),
 		visible  : Visible { is_visible, ..Default::default() },
 		..Default::default()

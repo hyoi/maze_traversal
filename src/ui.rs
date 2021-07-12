@@ -172,7 +172,8 @@ fn update_ui_upper_left
 //コンソールウィンドウを更新する
 fn update_console_window
 (	mut q_visible: Query<&mut Visible>,
-	q_sysinfo_id: Query<Entity, With<SysinfoObj>>,
+	q_spr_wall_id: Query<( Entity, &SpriteWall )>,
+	q_sysinfo_id : Query<Entity, With<SysinfoObj>>,
 	mut maze: ResMut<GameMap>,
 	record: Res<GameRecord>,
 	egui: Res<EguiContext>,
@@ -191,17 +192,16 @@ fn update_console_window
 
 	//Dark modeのチェックボックスが切り替わったら
 	if maze.is_darkmode != tmp_darkmode
-	{	match maze.is_darkmode
-		{	true  => maze.hide_whole_map( &mut q_visible ),	//⇒隠す
-			false => maze.show_whole_map( &mut q_visible ),	//⇒全体表示
+	{	for ( id, wall ) in q_spr_wall_id.iter()
+		{	if maze.is_visible( wall.x, wall.y ) { continue }
+			q_visible.get_component_mut::<Visible>( id ).unwrap().is_visible = ! maze.is_darkmode;
 		}
 	}
 
 	//System infoのチェックボックスが切り替わったら
 	if maze.is_sysinfo != tmp_sysinfo
-	{	match maze.is_sysinfo
-		{	true  => maze.show_sysinfo( &mut q_visible, q_sysinfo_id ),	//⇒表示
-			false => maze.hide_sysinfo( &mut q_visible, q_sysinfo_id ),	//⇒隠す
+	{	for id in q_sysinfo_id.iter()
+		{	q_visible.get_component_mut::<Visible>( id ).unwrap().is_visible = maze.is_sysinfo;
 		}
 	}
 }
