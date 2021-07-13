@@ -21,6 +21,7 @@ impl Plugin for PluginPlayer
 				.with_system( despawn_sprite_player.system() )	// 自機を削除
 		)
 		//------------------------------------------------------------------------------------------
+		.insert_resource( AutoMap ( 1 ) )
 		;
 	}
 }
@@ -53,6 +54,8 @@ struct Player
 	new_direction: Direction,
 	stop: bool,
 }
+
+pub struct AutoMap ( pub i32 );
 
 //Sprite
 const SPRITE_DEPTH_PLAYER: f32 = 20.0;
@@ -88,6 +91,7 @@ fn move_sprite_player
 	mut state : ResMut<State<GameState>>,
 	mut cmds: Commands,
 	( time, inkey ): ( Res<Time>, Res<Input<KeyCode>> ),
+	automap: ResMut<AutoMap>,
 )
 {	let time_delta = time.delta();
 	let ( mut player, mut transform ) = q.single_mut().unwrap();
@@ -135,8 +139,6 @@ fn move_sprite_player
 		//GOAL判定
 		if let MapObj::Goal( opt_dot ) = maze.map[ map_x as usize ][ map_y as usize ]
 		{	cmds.entity( opt_dot.unwrap() ).despawn();
-//			maze.map[ map_x as usize ][ map_y as usize ] = MapObj::Space;
-//			record.score += 1;
 		}
 
 		//ゴールしたので、Clearへ遷移する
@@ -178,7 +180,7 @@ fn move_sprite_player
 		player.map_location = ( map_x, map_y );
 
 		//Dark Modeでプレイヤーの周囲を視覚化する
-		maze.show_enclosure_obj( map_x, map_y, q_visible );
+		maze.show_enclosure_obj( map_x, map_y, q_visible, automap );
 
 		//ウェイトをリセットする
 		player.wait.reset();

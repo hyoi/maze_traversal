@@ -21,7 +21,7 @@ const APP_TITLE: &str = "maze traversal";
 const SCREEN_SCALING: usize = 3;
 const PIXEL_PER_GRID: f32   = ( 8 * SCREEN_SCALING ) as f32;
 const SCREEN_WIDTH  : f32   = PIXEL_PER_GRID * MAP_WIDTH  as f32;
-const SCREEN_HEIGHT : f32   = PIXEL_PER_GRID * ( MAP_HEIGHT as f32 + 1.0 );
+const SCREEN_HEIGHT : f32   = PIXEL_PER_GRID * ( MAP_HEIGHT as f32 + 2.0 );
 const SCREEN_BGCOLOR: Color = Color::rgb_linear( 0.025, 0.025, 0.04 );
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -61,8 +61,6 @@ fn main()
 	.add_plugin( EguiPlugin )										// bevy_egui
 	//----------------------------------------------------------------------------------------------
 	.add_state( GameState::Init )									// 状態遷移のState初期値
-	.init_resource::<GameRecord>()									// ゲームレコード
-	//----------------------------------------------------------------------------------------------
 	.add_system_set													// ＜GameState::Init＞
 	(	SystemSet::on_enter( GameState::Init )						// ＜on_enter()＞
 			.with_system( start_preload_assets.system() )			// Assetの事前ロード開始
@@ -96,12 +94,6 @@ fn main()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-//定義と定数
-
-//ゲームレコード
-#[derive(Default)]
-pub struct GameRecord { pub score: usize }
-
 //Assetsのプリロードとハンドルの保存
 const PRELOAD_ASSET_FILES: [ &str; 3 ] =
 [	FONT_MESSAGE_TEXT,	//定義はui.rs
@@ -109,8 +101,6 @@ const PRELOAD_ASSET_FILES: [ &str; 3 ] =
 	WALL_SPRITE_FILE,	//定義はmap.rs
 ];
 struct LoadedAssets { preload: Vec<HandleUntyped> }
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //Assetの事前ロードを開始する
 fn start_preload_assets

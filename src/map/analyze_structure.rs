@@ -105,7 +105,7 @@ impl GameMap
 						.insert( SysinfoObj );
 				}
 				//通路
-				else if self.is_passageway( x, y )
+				else if ! self.is_wall( x, y ) && ! self.is_passageway( x, y )
 				{	cmds.spawn_bundle( sprite_sysinfo( xy, color_matl, Color::INDIGO, self.is_sysinfo ) )
 						.insert( SysinfoObj );
 				}

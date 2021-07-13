@@ -70,11 +70,56 @@ impl GameMap
 	}
 
 	//指定されたマスと周囲の８マスを可視化する
-	pub fn show_enclosure_obj( &mut self, x: i32, y: i32, mut q: Query<&mut Visible> )
-	{	( -1..=1 ).for_each( | dx |
-		( -1..=1 ).for_each( | dy |
-			self.show( x + dx, y + dy, &mut q )
-		) );
+	pub fn show_enclosure_obj( &mut self, x: i32, y: i32, mut q: Query<&mut Visible>, automap: ResMut<AutoMap> )
+	{	self.show( x - 1, y - 1, &mut q );
+		self.show( x    , y - 1, &mut q );
+		self.show( x + 1, y - 1, &mut q );
+		self.show( x - 1, y    , &mut q );
+		self.show( x    , y    , &mut q );
+		self.show( x + 1, y    , &mut q );
+		self.show( x - 1, y + 1, &mut q );
+		self.show( x    , y + 1, &mut q );
+		self.show( x + 1, y + 1, &mut q );
+
+		if automap.0 <= 1 { return }
+
+		self.show( x    , y - 2, &mut q );
+		self.show( x - 2, y    , &mut q );
+		self.show( x + 2, y    , &mut q );
+		self.show( x    , y + 2, &mut q );
+
+		if automap.0 <= 2 { return }
+
+		self.show( x - 1, y - 2, &mut q );
+		self.show( x + 1, y - 2, &mut q );
+		self.show( x - 2, y - 1, &mut q );
+		self.show( x - 2, y + 1, &mut q );
+		self.show( x + 2, y - 1, &mut q );
+		self.show( x + 2, y + 1, &mut q );
+		self.show( x - 1, y + 2, &mut q );
+		self.show( x + 1, y + 2, &mut q );
+
+		if automap.0 <= 3 { return }
+
+		self.show( x    , y - 3, &mut q );
+		self.show( x - 2, y - 2, &mut q );
+		self.show( x + 2, y - 2, &mut q );
+		self.show( x - 3, y    , &mut q );
+		self.show( x - 2, y + 2, &mut q );
+		self.show( x + 3, y    , &mut q );
+		self.show( x + 2, y + 2, &mut q );
+		self.show( x    , y + 3, &mut q );
+
+		if automap.0 <= 4 { return }
+
+		self.show( x - 1, y - 3, &mut q );
+		self.show( x + 1, y - 3, &mut q );
+		self.show( x - 3, y - 1, &mut q );
+		self.show( x - 3, y + 1, &mut q );
+		self.show( x + 3, y - 1, &mut q );
+		self.show( x + 3, y + 1, &mut q );
+		self.show( x - 1, y + 3, &mut q );
+		self.show( x + 1, y + 3, &mut q );
 	}
 }
 

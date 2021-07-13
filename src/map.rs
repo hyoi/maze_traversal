@@ -28,7 +28,7 @@ impl Plugin for PluginMap
 		//------------------------------------------------------------------------------------------
 		.add_system_set											// ＜GameState::Play＞
 		(	SystemSet::on_update( GameState::Play )				// ＜on_update()＞
-				.with_system( animate_goal_sprite.system() )	// ゴールスプライトのアニメーション
+				.with_system( update_goal_sprite.system() )	// ゴールスプライトのアニメーション
 		)
 		//------------------------------------------------------------------------------------------
 		.add_system_set											// ＜GameState::Clear＞
@@ -50,7 +50,7 @@ impl Plugin for PluginMap
 
 //迷路の縦横のマス数
 pub const MAP_WIDTH : i32 = 66;
-pub const MAP_HEIGHT: i32 = 36;
+pub const MAP_HEIGHT: i32 = 35;
 
 //MAPのマスの種類
 #[derive(Copy,Clone,PartialEq)]
@@ -192,7 +192,7 @@ fn spawn_sprite_new_map
 }
 
 //ゴールのスプライトをアニメーションさせる
-fn animate_goal_sprite
+fn update_goal_sprite
 (	mut q: Query<( &mut Transform, &Handle<ColorMaterial> ), With<SpriteGoal>>,
 	mut color_matl: ResMut<Assets<ColorMaterial>>,
 	time: Res<Time>,

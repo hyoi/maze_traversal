@@ -24,8 +24,8 @@ impl Plugin for PluginUi
 				.with_system( hide_clear_message.system() )				// CLEARメッセージを隠す
 		)
 		//------------------------------------------------------------------------------------------
-		.add_system( update_ui_upper_left.system() )					// 情報を更新
-		.add_system( update_console_window.system() )					// コンソールウィンドウの表示
+		.add_system( update_ui_lower_left.system() )					// 情報を更新
+		.add_system( update_console_window.system() )					// コンソールウィンドウの更新
 		//------------------------------------------------------------------------------------------
 		;
 	}
@@ -56,21 +56,17 @@ const MESSAGE_CLEAR: [ MessageSect; 3 ] =
 
 const NA_STR3: &str = "---";
 
-struct UiUpperLeft;
-const UI_UPPER_LEFT: [ MessageSect; 2 ] =
-[	( "FPS " , FONT_MESSAGE_TEXT, PIXEL_PER_GRID * 0.8, Color::ORANGE ),
-	( NA_STR3, FONT_MESSAGE_TEXT, PIXEL_PER_GRID * 0.9, Color::WHITE  ),
-];
-
 struct UiUpperRight;
 const UI_UPPER_RIGHT: [ MessageSect; 2 ] =
 [	( APP_TITLE, FONT_TITLE_TEXT, PIXEL_PER_GRID * 1.3, Color::ORANGE ),
 	( "迷路踏破", FONT_TITLE_TEXT, PIXEL_PER_GRID * 1.6, Color::WHITE  ),
 ];
 
-//Countdown Timer
-#[derive(Default)]
-struct CountDown { timer: Timer }
+struct UiLowerLeft;
+const UI_LOWER_LEFT: [ MessageSect; 2 ] =
+[	( "FPS " , FONT_MESSAGE_TEXT, PIXEL_PER_GRID * 0.9, Color::ORANGE ),
+	( NA_STR3, FONT_MESSAGE_TEXT, PIXEL_PER_GRID * 1.0, Color::WHITE  ),
+];
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -83,12 +79,14 @@ fn spawn_text_ui_message( mut cmds: Commands, asset_svr: Res<AssetServer> )
 	clear_text.visible.is_visible = false;	//初期は非表示
 
 	//上端に表示するtext
-	let mut ui_upper_left = text_messsage( &UI_UPPER_LEFT, &asset_svr );
-	ui_upper_left.style.align_self = AlignSelf::FlexStart;
-	ui_upper_left.text.alignment.horizontal = HorizontalAlign::Left;
 	let mut ui_upper_right = text_messsage( &UI_UPPER_RIGHT, &asset_svr );
 	ui_upper_right.style.align_self = AlignSelf::FlexEnd;
 	ui_upper_right.text.alignment.horizontal = HorizontalAlign::Right;
+
+	//下端に表示するtext
+	let mut ui_lower_left = text_messsage( &UI_LOWER_LEFT, &asset_svr );
+	ui_lower_left.style.align_self = AlignSelf::FlexStart;
+	ui_lower_left.text.alignment.horizontal = HorizontalAlign::Left;
 
 	//隠しフレームの上に子要素を作成する
 	cmds.spawn_bundle( hidden_frame_for_centering() ).with_children( | cmds |
@@ -96,9 +94,13 @@ fn spawn_text_ui_message( mut cmds: Commands, asset_svr: Res<AssetServer> )
 		cmds.spawn_bundle( clear_text ).insert( MessageClear );
 
 		cmds.spawn_bundle( hidden_upper_frame() ).with_children( | cmds |
-		{	cmds.spawn_bundle( ui_upper_left  ).insert( UiUpperLeft  );
-			cmds.spawn_bundle( ui_upper_right ).insert( UiUpperRight );
+		{	cmds.spawn_bundle( ui_upper_right ).insert( UiUpperRight );
 		} );
+
+		cmds.spawn_bundle( hidden_lower_frame() ).with_children( | cmds |
+		{	cmds.spawn_bundle( ui_lower_left ).insert( UiLowerLeft );
+		} );
+
 	} );
 }
 
@@ -149,11 +151,26 @@ fn hidden_upper_frame() -> NodeBundle
 	NodeBundle { style, visible, ..Default::default() }
 }
 
+//下端幅合せ用の隠しフレーム
+fn hidden_lower_frame() -> NodeBundle
+{	let width  = Val::Px( SCREEN_WIDTH  );
+	let height = Val::Px( SCREEN_HEIGHT );
+	let style = Style
+	{	size: Size::new( width, height ),
+		position_type  : PositionType::Absolute,
+		flex_direction : FlexDirection::Column,
+		justify_content: JustifyContent::FlexStart, //画面の下端
+		..Default::default()
+	};
+	let visible = Visible { is_visible: false, ..Default::default() };
+	NodeBundle { style, visible, ..Default::default() }
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //下端の情報表示を更新する(左)
-fn update_ui_upper_left
-(	mut q: Query<&mut Text, With<UiUpperLeft>>,
+fn update_ui_lower_left
+(	mut q: Query<&mut Text, With<UiLowerLeft>>,
 	diag: Res<Diagnostics>,
 )
 {	if let Ok( mut ui ) = q.single_mut()
@@ -175,7 +192,7 @@ fn update_console_window
 	q_spr_wall_id: Query<( Entity, &SpriteWall )>,
 	q_sysinfo_id : Query<Entity, With<SysinfoObj>>,
 	mut maze: ResMut<GameMap>,
-	record: Res<GameRecord>,
+	mut automap: ResMut<AutoMap>,
 	egui: Res<EguiContext>,
 )
 {	let tmp_darkmode = maze.is_darkmode;
@@ -184,9 +201,20 @@ fn update_console_window
 	//コンソールウィンドウを更新する
 	egui::Window::new( "Console" ).show
 	(	egui.ctx(), |ui|
-		{	ui.label( format!( "Stage: {}\nScore: {}", maze.level, record.score ) );
-			ui.checkbox( &mut maze.is_darkmode, "Dark mode"   );
-			ui.checkbox( &mut maze.is_sysinfo , "System info" );
+		{	ui.label( format!( "Stage: {}", maze.level ) );
+			ui.horizontal( | ui |
+			{	ui.checkbox( &mut maze.is_darkmode, "Dark mode"   );
+				ui.checkbox( &mut maze.is_sysinfo , "System info" );
+			} );
+			ui.label( "Auto Mapping:".to_string() );
+			ui.horizontal( | ui |
+			{	ui.label( "  ".to_string() );
+				ui.radio_value( &mut automap.0, 1, "Lv1" );
+				ui.radio_value( &mut automap.0, 2, "Lv2" );
+				ui.radio_value( &mut automap.0, 3, "Lv3" );
+				ui.radio_value( &mut automap.0, 4, "Lv4" );
+				ui.radio_value( &mut automap.0, 5, "Lv5" );
+			} );
 		}
 	);
 
@@ -222,17 +250,17 @@ fn hide_clear_message( mut q: Query<&mut Visible, With<MessageClear>> )
 fn change_state_after_countdown
 (	mut q: Query<&mut Text, With<MessageClear>>,
 	mut state: ResMut<State<GameState>>,
-	( mut count, mut countdown ): ( Local<i32>, Local<CountDown> ),
+	( mut count, mut timer ): ( Local<i32>, Local<Timer> ),
 	time: Res<Time>,
 )
 {	if let Ok( mut ui ) = q.single_mut()
-	{	if *count <= 0											 //カウンターが未初期化なら
-		{	countdown.timer = Timer::from_seconds( 1.0, false ); //タイマーセット
-			*count = 6;											 //カウンター初期化
+	{	if *count <= 0									//カウンターが未初期化か？
+		{	*timer = Timer::from_seconds( 1.0, false );	//1秒タイマーセット
+			*count = 6;									//カウント数の初期化
 		}
-		else if countdown.timer.tick( time.delta() ).finished()	 //1秒経過したら
-		{	countdown.timer.reset();							 //タイマー再セット
-			*count -= 1;										 //カウントダウン
+		else if timer.tick( time.delta() ).finished()	//1秒経過したら
+		{	timer.reset();								//タイマー再セット
+			*count -= 1;								//カウントダウン
 
 			//カウントダウンが終わったら、Startへ遷移する
 			if *count <= 0 { let _ = state.overwrite_set( GameState::Start ); }
