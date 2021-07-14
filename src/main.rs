@@ -24,16 +24,20 @@ const SCREEN_WIDTH  : f32   = PIXEL_PER_GRID * MAP_WIDTH  as f32;
 const SCREEN_HEIGHT : f32   = PIXEL_PER_GRID * ( MAP_HEIGHT as f32 + 2.0 );
 const SCREEN_BGCOLOR: Color = Color::rgb_linear( 0.025, 0.025, 0.04 );
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-//状態遷移
+//ゲームの状態遷移
 #[derive(Clone,Copy,Debug,Eq,PartialEq,Hash)]
-pub enum GameState
-{	Init,
-	Start,
-	Play,
-	Clear,
-	Pause,
+pub enum GameState { Init, Start, Play, Clear, Pause }
+
+//全体に影響する変数を格納するResource
+struct SystemParameters
+{	maze_type: SelectMazeType,
+}
+impl Default for SystemParameters
+{	fn default() -> Self
+	{	Self
+		{	maze_type: SelectMazeType::Random
+		}
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -60,7 +64,8 @@ fn main()
 	.add_plugin( ShapePlugin )										// bevy_prototype_lyon
 	.add_plugin( EguiPlugin )										// bevy_egui
 	//----------------------------------------------------------------------------------------------
-	.add_state( GameState::Init )									// 状態遷移のState初期値
+	.add_state( GameState::Init )									// 状態遷移の初期値
+	.init_resource::<SystemParameters>()							// 全体に影響する変数を格納するResource
 	.add_system_set													// ＜GameState::Init＞
 	(	SystemSet::on_enter( GameState::Init )						// ＜on_enter()＞
 			.with_system( start_preload_assets.system() )			// Assetの事前ロード開始

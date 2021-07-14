@@ -193,27 +193,44 @@ fn update_console_window
 	q_sysinfo_id : Query<Entity, With<SysinfoObj>>,
 	mut maze: ResMut<GameMap>,
 	mut automap: ResMut<AutoMap>,
+	mut sysparams: ResMut<SystemParameters>,
 	egui: Res<EguiContext>,
 )
 {	let tmp_darkmode = maze.is_darkmode;
 	let tmp_sysinfo  = maze.is_sysinfo;
 
 	//コンソールウィンドウを更新する
-	egui::Window::new( "Console" ).show
-	(	egui.ctx(), |ui|
+	egui::Window::new( "Control panel" ).show
+	(	egui.ctx(), | ui |
 		{	ui.label( format!( "Stage: {}", maze.level ) );
 			ui.horizontal( | ui |
 			{	ui.checkbox( &mut maze.is_darkmode, "Dark mode"   );
 				ui.checkbox( &mut maze.is_sysinfo , "System info" );
 			} );
-			ui.label( "Auto Mapping:".to_string() );
 			ui.horizontal( | ui |
-			{	ui.label( "  ".to_string() );
-				ui.radio_value( &mut automap.0, 1, "Lv1" );
-				ui.radio_value( &mut automap.0, 2, "Lv2" );
-				ui.radio_value( &mut automap.0, 3, "Lv3" );
-				ui.radio_value( &mut automap.0, 4, "Lv4" );
-				ui.radio_value( &mut automap.0, 5, "Lv5" );
+			{	ui.label( "Next maze is:".to_string() );
+				egui::ComboBox::from_id_source( "Next maze is:" )
+				.width( PIXEL_PER_GRID * 2.7 )
+				.selected_text( format!( "{:?}", sysparams.maze_type ) )
+				.show_ui( ui, | ui |
+				{	ui.selectable_value( &mut sysparams.maze_type, SelectMazeType::Random, "Random" );
+					ui.selectable_value( &mut sysparams.maze_type, SelectMazeType::Type1,  "Type1 " );
+					ui.selectable_value( &mut sysparams.maze_type, SelectMazeType::Type2,  "Type2 " );
+					ui.selectable_value( &mut sysparams.maze_type, SelectMazeType::Type3,  "Type3 " );
+				} );
+			} );
+			ui.horizontal( | ui |
+			{	ui.label( "Skill[Auto Mapping]:".to_string() );
+				egui::ComboBox::from_id_source( "Skill[Auto Mapping]:" )
+				.width( PIXEL_PER_GRID )
+				.selected_text( format!( "Lv{:?}", automap.0 ) )
+				.show_ui( ui, | ui |
+				{	ui.selectable_value( &mut automap.0, 1, "Lv1" );
+					ui.selectable_value( &mut automap.0, 2, "Lv2" );
+					ui.selectable_value( &mut automap.0, 3, "Lv3" );
+					ui.selectable_value( &mut automap.0, 4, "Lv4" );
+					ui.selectable_value( &mut automap.0, 5, "Lv5" );
+				} );
 			} );
 		}
 	);

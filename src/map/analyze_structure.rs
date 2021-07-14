@@ -126,7 +126,7 @@ fn sprite_sysinfo
 {	SpriteBundle
 	{	material : color_matl.add( color.into() ),
 		transform: Transform::from_translation( Vec3::new( x, y, SPRITE_DEPTH_SYSINFO ) ),
-		sprite   : Sprite::new( Vec2::new( SYSTILE_PIXEL, SYSTILE_PIXEL ) ),
+		sprite   : Sprite::new( Vec2::new( SYSTILE_PIXEL, SYSTILE_PIXEL ) * 0.9 ),
 		visible  : Visible { is_visible, ..Default::default() },
 		..Default::default()
 	}

@@ -52,6 +52,10 @@ impl Plugin for PluginMap
 pub const MAP_WIDTH : i32 = 66;
 pub const MAP_HEIGHT: i32 = 35;
 
+//迷路生成関数の選択
+#[derive(PartialEq,Debug)]
+pub enum SelectMazeType { Random, Type1, Type2, Type3 }
+
 //MAPのマスの種類
 #[derive(Copy,Clone,PartialEq)]
 pub enum MapObj
@@ -112,6 +116,7 @@ const GOAL_COLOR: Color = Color::YELLOW;
 fn spawn_sprite_new_map
 (	mut maze: ResMut<GameMap>,
 	mut state : ResMut<State<GameState>>,
+	sysparams: ResMut<SystemParameters>,
 	mut cmds: Commands,
 	mut color_matl: ResMut<Assets<ColorMaterial>>,
 	asset_svr: Res<AssetServer>,
@@ -130,7 +135,13 @@ fn spawn_sprite_new_map
 	maze.start_xy = ( x, MAP_HEIGHT - 1 );
 
 	//呼び出す関数を乱数で決め、迷路を掘らせる
-	match maze.rng.gen_range( 0..3 )
+	let maze_type = match sysparams.maze_type
+	{	SelectMazeType::Random => maze.rng.gen_range( 0..3 ),
+		SelectMazeType::Type1  => 0,
+		SelectMazeType::Type2  => 1,
+		SelectMazeType::Type3  => 2,
+	};
+	match maze_type
 	{	0 => maze.dig_and_dig_and_dig(),			//一型迷路
 		1 => maze.dig_and_back_and_dig(),			//二型迷路
 		2 => maze.find_and_destroy_digable_walls(),	//三型迷路
