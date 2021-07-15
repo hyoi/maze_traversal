@@ -25,7 +25,6 @@ impl Plugin for PluginUi
 		)
 		//------------------------------------------------------------------------------------------
 		.add_system( update_ui_lower_left.system() )					// 情報を更新
-		.add_system( update_console_window.system() )					// コンソールウィンドウの更新
 		//------------------------------------------------------------------------------------------
 		;
 	}
@@ -181,73 +180,6 @@ fn update_ui_lower_left
 			}
 		} else { NA_STR3.to_string() };
 		ui.sections[ 1 ].value = fps_avr;
-	}
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-//コンソールウィンドウを更新する
-fn update_console_window
-(	mut q_visible: Query<&mut Visible>,
-	q_spr_wall_id: Query<( Entity, &SpriteWall )>,
-	q_sysinfo_id : Query<Entity, With<SysinfoObj>>,
-	mut maze: ResMut<GameMap>,
-	mut automap: ResMut<AutoMap>,
-	mut sysparams: ResMut<SystemParameters>,
-	egui: Res<EguiContext>,
-)
-{	let tmp_darkmode = maze.is_darkmode;
-	let tmp_sysinfo  = maze.is_sysinfo;
-
-	//コンソールウィンドウを更新する
-	egui::Window::new( "Control panel" ).show
-	(	egui.ctx(), | ui |
-		{	ui.label( format!( "Stage: {}", maze.level ) );
-			ui.horizontal( | ui |
-			{	ui.checkbox( &mut maze.is_darkmode, "Dark mode"   );
-				ui.checkbox( &mut maze.is_sysinfo , "System info" );
-			} );
-			ui.horizontal( | ui |
-			{	ui.label( "Next maze is:".to_string() );
-				egui::ComboBox::from_id_source( "Next maze is:" )
-				.width( PIXEL_PER_GRID * 2.7 )
-				.selected_text( format!( "{:?}", sysparams.maze_type ) )
-				.show_ui( ui, | ui |
-				{	ui.selectable_value( &mut sysparams.maze_type, SelectMazeType::Random, "Random" );
-					ui.selectable_value( &mut sysparams.maze_type, SelectMazeType::Type1,  "Type1 " );
-					ui.selectable_value( &mut sysparams.maze_type, SelectMazeType::Type2,  "Type2 " );
-					ui.selectable_value( &mut sysparams.maze_type, SelectMazeType::Type3,  "Type3 " );
-				} );
-			} );
-			ui.horizontal( | ui |
-			{	ui.label( "Skill[Auto Mapping]:".to_string() );
-				egui::ComboBox::from_id_source( "Skill[Auto Mapping]:" )
-				.width( PIXEL_PER_GRID )
-				.selected_text( format!( "Lv{:?}", automap.0 ) )
-				.show_ui( ui, | ui |
-				{	ui.selectable_value( &mut automap.0, 1, "Lv1" );
-					ui.selectable_value( &mut automap.0, 2, "Lv2" );
-					ui.selectable_value( &mut automap.0, 3, "Lv3" );
-					ui.selectable_value( &mut automap.0, 4, "Lv4" );
-					ui.selectable_value( &mut automap.0, 5, "Lv5" );
-				} );
-			} );
-		}
-	);
-
-	//Dark modeのチェックボックスが切り替わったら
-	if maze.is_darkmode != tmp_darkmode
-	{	for ( id, wall ) in q_spr_wall_id.iter()
-		{	if maze.is_visible( wall.x, wall.y ) { continue }
-			q_visible.get_component_mut::<Visible>( id ).unwrap().is_visible = ! maze.is_darkmode;
-		}
-	}
-
-	//System infoのチェックボックスが切り替わったら
-	if maze.is_sysinfo != tmp_sysinfo
-	{	for id in q_sysinfo_id.iter()
-		{	q_visible.get_component_mut::<Visible>( id ).unwrap().is_visible = maze.is_sysinfo;
-		}
 	}
 }
 

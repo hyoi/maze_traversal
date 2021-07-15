@@ -8,9 +8,11 @@ use rand::prelude::*;
 mod ui;
 mod map;
 mod player;
+mod control_panel;
 use ui::*;
 use map::*;
 use player::*;
+use control_panel::*;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -79,6 +81,7 @@ fn main()
 	.add_system( handle_esc_key_for_pause.system() )				// [Esc]でpause処理
 	//----------------------------------------------------------------------------------------------
 	.add_plugin( PluginUi )
+	.add_plugin( PluginControlPanel )
 	.add_plugin( PluginMap )
 	.add_plugin( PluginPlayer )
 	//----------------------------------------------------------------------------------------------

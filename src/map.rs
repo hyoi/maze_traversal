@@ -53,6 +53,7 @@ pub const MAP_WIDTH : i32 = 66;
 pub const MAP_HEIGHT: i32 = 35;
 
 //迷路生成関数の選択
+#[allow(dead_code)]
 #[derive(PartialEq,Debug)]
 pub enum SelectMazeType { Random, Type1, Type2, Type3 }
 
