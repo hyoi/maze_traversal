@@ -1,10 +1,46 @@
 use super::*;
+use std::collections::HashMap;
+
+//internal modules
+mod skill;
+pub use skill::*;
+
+//Playerの変数を格納するResource
+#[allow(dead_code)]
+pub struct PlayerParameters
+{	name: String,
+	flavor_text: String,
+	level: usize,
+	pub skill_set: HashMap<&'static str, usize>,
+//	uuid: UUID,
+//	create: Datetime,
+//	update: Datetime,
+}
+impl Default for PlayerParameters
+{	fn default() -> Self
+	{	//初期取得済みのスキルのレベル
+		let mut skill_set = HashMap::new();
+		skill_set.insert( SKILL_AUTO_MAPPING, 1 );	//Lv range: 0..=5
+
+		Self
+		{	name: "".to_string(),
+			flavor_text: "".to_string(),		
+			level: 1,
+			skill_set,
+		}
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //Pluginの手続き
 pub struct PluginPlayer;
 impl Plugin for PluginPlayer
 {	fn build( &self, app: &mut AppBuilder )
 	{	app
+		//------------------------------------------------------------------------------------------
+		.init_resource::<PlayerParameters>()					// PlayerParameters型のResource
+		.init_resource::<SkillParameters>()						// SkillParameters型のResource
 		//------------------------------------------------------------------------------------------
 		.add_system_set											// ＜GameState::Start＞
 		(	SystemSet::on_exit( GameState::Start )				// ＜on_exit()＞
@@ -21,7 +57,7 @@ impl Plugin for PluginPlayer
 				.with_system( despawn_sprite_player.system() )	// 自機を削除
 		)
 		//------------------------------------------------------------------------------------------
-		.insert_resource( AutoMap ( 1 ) )
+//		.insert_resource( AutoMap ( 1 ) )
 		;
 	}
 }
@@ -55,7 +91,7 @@ struct Player
 	stop: bool,
 }
 
-pub struct AutoMap ( pub i32 );
+//pub struct AutoMap ( pub i32 );
 
 //Sprite
 const SPRITE_DEPTH_PLAYER: f32 = 20.0;
@@ -87,11 +123,12 @@ fn spawn_sprite_player( maze: Res<GameMap>, mut cmds: Commands )
 fn move_sprite_player
 (	mut q: Query<( &mut Player, &mut Transform )>,
 	q_visible: Query<&mut Visible>,
-	mut maze: ResMut<GameMap>,
 	mut state : ResMut<State<GameState>>,
-	mut cmds: Commands,
-	( time, inkey ): ( Res<Time>, Res<Input<KeyCode>> ),
-	automap: ResMut<AutoMap>,
+	mut maze: ResMut<GameMap>,
+	player_params: Res<PlayerParameters>,
+	skill_params: Res<SkillParameters>,
+	( mut cmds, time, inkey ): ( Commands, Res<Time>, Res<Input<KeyCode>> ),
+//	automap: ResMut<AutoMap>,
 )
 {	let time_delta = time.delta();
 	let ( mut player, mut transform ) = q.single_mut().unwrap();
@@ -180,7 +217,12 @@ fn move_sprite_player
 		player.map_location = ( map_x, map_y );
 
 		//Dark Modeでプレイヤーの周囲を視覚化する
-		maze.show_enclosure_obj( map_x, map_y, q_visible, automap );
+		maze.show_enclosure_obj
+		(	map_x, map_y,
+			*player_params.skill_set.get( SKILL_AUTO_MAPPING ).unwrap(),
+			q_visible,
+			&skill_params.auto_mapping,
+		);
 
 		//ウェイトをリセットする
 		player.wait.reset();

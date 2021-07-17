@@ -20,7 +20,7 @@ fn update_control_panel_window
 	q_spr_wall_id: Query<( Entity, &SpriteWall )>,
 	q_sysinfo_id : Query<Entity, With<SysinfoObj>>,
 	mut maze: ResMut<GameMap>,
-	mut automap: ResMut<AutoMap>,
+	mut player_params: ResMut<PlayerParameters>,
 	mut sysparams: ResMut<SystemParameters>,
 	egui: Res<EguiContext>,
 )
@@ -43,20 +43,26 @@ fn update_control_panel_window
 					ui.selectable_value( &mut sysparams.maze_type, SelectMazeType::Type3,  "Type3 " );
 				} );
 			} );
+
+			let mut temp = *player_params.skill_set.get( SKILL_AUTO_MAPPING ).unwrap();
 			ui.label( "Skill:".to_string() );
 			ui.horizontal( | ui |
 			{	ui.label( "- Auto Mapping:".to_string() );
 				egui::ComboBox::from_id_source( "Auto Mapping Lv" )
 				.width( PIXEL_PER_GRID )
-				.selected_text( format!( "Lv{:?}", automap.0 ) )
+				.selected_text( format!( "Lv{:?}", temp ) )
 				.show_ui( ui, | ui |
-				{	ui.selectable_value( &mut automap.0, 1, "Lv1" );
-					ui.selectable_value( &mut automap.0, 2, "Lv2" );
-					ui.selectable_value( &mut automap.0, 3, "Lv3" );
-					ui.selectable_value( &mut automap.0, 4, "Lv4" );
-					ui.selectable_value( &mut automap.0, 5, "Lv5" );
+				{	ui.selectable_value( &mut temp, 1, "Lv1" );
+					ui.selectable_value( &mut temp, 2, "Lv2" );
+					ui.selectable_value( &mut temp, 3, "Lv3" );
+					ui.selectable_value( &mut temp, 4, "Lv4" );
+					ui.selectable_value( &mut temp, 5, "Lv5" );
 				} );
 			} );
+			if temp != *player_params.skill_set.get( SKILL_AUTO_MAPPING ).unwrap()
+			{	player_params.skill_set.insert( SKILL_AUTO_MAPPING, temp );
+			}
+
 			ui.horizontal( | ui |
 			{	ui.checkbox( &mut maze.is_darkmode, "Dark mode"   );
 				ui.checkbox( &mut maze.is_sysinfo , "System info" );

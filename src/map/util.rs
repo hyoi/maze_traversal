@@ -51,6 +51,7 @@ const BIT_IS_DEAD_END  : usize = 0b0100;
 
 impl GameMap
 {	//指定されたマスのフラグを返す
+	#[allow(dead_code)]
 	pub fn is_visible    ( &self, x: i32, y: i32 ) -> bool { self.stat[ x as usize ][ y as usize ] & BIT_IS_VISIBLE    != 0 }
 	pub fn is_passageway ( &self, x: i32, y: i32 ) -> bool { self.stat[ x as usize ][ y as usize ] & BIT_IS_PASSAGEWAY != 0 }
 	pub fn is_dead_end   ( &self, x: i32, y: i32 ) -> bool { self.stat[ x as usize ][ y as usize ] & BIT_IS_DEAD_END   != 0 }
@@ -60,66 +61,13 @@ impl GameMap
 	pub fn set_flag_dead_end   ( &mut self, x: i32, y: i32 ) { self.stat[ x as usize ][ y as usize ] |= BIT_IS_DEAD_END;   }
 
 	//指定されたマスのVISIBLEフラグを立ててスプライトを可視化する
-	fn show( &mut self, x: i32, y: i32, q: &mut Query<&mut Visible> )
+	pub fn show( &mut self, x: i32, y: i32, q: &mut Query<&mut Visible> )
 	{	if ! MAP_INDEX_X.contains( &x ) || ! MAP_INDEX_Y.contains( &y ) { return }
 
 		self.stat[ x as usize ][ y as usize ] |= BIT_IS_VISIBLE;
 		if let MapObj::Wall( Some( id ) ) = self.map[ x as usize ][ y as usize ]
 		{	q.get_component_mut::<Visible>( id ).unwrap().is_visible = true;
 		}
-	}
-
-	//指定されたマスと周囲の８マスを可視化する
-	pub fn show_enclosure_obj( &mut self, x: i32, y: i32, mut q: Query<&mut Visible>, automap: ResMut<AutoMap> )
-	{	self.show( x - 1, y - 1, &mut q );
-		self.show( x    , y - 1, &mut q );
-		self.show( x + 1, y - 1, &mut q );
-		self.show( x - 1, y    , &mut q );
-		self.show( x    , y    , &mut q );
-		self.show( x + 1, y    , &mut q );
-		self.show( x - 1, y + 1, &mut q );
-		self.show( x    , y + 1, &mut q );
-		self.show( x + 1, y + 1, &mut q );
-
-		if automap.0 <= 1 { return }
-
-		self.show( x    , y - 2, &mut q );
-		self.show( x - 2, y    , &mut q );
-		self.show( x + 2, y    , &mut q );
-		self.show( x    , y + 2, &mut q );
-
-		if automap.0 <= 2 { return }
-
-		self.show( x - 1, y - 2, &mut q );
-		self.show( x + 1, y - 2, &mut q );
-		self.show( x - 2, y - 1, &mut q );
-		self.show( x - 2, y + 1, &mut q );
-		self.show( x + 2, y - 1, &mut q );
-		self.show( x + 2, y + 1, &mut q );
-		self.show( x - 1, y + 2, &mut q );
-		self.show( x + 1, y + 2, &mut q );
-
-		if automap.0 <= 3 { return }
-
-		self.show( x    , y - 3, &mut q );
-		self.show( x - 2, y - 2, &mut q );
-		self.show( x + 2, y - 2, &mut q );
-		self.show( x - 3, y    , &mut q );
-		self.show( x - 2, y + 2, &mut q );
-		self.show( x + 3, y    , &mut q );
-		self.show( x + 2, y + 2, &mut q );
-		self.show( x    , y + 3, &mut q );
-
-		if automap.0 <= 4 { return }
-
-		self.show( x - 1, y - 3, &mut q );
-		self.show( x + 1, y - 3, &mut q );
-		self.show( x - 3, y - 1, &mut q );
-		self.show( x - 3, y + 1, &mut q );
-		self.show( x + 3, y - 1, &mut q );
-		self.show( x + 3, y + 1, &mut q );
-		self.show( x - 1, y + 3, &mut q );
-		self.show( x + 1, y + 3, &mut q );
 	}
 }
 
