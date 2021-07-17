@@ -89,6 +89,7 @@ impl GameMap
 	//システム情報の表示用スプライト・テキストを生成する
 	pub fn spawn_sysinfo_obj
 	(	&mut self,
+		sysinfo: bool,
 		cmds: &mut Commands,
 		color_matl: &mut ResMut<Assets<ColorMaterial>>,
 		asset_svr: &Res<AssetServer>,
@@ -98,15 +99,15 @@ impl GameMap
 			{	//行き止まり
 				let xy = conv_sprite_coordinates( x, y );
 				if self.is_dead_end( x, y )
-				{	cmds.spawn_bundle( sprite_sysinfo( xy, color_matl, Color::MIDNIGHT_BLUE, self.is_sysinfo ) )
+				{	cmds.spawn_bundle( sprite_sysinfo( xy, color_matl, Color::MIDNIGHT_BLUE, sysinfo ) )
 						.insert( SysinfoObj );
 					let info = self.count[ x as usize ][ y as usize ].to_string();
-					cmds.spawn_bundle ( text2d_sysinfo( &info, xy, asset_svr, self.is_sysinfo ) )
+					cmds.spawn_bundle ( text2d_sysinfo( &info, xy, asset_svr, sysinfo ) )
 						.insert( SysinfoObj );
 				}
 				//通路
 				else if ! self.is_wall( x, y ) && ! self.is_passageway( x, y )
-				{	cmds.spawn_bundle( sprite_sysinfo( xy, color_matl, Color::INDIGO, self.is_sysinfo ) )
+				{	cmds.spawn_bundle( sprite_sysinfo( xy, color_matl, Color::INDIGO, sysinfo ) )
 						.insert( SysinfoObj );
 				}
 			}

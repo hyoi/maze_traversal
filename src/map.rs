@@ -78,8 +78,7 @@ pub struct GameMap
 	pub start_xy: ( i32, i32 ),
 	pub goal_xy : ( i32, i32 ),
 	pub count_dots: usize,
-	pub is_darkmode: bool,
-	pub is_sysinfo : bool,
+//	pub is_sysinfo : bool,
 }
 impl Default for GameMap
 {	fn default() -> Self
@@ -93,8 +92,7 @@ impl Default for GameMap
 			start_xy: ( 0, 0 ),
 			goal_xy : ( 0, 0 ),
 			count_dots: 0,
-			is_darkmode: true,
-			is_sysinfo : false,
+//			is_sysinfo : false,
 		}
 	}
 }
@@ -161,11 +159,10 @@ fn spawn_sprite_new_map
 	//迷路の構造解析
 	maze.identify_halls_and_passageways();
 	maze.count_deadend_passageway_length();
-	maze.spawn_sysinfo_obj( &mut cmds, &mut color_matl, &asset_svr );
+	maze.spawn_sysinfo_obj( sysparams.sysinfo, &mut cmds, &mut color_matl, &asset_svr );
 
 	//スプライトをspawnしてEntity IDを記録する
 	let mut count = 0;
-	let darkmode = maze.is_darkmode;
 	for x in MAP_INDEX_X
 	{	for y in MAP_INDEX_Y
 		{	let xy = conv_sprite_coordinates( x, y );
@@ -188,7 +185,7 @@ fn spawn_sprite_new_map
 				}
 				MapObj::Wall(_) =>
 				{	let id = cmds
-						.spawn_bundle( sprite_wall( xy, &mut color_matl, &asset_svr, darkmode ) )
+						.spawn_bundle( sprite_wall( xy, &mut color_matl, &asset_svr, sysparams.darkmode ) )
 						.insert( SpriteWall { x, y } )
 						.id();
 					MapObj::Wall( Some( id ) )

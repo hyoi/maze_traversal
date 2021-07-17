@@ -19,18 +19,21 @@ fn update_control_panel_window
 (	mut q_visible: Query<&mut Visible>,
 	q_spr_wall_id: Query<( Entity, &SpriteWall )>,
 	q_sysinfo_id : Query<Entity, With<SysinfoObj>>,
-	mut maze: ResMut<GameMap>,
+	maze: Res<GameMap>,
 	mut player_params: ResMut<PlayerParameters>,
 	mut sysparams: ResMut<SystemParameters>,
 	egui: Res<EguiContext>,
 )
-{	let tmp_darkmode = maze.is_darkmode;
-	let tmp_sysinfo  = maze.is_sysinfo;
+{	let tmp_darkmode = sysparams.darkmode;
+	let tmp_sysinfo  = sysparams.sysinfo;
 
 	//コンソールウィンドウを更新する
 	egui::Window::new( "Control panel" ).show
 	(	egui.ctx(), | ui |
-		{	ui.label( format!( "Stage: {}", maze.level ) );
+		{	//挑戦中のステージは何番目か
+			ui.label( format!( "Stage: {}", maze.level ) );
+
+			//次のステージの迷路作成関数を乱数で決めるか、固定するか
 			ui.horizontal( | ui |
 			{	ui.label( "Next Maze:" );
 				egui::ComboBox::from_id_source( "Next Maze" )
@@ -44,44 +47,46 @@ fn update_control_panel_window
 				} );
 			} );
 
-			let mut temp = *player_params.skill_set.get( SKILL_AUTO_MAPPING ).unwrap();
+			//スキル・オートマッピングのレベル変更
+			let mut tmp = *player_params.skill_set.get( SKILL_AUTO_MAPPING ).unwrap();
 			ui.label( "Skill:".to_string() );
 			ui.horizontal( | ui |
 			{	ui.label( "- Auto Mapping:".to_string() );
 				egui::ComboBox::from_id_source( "Auto Mapping Lv" )
 				.width( PIXEL_PER_GRID )
-				.selected_text( format!( "Lv{:?}", temp ) )
+				.selected_text( format!( "Lv{:?}", tmp ) )
 				.show_ui( ui, | ui |
-				{	ui.selectable_value( &mut temp, 1, "Lv1" );
-					ui.selectable_value( &mut temp, 2, "Lv2" );
-					ui.selectable_value( &mut temp, 3, "Lv3" );
-					ui.selectable_value( &mut temp, 4, "Lv4" );
-					ui.selectable_value( &mut temp, 5, "Lv5" );
+				{	ui.selectable_value( &mut tmp, 1, "Lv1" );
+					ui.selectable_value( &mut tmp, 2, "Lv2" );
+					ui.selectable_value( &mut tmp, 3, "Lv3" );
+					ui.selectable_value( &mut tmp, 4, "Lv4" );
+					ui.selectable_value( &mut tmp, 5, "Lv5" );
 				} );
 			} );
-			if temp != *player_params.skill_set.get( SKILL_AUTO_MAPPING ).unwrap()
-			{	player_params.skill_set.insert( SKILL_AUTO_MAPPING, temp );
+			if tmp != *player_params.skill_set.get( SKILL_AUTO_MAPPING ).unwrap()
+			{	player_params.skill_set.insert( SKILL_AUTO_MAPPING, tmp );
 			}
 
+			//各種チェックボックス
 			ui.horizontal( | ui |
-			{	ui.checkbox( &mut maze.is_darkmode, "Dark mode"   );
-				ui.checkbox( &mut maze.is_sysinfo , "System info" );
+			{	ui.checkbox( &mut sysparams.darkmode, "Dark mode"   ); //迷路全体非表示のOn/Off
+				ui.checkbox( &mut sysparams.sysinfo , "System info" ); //迷路のシステム情報の表示On/Off
 			} );
 		}
 	);
 
 	//Dark modeのチェックボックスが切り替わったら
-	if maze.is_darkmode != tmp_darkmode
+	if sysparams.darkmode != tmp_darkmode
 	{	for ( id, wall ) in q_spr_wall_id.iter()
 		{	if maze.is_visible( wall.x, wall.y ) { continue }
-			q_visible.get_component_mut::<Visible>( id ).unwrap().is_visible = ! maze.is_darkmode;
+			q_visible.get_component_mut::<Visible>( id ).unwrap().is_visible = ! sysparams.darkmode;
 		}
 	}
 
 	//System infoのチェックボックスが切り替わったら
-	if maze.is_sysinfo != tmp_sysinfo
+	if sysparams.sysinfo != tmp_sysinfo
 	{	for id in q_sysinfo_id.iter()
-		{	q_visible.get_component_mut::<Visible>( id ).unwrap().is_visible = maze.is_sysinfo;
+		{	q_visible.get_component_mut::<Visible>( id ).unwrap().is_visible = sysparams.sysinfo;
 		}
 	}
 }

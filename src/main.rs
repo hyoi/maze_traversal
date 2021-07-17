@@ -28,16 +28,20 @@ const SCREEN_BGCOLOR: Color = Color::rgb_linear( 0.025, 0.025, 0.04 );
 
 //ゲームの状態遷移
 #[derive(Clone,Copy,Debug,Eq,PartialEq,Hash)]
-pub enum GameState { Init, Start, Play, Clear, Pause }
+pub enum GameState { Init, Start, Play, Clear, Over, Pause }
 
 //全体に影響する変数を格納するResource
 struct SystemParameters
 {	maze_type: SelectMazeType,
+	darkmode : bool,
+	sysinfo  : bool,
 }
 impl Default for SystemParameters
 {	fn default() -> Self
 	{	Self
-		{	maze_type: SelectMazeType::Random
+		{	maze_type: SelectMazeType::Random,
+			darkmode: true,
+			sysinfo : false,
 		}
 	}
 }
