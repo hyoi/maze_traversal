@@ -32,16 +32,18 @@ pub enum GameState { Init, Start, Play, Clear, Over, Pause }
 
 //全体に影響する変数を格納するResource
 struct SystemParameters
-{	maze_type: SelectMazeType,
+{	stage    : usize,
+	maze_type: SelectMazeType,
 	darkmode : bool,
 	sysinfo  : bool,
 }
 impl Default for SystemParameters
 {	fn default() -> Self
 	{	Self
-		{	maze_type: SelectMazeType::Random,
-			darkmode: true,
-			sysinfo : false,
+		{	stage    : 0,
+			maze_type: SelectMazeType::Random,
+			darkmode : true,
+			sysinfo  : false,
 		}
 	}
 }

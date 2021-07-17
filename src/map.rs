@@ -71,28 +71,26 @@ pub enum MapObj
 //MAP情報のResource
 pub struct GameMap
 {	pub rng: rand::prelude::StdRng,	//再現性がある乱数を使いたいので
-	pub level: usize,
+//	pub level: usize,
 	pub map  : [ [ MapObj; MAP_HEIGHT as usize ]; MAP_WIDTH as usize ],
 	pub stat : [ [ usize ; MAP_HEIGHT as usize ]; MAP_WIDTH as usize ],
 	pub count: [ [ usize ; MAP_HEIGHT as usize ]; MAP_WIDTH as usize ],
 	pub start_xy: ( i32, i32 ),
 	pub goal_xy : ( i32, i32 ),
 	pub count_dots: usize,
-//	pub is_sysinfo : bool,
 }
 impl Default for GameMap
 {	fn default() -> Self
 	{	Self
 		{//	rng: StdRng::seed_from_u64( rand::thread_rng().gen::<u64>() ),	//本番用
 			rng: StdRng::seed_from_u64( 1234567890 ),	//開発用：再現性がある乱数を使いたい場合
-			level: 0,
+//			level: 0,
 			map  : [ [ MapObj::None ; MAP_HEIGHT as usize ]; MAP_WIDTH as usize ],
 			stat : [ [ BIT_ALL_CLEAR; MAP_HEIGHT as usize ]; MAP_WIDTH as usize ],
 			count: [ [ 0            ; MAP_HEIGHT as usize ]; MAP_WIDTH as usize ],
 			start_xy: ( 0, 0 ),
 			goal_xy : ( 0, 0 ),
 			count_dots: 0,
-//			is_sysinfo : false,
 		}
 	}
 }
@@ -115,7 +113,7 @@ const GOAL_COLOR: Color = Color::YELLOW;
 fn spawn_sprite_new_map
 (	mut maze: ResMut<GameMap>,
 	mut state : ResMut<State<GameState>>,
-	sysparams: ResMut<SystemParameters>,
+	mut sysparams: ResMut<SystemParameters>,
 	mut cmds: Commands,
 	mut color_matl: ResMut<Assets<ColorMaterial>>,
 	asset_svr: Res<AssetServer>,
@@ -125,7 +123,7 @@ fn spawn_sprite_new_map
 	maze.stat .iter_mut().for_each( | x | x.fill( BIT_ALL_CLEAR        ) );
 	maze.count.iter_mut().for_each( | x | x.fill( 0                    ) );
 	maze.count_dots = 0;
-	maze.level += 1;
+	sysparams.stage += 1;
 
 	//入口を掘る
 	let x = maze.rng.gen_range( MAP_DIGABLE_X );

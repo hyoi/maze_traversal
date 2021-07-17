@@ -31,7 +31,7 @@ fn update_control_panel_window
 	egui::Window::new( "Control panel" ).show
 	(	egui.ctx(), | ui |
 		{	//挑戦中のステージは何番目か
-			ui.label( format!( "Stage: {}", maze.level ) );
+			ui.label( format!( "Stage: {}", sysparams.stage ) );
 
 			//次のステージの迷路作成関数を乱数で決めるか、固定するか
 			ui.horizontal( | ui |
