@@ -48,6 +48,7 @@ pub const BIT_ALL_CLEAR: usize = 0;
 const BIT_IS_VISIBLE   : usize = 0b0001;
 const BIT_IS_PASSAGEWAY: usize = 0b0010;
 const BIT_IS_DEAD_END  : usize = 0b0100;
+const BIT_IS_EVENT_DONE: usize = 0b1000;
 
 impl GameMap
 {	//指定されたマスのフラグを返す
@@ -55,10 +56,12 @@ impl GameMap
 	pub fn is_visible    ( &self, x: i32, y: i32 ) -> bool { self.stat[ x as usize ][ y as usize ] & BIT_IS_VISIBLE    != 0 }
 	pub fn is_passageway ( &self, x: i32, y: i32 ) -> bool { self.stat[ x as usize ][ y as usize ] & BIT_IS_PASSAGEWAY != 0 }
 	pub fn is_dead_end   ( &self, x: i32, y: i32 ) -> bool { self.stat[ x as usize ][ y as usize ] & BIT_IS_DEAD_END   != 0 }
+	pub fn is_event_done ( &self, x: i32, y: i32 ) -> bool { self.stat[ x as usize ][ y as usize ] & BIT_IS_EVENT_DONE != 0 }
 
 	//指定されたマスのフラグを立てる
 	pub fn set_flag_passageway ( &mut self, x: i32, y: i32 ) { self.stat[ x as usize ][ y as usize ] |= BIT_IS_PASSAGEWAY; }
 	pub fn set_flag_dead_end   ( &mut self, x: i32, y: i32 ) { self.stat[ x as usize ][ y as usize ] |= BIT_IS_DEAD_END;   }
+	pub fn set_flag_event_done ( &mut self, x: i32, y: i32 ) { self.stat[ x as usize ][ y as usize ] |= BIT_IS_EVENT_DONE; }
 
 	//指定されたマスのVISIBLEフラグを立ててスプライトを可視化する
 	pub fn show( &mut self, x: i32, y: i32, q: &mut Query<&mut Visible> )

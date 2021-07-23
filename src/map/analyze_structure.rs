@@ -3,6 +3,7 @@ use super::*;
 //Sprite
 pub struct SysinfoObj;
 const SYSTILE_PIXEL: f32 = PIXEL_PER_GRID;
+const SPRITE_DEPTH_SYSINFO: f32 =  5.0;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 

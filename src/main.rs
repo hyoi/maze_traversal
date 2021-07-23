@@ -8,10 +8,12 @@ use rand::prelude::*;
 mod ui;
 mod map;
 mod player;
+mod event;
 mod control_panel;
 use ui::*;
 use map::*;
 use player::*;
+use event::*;
 use control_panel::*;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -28,7 +30,7 @@ const SCREEN_BGCOLOR: Color = Color::rgb_linear( 0.025, 0.025, 0.04 );
 
 //ゲームの状態遷移
 #[derive(Clone,Copy,Debug,Eq,PartialEq,Hash)]
-pub enum GameState { Init, Start, Play, Clear, Over, Pause }
+pub enum GameState { Init, Start, Play, Event, Clear, Over, Pause }
 
 //全体に影響する変数を格納するResource
 struct SystemParameters
@@ -87,9 +89,10 @@ fn main()
 	.add_system( handle_esc_key_for_pause.system() )				// [Esc]でpause処理
 	//----------------------------------------------------------------------------------------------
 	.add_plugin( PluginUi )
-	.add_plugin( PluginControlPanel )
 	.add_plugin( PluginMap )
 	.add_plugin( PluginPlayer )
+	.add_plugin( PluginEvent )
+	.add_plugin( PluginControlPanel )
 	//----------------------------------------------------------------------------------------------
 	;
 

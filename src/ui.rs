@@ -8,7 +8,7 @@ impl Plugin for PluginUi
 		//------------------------------------------------------------------------------------------
 		.add_system_set													// ＜GameState::Init＞
 		(	SystemSet::on_exit( GameState::Init )						// ＜on_exit()＞
-				.with_system( spawn_text_ui_message.system() )			// UIを非表示で生成
+				.with_system( spawn_text_ui_message.system() )			// assetesプリロード後にUIを非表示で生成
 		)
 		//------------------------------------------------------------------------------------------
 		.add_system_set													// ＜GameState::Clear＞
@@ -24,6 +24,8 @@ impl Plugin for PluginUi
 				.with_system( hide_clear_message.system() )				// CLEARメッセージを隠す
 		)
 		//------------------------------------------------------------------------------------------
+		.add_startup_system( spawn_hp_gauge_sprite.system() )			//
+		.add_system( update_ui_upper_left.system() )					// 情報を更新
 		.add_system( update_ui_lower_left.system() )					// 情報を更新
 		//------------------------------------------------------------------------------------------
 		;
@@ -53,12 +55,25 @@ const MESSAGE_CLEAR: [ MessageSect; 3 ] =
 	( ""                 , FONT_MESSAGE_TEXT, PIXEL_PER_GRID * 4.0, Color::WHITE ),
 ];
 
+pub struct MessageEvent;
+const MESSAGE_EVENT: [ MessageSect; 3 ] =
+[	( "E V E N T !!\n", FONT_TITLE_TEXT, PIXEL_PER_GRID * 5.0, Color::GOLD  ),
+	( "戦闘中...\n\n"  , FONT_TITLE_TEXT, PIXEL_PER_GRID * 2.0, Color::WHITE ),
+	( "Hit SPACE Kry!", FONT_TITLE_TEXT, PIXEL_PER_GRID * 2.5, Color::GOLD ),
+];
+
 const NA_STR3: &str = "---";
 
 struct UiUpperRight;
 const UI_UPPER_RIGHT: [ MessageSect; 2 ] =
 [	( APP_TITLE, FONT_TITLE_TEXT, PIXEL_PER_GRID * 1.3, Color::ORANGE ),
 	( "迷路踏破", FONT_TITLE_TEXT, PIXEL_PER_GRID * 1.6, Color::WHITE  ),
+];
+
+struct UiUpperLeft;
+const UI_UPPER_LEFT: [ MessageSect; 2 ] =
+[	( "HP "  , FONT_MESSAGE_TEXT, PIXEL_PER_GRID * 0.9, Color::ORANGE ),
+	( NA_STR3, FONT_MESSAGE_TEXT, PIXEL_PER_GRID * 1.0, Color::WHITE  ),
 ];
 
 struct UiLowerLeft;
@@ -74,13 +89,18 @@ fn spawn_text_ui_message( mut cmds: Commands, asset_svr: Res<AssetServer> )
 {	//中央に表示するtext
 	let mut pause_text = text_messsage( &MESSAGE_PAUSE, &asset_svr );
 	let mut clear_text = text_messsage( &MESSAGE_CLEAR, &asset_svr );
+	let mut event_text = text_messsage( &MESSAGE_EVENT, &asset_svr );
 	pause_text.visible.is_visible = false;	//初期は非表示
 	clear_text.visible.is_visible = false;	//初期は非表示
+	event_text.visible.is_visible = false;	//初期は非表示
 
 	//上端に表示するtext
 	let mut ui_upper_right = text_messsage( &UI_UPPER_RIGHT, &asset_svr );
 	ui_upper_right.style.align_self = AlignSelf::FlexEnd;
 	ui_upper_right.text.alignment.horizontal = HorizontalAlign::Right;
+	let mut ui_upper_left = text_messsage( &UI_UPPER_LEFT, &asset_svr );
+	ui_upper_left.style.align_self = AlignSelf::FlexStart;
+	ui_upper_left.text.alignment.horizontal = HorizontalAlign::Left;
 
 	//下端に表示するtext
 	let mut ui_lower_left = text_messsage( &UI_LOWER_LEFT, &asset_svr );
@@ -91,9 +111,11 @@ fn spawn_text_ui_message( mut cmds: Commands, asset_svr: Res<AssetServer> )
 	cmds.spawn_bundle( hidden_frame_for_centering() ).with_children( | cmds |
 	{	cmds.spawn_bundle( pause_text ).insert( MessagePause );
 		cmds.spawn_bundle( clear_text ).insert( MessageClear );
+		cmds.spawn_bundle( event_text ).insert( MessageEvent );
 
 		cmds.spawn_bundle( hidden_upper_frame() ).with_children( | cmds |
 		{	cmds.spawn_bundle( ui_upper_right ).insert( UiUpperRight );
+			cmds.spawn_bundle( ui_upper_left  ).insert( UiUpperLeft  );
 		} );
 
 		cmds.spawn_bundle( hidden_lower_frame() ).with_children( | cmds |
@@ -163,6 +185,73 @@ fn hidden_lower_frame() -> NodeBundle
 	};
 	let visible = Visible { is_visible: false, ..Default::default() };
 	NodeBundle { style, visible, ..Default::default() }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//LIFE GAUGE
+struct HpGauge;
+const GAUGE_RECTANGLE: ( f32, f32, f32, f32 ) = 
+(	PIXEL_PER_GRID *  8.9 - SCREEN_WIDTH  / 2.0,	//X軸：画面中央からやや左より
+	PIXEL_PER_GRID * -0.7 + SCREEN_HEIGHT / 2.0,	//Y軸：画面上端からやや下がった位置
+	PIXEL_PER_GRID * 15.0,							//幅
+	PIXEL_PER_GRID *  0.2,							//高さ
+);
+const GAUGE_DEPTH: f32 = 30.0;
+
+//
+fn spawn_hp_gauge_sprite
+(	mut cmds: Commands,
+	mut color_matl: ResMut<Assets<ColorMaterial>>,
+)
+{	//LIFE GAUGEのスプライト
+	let ( x, y, w, h ) = GAUGE_RECTANGLE;
+	let sprite = SpriteBundle
+	{	material : color_matl.add( Color::GREEN.into() ),
+		transform: Transform::from_translation( Vec3::new( x, y, GAUGE_DEPTH ) ),
+		sprite   : Sprite::new( Vec2::new( w, h ) ),
+		..Default::default()
+	};
+	cmds.spawn_bundle( sprite ).insert( HpGauge );
+}
+
+//上端の情報表示を更新する(左)
+fn update_ui_upper_left
+(	mut q_gauge: Query<( &mut Transform, &Handle<ColorMaterial> ), With<HpGauge>>,
+	mut q_ui: Query<&mut Text, With<UiUpperLeft>>,
+	o_player: Option<Res<PlayerParameters>>,
+	mut assets_color_matl: ResMut<Assets<ColorMaterial>>,
+)
+{	if let Ok( mut ui ) = q_ui.single_mut()
+	{	let hp_gauge = match o_player
+		{	Some( player ) =>
+			{	let hp_now = player.hp_now.max( 0.0 );
+				let ( mut transform, handle ) = q_gauge.single_mut().unwrap();
+
+				//スプライトの幅のスケールを縮小する。
+				//すると両端が縮むので、スプライトを左に移動して右端が縮んだように見せる
+				let scale_width = &mut transform.scale[ 0 ];
+				if 	*scale_width > 0.0
+				{	*scale_width = ( hp_now / player.hp_max ).max( 0.0 );
+					let ( x, _, w, _ ) = GAUGE_RECTANGLE;
+					let translation = &mut transform.translation;
+					translation.x = x - ( player.hp_max - hp_now ) * w / 200.0;	
+				}
+
+				//色を変える(緑色⇒黄色⇒赤色)
+				let color_matl = assets_color_matl.get_mut( handle ).unwrap();
+				let temp = hp_now / player.hp_max;
+				color_matl.color = Color::rgb
+				(	1.0 - ( temp - 0.6 ).max( 0.0 ) * 2.0,
+					( temp.min( 0.7 ) * 2.0 - 0.4 ).max( 0.0 ),
+					0.0
+				);
+				format!( "{}", hp_now )
+			},
+			None => NA_STR3.to_string()
+		};
+		ui.sections[ 1 ].value = hp_gauge;
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

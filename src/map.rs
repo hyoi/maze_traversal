@@ -49,7 +49,7 @@ impl Plugin for PluginMap
 //定義と定数
 
 //迷路の縦横のマス数
-pub const MAP_WIDTH : i32 = 66;
+pub const MAP_WIDTH : i32 = 35;	//66
 pub const MAP_HEIGHT: i32 = 35;
 
 //迷路生成関数の選択
@@ -71,7 +71,6 @@ pub enum MapObj
 //MAP情報のResource
 pub struct GameMap
 {	pub rng: rand::prelude::StdRng,	//再現性がある乱数を使いたいので
-//	pub level: usize,
 	pub map  : [ [ MapObj; MAP_HEIGHT as usize ]; MAP_WIDTH as usize ],
 	pub stat : [ [ usize ; MAP_HEIGHT as usize ]; MAP_WIDTH as usize ],
 	pub count: [ [ usize ; MAP_HEIGHT as usize ]; MAP_WIDTH as usize ],
@@ -84,7 +83,6 @@ impl Default for GameMap
 	{	Self
 		{//	rng: StdRng::seed_from_u64( rand::thread_rng().gen::<u64>() ),	//本番用
 			rng: StdRng::seed_from_u64( 1234567890 ),	//開発用：再現性がある乱数を使いたい場合
-//			level: 0,
 			map  : [ [ MapObj::None ; MAP_HEIGHT as usize ]; MAP_WIDTH as usize ],
 			stat : [ [ BIT_ALL_CLEAR; MAP_HEIGHT as usize ]; MAP_WIDTH as usize ],
 			count: [ [ 0            ; MAP_HEIGHT as usize ]; MAP_WIDTH as usize ],
@@ -97,7 +95,6 @@ impl Default for GameMap
 
 //Sprite
 const SPRITE_DEPTH_MAZE   : f32 = 10.0;
-const SPRITE_DEPTH_SYSINFO: f32 =  5.0;
 
 pub struct SpriteWall { pub x: i32, pub y: i32 }
 const WALL_PIXEL: f32 = PIXEL_PER_GRID;
@@ -158,6 +155,8 @@ fn spawn_sprite_new_map
 	maze.identify_halls_and_passageways();
 	maze.count_deadend_passageway_length();
 	maze.spawn_sysinfo_obj( sysparams.sysinfo, &mut cmds, &mut color_matl, &asset_svr );
+	let ( x, y ) = maze.start_xy; maze.set_flag_event_done( x, y ); //スタートでいきなりイベントを起こさないように
+	let ( x, y ) = maze.goal_xy ; maze.set_flag_event_done( x, y ); //コールでいきなりイベントを起こさないように
 
 	//スプライトをspawnしてEntity IDを記録する
 	let mut count = 0;

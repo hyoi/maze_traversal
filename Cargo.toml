@@ -22,6 +22,6 @@ bevy_webgl2 = { version="0.5.2", optional = true }
 winit = { version = "0.24.0" }
 getrandom = { version = "0.2.2", features = [ "wasm-bindgen" ] }
 
-bevy_egui = "0.6.0"
+bevy_egui = "0.6.1"
 bevy_prototype_lyon = "0.3.1"
-rand = "0.8.3"
+rand = "0.8.4"

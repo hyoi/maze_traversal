@@ -11,6 +11,8 @@ pub struct PlayerParameters
 {	name: String,
 	flavor_text: String,
 	level: usize,
+	pub hp_max: f32,
+	pub hp_now: f32,
 	pub skill_set: HashMap<&'static str, usize>,
 //	uuid: UUID,
 //	create: Datetime,
@@ -26,6 +28,8 @@ impl Default for PlayerParameters
 		{	name: "".to_string(),
 			flavor_text: "".to_string(),		
 			level: 1,
+			hp_max: 100.0,
+			hp_now: 100.0,
 			skill_set,
 		}
 	}
@@ -57,7 +61,6 @@ impl Plugin for PluginPlayer
 				.with_system( despawn_sprite_player.system() )	// 自機を削除
 		)
 		//------------------------------------------------------------------------------------------
-//		.insert_resource( AutoMap ( 1 ) )
 		;
 	}
 }
@@ -125,10 +128,9 @@ fn move_sprite_player
 	q_visible: Query<&mut Visible>,
 	mut state : ResMut<State<GameState>>,
 	mut maze: ResMut<GameMap>,
-	player_params: Res<PlayerParameters>,
+	mut player_params: ResMut<PlayerParameters>,
 	skill_params: Res<SkillParameters>,
 	( mut cmds, time, inkey ): ( Commands, Res<Time>, Res<Input<KeyCode>> ),
-//	automap: ResMut<AutoMap>,
 )
 {	let time_delta = time.delta();
 	let ( mut player, mut transform ) = q.single_mut().unwrap();
@@ -173,15 +175,25 @@ fn move_sprite_player
 			player.direction = player.new_direction;
 		}
 
-		//GOAL判定
-		if let MapObj::Goal( opt_dot ) = maze.map[ map_x as usize ][ map_y as usize ]
-		{	cmds.entity( opt_dot.unwrap() ).despawn();
-		}
-
 		//ゴールしたので、Clearへ遷移する
 		if ( map_x, map_y ) == maze.goal_xy
-		{	let _ = state.overwrite_set( GameState::Clear );
+		{	if let MapObj::Goal ( opt_dot ) = maze.map[ map_x as usize ][ map_y as usize ]
+			{	cmds.entity( opt_dot.unwrap() ).despawn();
+			}
+			let _ = state.overwrite_set( GameState::Clear );
 			return;
+		}
+
+		//エンカウント
+		if ! maze.is_event_done( map_x, map_y )
+		{	maze.set_flag_event_done( map_x, map_y );
+			let threshold = if maze.is_passageway( map_x, map_y ) { 10 } else { 30 };
+			let mut rng = rand::thread_rng();
+			if rng.gen_range( 0..100 ) < threshold
+			{	player_params.hp_now -= 1.0;
+				let _ = state.overwrite_set( GameState::Event );
+				return;
+			}
 		}
 
 		//キー入力を取得する
