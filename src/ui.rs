@@ -152,16 +152,15 @@ fn spawn_hp_gauge_sprite( mut cmds: Commands )
 
 //上端の情報表示を更新する(左)
 fn update_ui_upper_left
-(	mut q_gauge: Query<( &mut Transform, &Handle<ColorMaterial> ), With<HpGauge>>,
+(	mut q_gauge: Query<( &mut Transform, &mut Sprite ), With<HpGauge>>,
 	mut q_ui: Query<&mut Text, With<UiUpperLeft>>,
 	o_player: Option<Res<PlayerParameters>>,
-	mut assets_color_matl: ResMut<Assets<ColorMaterial>>,
 )
 {	if let Ok( mut ui ) = q_ui.get_single_mut()
 	{	let hp_gauge = match o_player
 		{	Some( player ) =>
 			{	let hp_now = player.hp_now.max( 0.0 );
-				let ( mut transform, handle ) = q_gauge.get_single_mut().unwrap();
+				let ( mut transform, mut sprite ) = q_gauge.get_single_mut().unwrap();
 
 				//スプライトの幅のスケールを縮小する。
 				//すると両端が縮むので、スプライトを左に移動して右端が縮んだように見せる
@@ -174,9 +173,8 @@ fn update_ui_upper_left
 				}
 
 				//色を変える(緑色⇒黄色⇒赤色)
-				let color_matl = assets_color_matl.get_mut( handle ).unwrap();
 				let temp = hp_now / player.hp_max;
-				color_matl.color = Color::rgb
+				sprite.color = Color::rgb
 				(	1.0 - ( temp - 0.6 ).max( 0.0 ) * 2.0,
 					( temp.min( 0.7 ) * 2.0 - 0.4 ).max( 0.0 ),
 					0.0

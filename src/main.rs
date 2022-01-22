@@ -1,6 +1,5 @@
 //external modules
 use bevy::{ prelude::*, diagnostic::*,};
-// use bevy_prototype_lyon::{ prelude::*, entity::ShapeBundle };
 // use bevy_egui::*;
 
 //internal modules
@@ -15,15 +14,15 @@ use utils::*;
 mod fetch_assets;
 mod ui;
 mod map;
+mod player;
 
 use fetch_assets::*;
 use ui::*;
 use map::*;
+use player::*;
 
-// mod player;
 // mod event;
 // mod control_panel;
-// use player::*;
 // use event::*;
 // use control_panel::*;
 
@@ -46,7 +45,6 @@ fn main()
 	//----------------------------------------------------------------------------------------------
 	.add_plugins( DefaultPlugins )							// デフォルトプラグイン
 	.add_plugin( FrameTimeDiagnosticsPlugin::default() )	// fps計測のプラグイン
-	// .add_plugin( ShapePlugin )							// bevy_prototype_lyon
 	// .add_plugin( EguiPlugin )							// bevy_egui
 	//----------------------------------------------------------------------------------------------
 	.add_state( GameState::Init )							// 状態遷移の初期値
@@ -66,7 +64,7 @@ fn main()
 	.add_plugin( PluginFetchAssets )
 	.add_plugin( PluginUi )
 	.add_plugin( PluginMap )
-	// .add_plugin( PluginPlayer )
+	.add_plugin( PluginPlayer )
 	// .add_plugin( PluginEvent )
 	// .add_plugin( PluginControlPanel )
 	//----------------------------------------------------------------------------------------------

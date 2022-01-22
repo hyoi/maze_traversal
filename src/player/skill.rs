@@ -46,7 +46,7 @@ fn auto_mapping_lv_and_area() -> Vec<Vec<(i32,i32)>>
 impl GameMap
 {	pub fn show_enclosure_obj
 	(	&mut self, x: i32, y: i32, skill_lv: usize,
-		mut q: Query<&mut Visible>,
+		mut q: Query<&mut Visibility>,
 		auto_mappiing_lv_and_area: &[ Vec<(i32,i32)> ],
 	)
 	{	for v_dxdy in auto_mappiing_lv_and_area.iter().take( skill_lv + 1 ) 
