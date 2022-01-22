@@ -2,7 +2,6 @@
 use bevy::{ prelude::*, diagnostic::*,};
 // use bevy_prototype_lyon::{ prelude::*, entity::ShapeBundle };
 // use bevy_egui::*;
-// use rand::prelude::*;
 
 //internal modules
 mod types;
@@ -13,12 +12,16 @@ use types::*;
 use consts::*;
 use utils::*;
 
-// mod ui;
+mod fetch_assets;
+mod ui;
+
+use fetch_assets::*;
+use ui::*;
+
 // mod map;
 // mod player;
 // mod event;
 // mod control_panel;
-// use ui::*;
 // use map::*;
 // use player::*;
 // use event::*;
@@ -60,7 +63,8 @@ fn main()
 	.add_startup_system( spawn_camera )						// bevyのカメラ設置
 	.add_system( handle_esc_key_for_pause )					// [Esc]でpause処理
 	//----------------------------------------------------------------------------------------------
-	// .add_plugin( PluginUi )
+	.add_plugin( PluginFetchAssets )
+	.add_plugin( PluginUi )
 	// .add_plugin( PluginMap )
 	// .add_plugin( PluginPlayer )
 	// .add_plugin( PluginEvent )

@@ -26,6 +26,12 @@ pub const FONT_MESSAGE_TEXT: &str = "fonts/Orbitron-Black.ttf";
 pub const FONT_TITLE_TEXT  : &str = "fonts/ReggaeOne-Regular.ttf";
 pub const WALL_SPRITE_FILE : &str = "sprites/wall.png";
 
+pub const FETCH_ASSETS: [ &str; 3 ] =
+[	FONT_MESSAGE_TEXT,
+	FONT_TITLE_TEXT,
+	WALL_SPRITE_FILE,
+];
+
 //TEXT UIのメッセージセクションの型
 pub type MessageSect<'a> = ( &'a str, &'a str, f32, Color );
 
@@ -72,6 +78,33 @@ pub struct UiLowerLeft;
 pub const UI_LOWER_LEFT: [ MessageSect; 2 ] =
 [	( "FPS " , FONT_MESSAGE_TEXT, PIXEL_PER_GRID * 0.9, Color::ORANGE ),
 	( NA_STR3, FONT_MESSAGE_TEXT, PIXEL_PER_GRID * 1.0, Color::WHITE  ),
+];
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//LIFE GAUGE
+#[derive(Component)]
+pub struct HpGauge;
+pub const GAUGE_RECTANGLE: ( f32, f32, f32, f32 ) = 
+(	PIXEL_PER_GRID *  8.9 - SCREEN_WIDTH  / 2.0,	//X軸：画面中央からやや左より
+	PIXEL_PER_GRID * -0.7 + SCREEN_HEIGHT / 2.0,	//Y軸：画面上端からやや下がった位置
+	PIXEL_PER_GRID * 15.0,							//幅
+	PIXEL_PER_GRID *  0.2,							//高さ
+);
+pub const GAUGE_DEPTH: f32 = 30.0;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//スキル・オートマッピングのパラメータ
+pub const SKILL_AUTO_MAPPING: &str = "auto_mapping";
+pub const AUTO_MAPPING_LV_AND_AREA: [ &str; 7 ] = 
+[	"  545  ",
+	" 43234 ",
+	"5311135",
+	"4210124",	// 中心0
+	"5311135",
+	" 43234 ",
+	"  545  ",
 ];
 
 //End of code.
