@@ -14,11 +14,6 @@ pub const SCREEN_WIDTH  : f32   = PIXEL_PER_GRID * MAP_WIDTH  as f32;
 pub const SCREEN_HEIGHT : f32   = PIXEL_PER_GRID * ( MAP_HEIGHT as f32 + 2.0 );
 pub const SCREEN_BGCOLOR: Color = Color::rgb_linear( 0.025, 0.025, 0.04 );
 
-//迷路生成関数の選択
-#[allow(dead_code)]
-#[derive(PartialEq,Debug)]
-pub enum SelectMazeType { Random, Type1, Type2, Type3 }
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //事前ロード対象のAsset（フォント、画像...etc）

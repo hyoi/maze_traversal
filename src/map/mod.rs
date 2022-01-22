@@ -1,5 +1,8 @@
 use super::*;
 
+//external modules
+use rand::prelude::*;
+
 //internal modules
 mod util;
 pub use util::*;
@@ -11,33 +14,32 @@ mod find_and_destroy_digable_walls;	//迷路作成関数
 mod analyze_structure;
 pub use analyze_structure::*;
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
 //Pluginの手続き
 pub struct PluginMap;
 impl Plugin for PluginMap
-{	fn build( &self, app: &mut AppBuilder )
+{	fn build( &self, app: &mut App )
 	{	app
 		//------------------------------------------------------------------------------------------
 		.init_resource::<GameMap>()								// MAP情報のResource
 		//------------------------------------------------------------------------------------------
 		.add_system_set											// ＜GameState::Start＞
 		(	SystemSet::on_enter( GameState::Start )				// ＜on_enter()＞
-				.with_system( spawn_sprite_new_map.system() )	// 新マップ表示⇒GameState::Playへ
+				.with_system( spawn_sprite_new_map )			// 新マップ表示⇒GameState::Playへ
 		)
 		//------------------------------------------------------------------------------------------
 		.add_system_set											// ＜GameState::Play＞
 		(	SystemSet::on_update( GameState::Play )				// ＜on_update()＞
-				.with_system( update_goal_sprite.system() )	// ゴールスプライトのアニメーション
+				.with_system( update_goal_sprite )				// ゴールスプライトのアニメーション
 		)
 		//------------------------------------------------------------------------------------------
 		.add_system_set											// ＜GameState::Clear＞
 		(	SystemSet::on_enter( GameState::Clear )				// ＜on_enter()＞
-				.with_system( show_cleared_map.system() )		// 地図の全体像を見せる
+				.with_system( show_cleared_map )				// 地図の全体像を見せる
 		)
 		.add_system_set											// ＜GameState::Clear＞
 		(	SystemSet::on_exit( GameState::Clear )				// ＜on_exit()＞
-				.with_system( despawn_sprite_map.system() )		// マップを削除
+				.with_system( despawn_entity::<SpriteWall> )	// マップを削除
+				.with_system( despawn_entity::<SysinfoObj> )	// マップを削除
 		)
 		//------------------------------------------------------------------------------------------
 		;
@@ -45,17 +47,6 @@ impl Plugin for PluginMap
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-
-//定義と定数
-
-//迷路の縦横のマス数
-pub const MAP_WIDTH : i32 = 35;	//66
-pub const MAP_HEIGHT: i32 = 35;
-
-//迷路生成関数の選択
-#[allow(dead_code)]
-#[derive(PartialEq,Debug)]
-pub enum SelectMazeType { Random, Type1, Type2, Type3 }
 
 //MAPのマスの種類
 #[derive(Copy,Clone,PartialEq)]
@@ -81,8 +72,8 @@ pub struct GameMap
 impl Default for GameMap
 {	fn default() -> Self
 	{	Self
-		{//	rng: StdRng::seed_from_u64( rand::thread_rng().gen::<u64>() ),	//本番用
-			rng: StdRng::seed_from_u64( 1234567890 ),	//開発用：再現性がある乱数を使いたい場合
+		{	rng: StdRng::seed_from_u64( rand::thread_rng().gen::<u64>() ),	//本番用
+		//	rng: StdRng::seed_from_u64( 1234567890 ),	//開発用：再現性がある乱数を使いたい場合
 			map  : [ [ MapObj::None ; MAP_HEIGHT as usize ]; MAP_WIDTH as usize ],
 			stat : [ [ BIT_ALL_CLEAR; MAP_HEIGHT as usize ]; MAP_WIDTH as usize ],
 			count: [ [ 0            ; MAP_HEIGHT as usize ]; MAP_WIDTH as usize ],
@@ -96,10 +87,11 @@ impl Default for GameMap
 //Sprite
 const SPRITE_DEPTH_MAZE   : f32 = 10.0;
 
+#[derive(Component)]
 pub struct SpriteWall { pub x: i32, pub y: i32 }
 const WALL_PIXEL: f32 = PIXEL_PER_GRID;
-pub const WALL_SPRITE_FILE: &str = "sprites/wall.png";
 
+#[derive(Component)]
 struct SpriteGoal;
 const GOAL_PIXEL: f32 = PIXEL_PER_GRID / 2.0;
 const GOAL_COLOR: Color = Color::YELLOW;
@@ -112,7 +104,6 @@ fn spawn_sprite_new_map
 	mut state : ResMut<State<GameState>>,
 	mut sysparams: ResMut<SystemParameters>,
 	mut cmds: Commands,
-	mut color_matl: ResMut<Assets<ColorMaterial>>,
 	asset_svr: Res<AssetServer>,
 )
 {	//map配列を初期化する
@@ -154,7 +145,7 @@ fn spawn_sprite_new_map
 	//迷路の構造解析
 	maze.identify_halls_and_passageways();
 	maze.count_deadend_passageway_length();
-	maze.spawn_sysinfo_obj( sysparams.sysinfo, &mut cmds, &mut color_matl, &asset_svr );
+	maze.spawn_sysinfo_obj( sysparams.sysinfo, &mut cmds, &asset_svr );
 	let ( x, y ) = maze.start_xy; maze.set_flag_event_done( x, y ); //スタートでいきなりイベントを起こさないように
 	let ( x, y ) = maze.goal_xy ; maze.set_flag_event_done( x, y ); //コールでいきなりイベントを起こさないように
 
@@ -162,7 +153,7 @@ fn spawn_sprite_new_map
 	let mut count = 0;
 	for x in MAP_INDEX_X
 	{	for y in MAP_INDEX_Y
-		{	let xy = conv_sprite_coordinates( x, y );
+		{	let xy = conv_sprite_coordinates( x as usize, y as usize );
 			let obj = &mut maze.map[ x as usize ][ y as usize ];
 			*obj = match obj
 			{	MapObj::Dot1 =>
@@ -174,7 +165,7 @@ fn spawn_sprite_new_map
 				}
 				MapObj::Goal(_) =>
 				{	let id = cmds
-						.spawn_bundle( sprite_goal( xy, &mut color_matl ) )
+						.spawn_bundle( sprite_goal( xy ) )
 						.insert( SpriteGoal )
 						.id(); 
 					count += 1;
@@ -182,7 +173,7 @@ fn spawn_sprite_new_map
 				}
 				MapObj::Wall(_) =>
 				{	let id = cmds
-						.spawn_bundle( sprite_wall( xy, &mut color_matl, &asset_svr, sysparams.darkmode ) )
+						.spawn_bundle( sprite_wall( xy, &asset_svr, sysparams.darkmode ) )
 						.insert( SpriteWall { x, y } )
 						.id();
 					MapObj::Wall( Some( id ) )
@@ -199,12 +190,10 @@ fn spawn_sprite_new_map
 
 //ゴールのスプライトをアニメーションさせる
 fn update_goal_sprite
-(	mut q: Query<( &mut Transform, &Handle<ColorMaterial> ), With<SpriteGoal>>,
-	mut color_matl: ResMut<Assets<ColorMaterial>>,
+(	mut q: Query<( &mut Transform, &mut Sprite ), With<SpriteGoal>>,
 	time: Res<Time>,
 )
-{	let ( mut transform, handle ) = q.single_mut().unwrap();
-	let color_matl = color_matl.get_mut( handle ).unwrap();
+{	let ( mut transform, mut sprite) = q.get_single_mut().unwrap();
 
 	//回転させる
 	let angle = 360.0 * time.delta().as_secs_f32();
@@ -214,58 +203,48 @@ fn update_goal_sprite
 	//色を変える
 	let hue = ( ( time.seconds_since_startup() * 500. ) as usize % 360 ) as f32;
 	let ( saturation, lightness, alpha ) = ( 1., 0.5, 1. );
-	color_matl.color = Color::Hsla{ hue, saturation, lightness, alpha };
+	sprite.color = Color::Hsla{ hue, saturation, lightness, alpha };
 }
 
 //クリアした地図の全体像を見せる
 pub fn show_cleared_map
-(	mut q_visible: Query<&mut Visible>,
+(	mut q_visibility: Query<&mut Visibility>,
 	q_spr_wall_id: Query<Entity, With<SpriteWall>>,
 )
 {	for id in q_spr_wall_id.iter()
-	{	q_visible.get_component_mut::<Visible>( id ).unwrap().is_visible = true;
+	{	q_visibility.get_component_mut::<Visibility>( id ).unwrap().is_visible = true;
 	}
-}
-
-//スプライトを削除する
-fn despawn_sprite_map
-(	q_sprwall: Query<Entity, With<SpriteWall>>,
-	q_sysinfo: Query<Entity, With<SysinfoObj>>,
-	mut cmds: Commands,
-)
-{	q_sprwall.for_each( | id | cmds.entity( id ).despawn() );
-	q_sysinfo.for_each( | id | cmds.entity( id ).despawn() );
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //ゴールのスプライトバンドルを生成
-fn sprite_goal( ( x, y ): ( f32, f32 ), color_matl: &mut ResMut<Assets<ColorMaterial>> ) -> SpriteBundle
-{	let mut sprite = SpriteBundle
-	{	material : color_matl.add( GOAL_COLOR.into() ),
-		transform: Transform::from_translation( Vec3::new( x, y, SPRITE_DEPTH_MAZE ) ),
-		sprite   : Sprite::new( Vec2::new( GOAL_PIXEL, GOAL_PIXEL ) ),
-		..Default::default()
-	};
-	sprite.transform.rotate( Quat::from_rotation_z( 45_f32.to_radians() ) );
+fn sprite_goal( ( x, y ): ( f32, f32 ) ) -> SpriteBundle
+{	let position = Vec3::new( x, y, SPRITE_DEPTH_MAZE );
+	let square   = Vec2::new( GOAL_PIXEL, GOAL_PIXEL );
+	let quat     = Quat::from_rotation_z( 45_f32.to_radians() ); //45°傾ける
+	let color    = GOAL_COLOR;
 
-	sprite
+	let transform = Transform::from_translation( position ).with_rotation( quat );
+	let sprite = Sprite { color, custom_size: Some( square ), ..Default::default() };
+
+	SpriteBundle { transform, sprite, ..Default::default() }
 }
 
 //壁用のスプライトバンドルを生成
 fn sprite_wall
 (	( x, y ): ( f32, f32 ),
-	color_matl: &mut ResMut<Assets<ColorMaterial>>,
 	asset_svr: &Res<AssetServer>,
 	darkmode: bool,
 ) -> SpriteBundle
-{	SpriteBundle
-	{	material : color_matl.add( asset_svr.load( WALL_SPRITE_FILE ).into() ),
-		transform: Transform::from_translation( Vec3::new( x, y, SPRITE_DEPTH_MAZE ) ),
-		sprite   : Sprite::new( Vec2::new( WALL_PIXEL, WALL_PIXEL ) ),
-		visible  : Visible { is_visible: ! darkmode, ..Default::default() },
-		..Default::default()
-	}
+{	let custom_size = Some( Vec2::new( WALL_PIXEL, WALL_PIXEL ) );
+
+	let sprite     = Sprite { custom_size, ..Default::default() };
+	let texture    = asset_svr.load( WALL_SPRITE_FILE );
+	let transform  = Transform::from_translation( Vec3::new( x, y, SPRITE_DEPTH_MAZE ) );
+	let visibility = Visibility { is_visible: ! darkmode };
+
+	SpriteBundle { sprite, texture, transform, visibility, ..Default::default() }
 }
 
 //End of code.

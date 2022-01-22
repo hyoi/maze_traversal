@@ -1,6 +1,7 @@
 use super::*;
 
 //Sprite
+#[derive(Component)]
 pub struct SysinfoObj;
 const SYSTILE_PIXEL: f32 = PIXEL_PER_GRID;
 const SPRITE_DEPTH_SYSINFO: f32 =  5.0;
@@ -92,15 +93,14 @@ impl GameMap
 	(	&mut self,
 		sysinfo: bool,
 		cmds: &mut Commands,
-		color_matl: &mut ResMut<Assets<ColorMaterial>>,
 		asset_svr: &Res<AssetServer>,
 	)
 	{	for x in MAP_DIGABLE_X
 		{	for y in MAP_DIGABLE_Y
 			{	//行き止まり
-				let xy = conv_sprite_coordinates( x, y );
+				let xy = conv_sprite_coordinates( x as usize, y as usize );
 				if self.is_dead_end( x, y )
-				{	cmds.spawn_bundle( sprite_sysinfo( xy, color_matl, Color::MIDNIGHT_BLUE, sysinfo ) )
+				{	cmds.spawn_bundle( sprite_sysinfo( xy, Color::MIDNIGHT_BLUE, sysinfo ) )
 						.insert( SysinfoObj );
 					let info = self.count[ x as usize ][ y as usize ].to_string();
 					cmds.spawn_bundle ( text2d_sysinfo( &info, xy, asset_svr, sysinfo ) )
@@ -108,7 +108,7 @@ impl GameMap
 				}
 				//通路
 				else if ! self.is_wall( x, y ) && ! self.is_passageway( x, y )
-				{	cmds.spawn_bundle( sprite_sysinfo( xy, color_matl, Color::INDIGO, sysinfo ) )
+				{	cmds.spawn_bundle( sprite_sysinfo( xy, Color::INDIGO, sysinfo ) )
 						.insert( SysinfoObj );
 				}
 			}
@@ -119,19 +119,15 @@ impl GameMap
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //システム情報用のスプライトバンドルを生成
-fn sprite_sysinfo
-(	( x, y ): ( f32, f32 ),
-	color_matl: &mut ResMut<Assets<ColorMaterial>>,
-	color: Color,
-	is_visible: bool,
-) -> SpriteBundle
-{	SpriteBundle
-	{	material : color_matl.add( color.into() ),
-		transform: Transform::from_translation( Vec3::new( x, y, SPRITE_DEPTH_SYSINFO ) ),
-		sprite   : Sprite::new( Vec2::new( SYSTILE_PIXEL, SYSTILE_PIXEL ) * 0.9 ),
-		visible  : Visible { is_visible, ..Default::default() },
-		..Default::default()
-	}
+fn sprite_sysinfo( ( x, y ): ( f32, f32 ), color: Color, is_visible: bool ) -> SpriteBundle
+{	let position = Vec3::new( x, y, SPRITE_DEPTH_SYSINFO );
+	let square = Vec2::new( SYSTILE_PIXEL, SYSTILE_PIXEL ) * 0.9;
+	let visibility = Visibility { is_visible };
+
+	let transform = Transform::from_translation( position );
+	let sprite = Sprite { color, custom_size: Some( square ), ..Default::default() };
+
+	SpriteBundle { transform, sprite, visibility, ..Default::default() }
 }
 
 //システム情報用のテキスト2Dバンドルを生成
@@ -154,7 +150,7 @@ fn text2d_sysinfo
 	Text2dBundle
 	{	text     : Text::with_section( info, style, align ),
 		transform: Transform::from_translation( Vec3::new( x, y, 15.0 ) ),
-		visible  : Visible { is_visible, ..Default::default() },
+		visibility  : Visibility { is_visible },
 		..Default::default()
 	}
 }

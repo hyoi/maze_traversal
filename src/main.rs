@@ -14,15 +14,15 @@ use utils::*;
 
 mod fetch_assets;
 mod ui;
+mod map;
 
 use fetch_assets::*;
 use ui::*;
+use map::*;
 
-// mod map;
 // mod player;
 // mod event;
 // mod control_panel;
-// use map::*;
 // use player::*;
 // use event::*;
 // use control_panel::*;
@@ -65,7 +65,7 @@ fn main()
 	//----------------------------------------------------------------------------------------------
 	.add_plugin( PluginFetchAssets )
 	.add_plugin( PluginUi )
-	// .add_plugin( PluginMap )
+	.add_plugin( PluginMap )
 	// .add_plugin( PluginPlayer )
 	// .add_plugin( PluginEvent )
 	// .add_plugin( PluginControlPanel )
@@ -79,47 +79,5 @@ fn main()
 
 	app.run();												// アプリの実行
 }
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-// //Assetsのプリロードとハンドルの保存
-// const PRELOAD_ASSET_FILES: [ &str; 3 ] =
-// [	FONT_MESSAGE_TEXT,	//定義はui.rs
-// 	FONT_TITLE_TEXT, 	//定義はui.rs
-// 	WALL_SPRITE_FILE,	//定義はmap.rs
-// ];
-// struct LoadedAssets { preload: Vec<HandleUntyped> }
-
-// //Assetの事前ロードを開始する
-// fn start_preload_assets
-// (	mut cmds: Commands,
-// 	asset_svr: Res<AssetServer>,
-// )
-// {	//Assetのロードを開始
-// 	let mut preload = Vec::new();
-// 	PRELOAD_ASSET_FILES.iter()
-// 		.for_each( | f | preload.push( asset_svr.load_untyped( *f ) ) );
-
-// 	cmds.insert_resource( LoadedAssets { preload } );
-// }
-
-// //Assetのロードが完了したら、Stateを変更
-// fn change_state_after_loading
-// (	mut state : ResMut<State<GameState>>,
-// 	assets: Res<LoadedAssets>,
-// 	asset_svr: Res<AssetServer>,
-// )
-// {	for handle in assets.preload.iter()
-// 	{	use bevy::asset::LoadState::*;
-// 		match asset_svr.get_load_state( handle )
-// 		{	Loaded => {}
-// 			Failed => panic!(),	//ロードエラー⇒パニック
-// 			_      => return,	//on_update()なので繰り返し関数が呼び出される
-// 		}
-// 	}
-
-// 	//Startへ遷移する
-// 	let _ = state.overwrite_set( GameState::Start );
-// }
 
 //End of code.

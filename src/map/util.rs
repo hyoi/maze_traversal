@@ -1,11 +1,11 @@
 use super::*;
 
-//二次元配列の添え字から画面座標を算出する
-pub fn conv_sprite_coordinates( x: i32, y: i32 ) -> ( f32, f32 )
-{	let x = ( PIXEL_PER_GRID - SCREEN_WIDTH  ) / 2.0 + PIXEL_PER_GRID * x as f32;
-	let y = ( SCREEN_HEIGHT - PIXEL_PER_GRID ) / 2.0 - PIXEL_PER_GRID * y as f32 - PIXEL_PER_GRID;
-	( x, y )
-}
+// //二次元配列の添え字から画面座標を算出する
+// pub fn conv_sprite_coordinates( x: i32, y: i32 ) -> ( f32, f32 )
+// {	let x = ( PIXEL_PER_GRID - SCREEN_WIDTH  ) / 2.0 + PIXEL_PER_GRID * x as f32;
+// 	let y = ( SCREEN_HEIGHT - PIXEL_PER_GRID ) / 2.0 - PIXEL_PER_GRID * y as f32 - PIXEL_PER_GRID;
+// 	( x, y )
+// }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -64,12 +64,12 @@ impl GameMap
 	pub fn set_flag_event_done ( &mut self, x: i32, y: i32 ) { self.stat[ x as usize ][ y as usize ] |= BIT_IS_EVENT_DONE; }
 
 	//指定されたマスのVISIBLEフラグを立ててスプライトを可視化する
-	pub fn show( &mut self, x: i32, y: i32, q: &mut Query<&mut Visible> )
+	pub fn show( &mut self, x: i32, y: i32, q: &mut Query<&mut Visibility> )
 	{	if ! MAP_INDEX_X.contains( &x ) || ! MAP_INDEX_Y.contains( &y ) { return }
 
 		self.stat[ x as usize ][ y as usize ] |= BIT_IS_VISIBLE;
 		if let MapObj::Wall( Some( id ) ) = self.map[ x as usize ][ y as usize ]
-		{	q.get_component_mut::<Visible>( id ).unwrap().is_visible = true;
+		{	q.get_component_mut::<Visibility>( id ).unwrap().is_visible = true;
 		}
 	}
 }

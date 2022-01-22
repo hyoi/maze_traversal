@@ -15,20 +15,25 @@ pub enum GameState
 	Pause
 }
 
+//迷路生成関数の選択
+#[allow(dead_code)]
+#[derive(PartialEq,Debug)]
+pub enum SelectMazeType { Random, Type1, Type2, Type3 }
+
 //全体に影響する変数を格納するResource
 pub struct SystemParameters
-{	stage    : usize,
-	maze_type: SelectMazeType,
-	darkmode : bool,
-	sysinfo  : bool,
+{	pub stage    : usize,
+	pub maze_type: SelectMazeType,
+	pub darkmode : bool,
+	pub sysinfo  : bool,
 }
 impl Default for SystemParameters
 {	fn default() -> Self
 	{	Self
 		{	stage    : 0,
 			maze_type: SelectMazeType::Random,
-			darkmode : true,
-			sysinfo  : false,
+			darkmode : false,
+			sysinfo  : true,
 		}
 	}
 }
