@@ -1,13 +1,5 @@
 use super::*;
 
-//Sprite
-#[derive(Component)]
-pub struct SysinfoObj;
-const SYSTILE_PIXEL: f32 = PIXEL_PER_GRID;
-const SPRITE_DEPTH_SYSINFO: f32 =  5.0;
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
 impl GameMap
 {	//広間と通路を識別する
 	pub fn identify_halls_and_passageways( &mut self )
@@ -86,72 +78,6 @@ impl GameMap
 				self.count[ x as usize ][ y as usize ] = pedometer;
 			}
 		}
-	}
-
-	//システム情報の表示用スプライト・テキストを生成する
-	pub fn spawn_sysinfo_obj
-	(	&mut self,
-		sysinfo: bool,
-		cmds: &mut Commands,
-		asset_svr: &Res<AssetServer>,
-	)
-	{	for x in MAP_DIGABLE_X
-		{	for y in MAP_DIGABLE_Y
-			{	//行き止まり
-				let xy = conv_sprite_coordinates( x as usize, y as usize );
-				if self.is_dead_end( x, y )
-				{	cmds.spawn_bundle( sprite_sysinfo( xy, Color::MIDNIGHT_BLUE, sysinfo ) )
-						.insert( SysinfoObj );
-					let info = self.count[ x as usize ][ y as usize ].to_string();
-					cmds.spawn_bundle ( text2d_sysinfo( &info, xy, asset_svr, sysinfo ) )
-						.insert( SysinfoObj );
-				}
-				//通路
-				else if ! self.is_wall( x, y ) && ! self.is_passageway( x, y )
-				{	cmds.spawn_bundle( sprite_sysinfo( xy, Color::INDIGO, sysinfo ) )
-						.insert( SysinfoObj );
-				}
-			}
-		}
-	}
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-//システム情報用のスプライトバンドルを生成
-fn sprite_sysinfo( ( x, y ): ( f32, f32 ), color: Color, is_visible: bool ) -> SpriteBundle
-{	let position = Vec3::new( x, y, SPRITE_DEPTH_SYSINFO );
-	let square = Vec2::new( SYSTILE_PIXEL, SYSTILE_PIXEL ) * 0.9;
-	let visibility = Visibility { is_visible };
-
-	let transform = Transform::from_translation( position );
-	let sprite = Sprite { color, custom_size: Some( square ), ..Default::default() };
-
-	SpriteBundle { transform, sprite, visibility, ..Default::default() }
-}
-
-//システム情報用のテキスト2Dバンドルを生成
-fn text2d_sysinfo
-(	info: &str,
-	( x, y ): ( f32, f32 ),
-	asset_svr: &Res<AssetServer>,
-	is_visible: bool,
-) -> Text2dBundle
-{	let style = TextStyle
-	{	font: asset_svr.load( FONT_MESSAGE_TEXT ),
-		font_size: PIXEL_PER_GRID,
-		color: Color::GRAY,
-	};
-	let align = TextAlignment
-	{	vertical: VerticalAlign::Center,
-		horizontal: HorizontalAlign::Center,
-	};
-
-	Text2dBundle
-	{	text     : Text::with_section( info, style, align ),
-		transform: Transform::from_translation( Vec3::new( x, y, 15.0 ) ),
-		visibility  : Visibility { is_visible },
-		..Default::default()
 	}
 }
 

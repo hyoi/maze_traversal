@@ -12,7 +12,6 @@ mod dig_and_back_and_dig;			//迷路作成関数
 mod find_and_destroy_digable_walls;	//迷路作成関数
 
 mod analyze_structure;
-pub use analyze_structure::*;
 
 //Pluginの手続き
 pub struct PluginMap;
@@ -52,10 +51,10 @@ impl Plugin for PluginMap
 #[derive(Copy,Clone,PartialEq)]
 pub enum MapObj
 {	None,
-	Wall ( Option<Entity> ),
-	PATHWAY, //通常の道
-	DEADEND, //行き止まり目印用
-	Goal ( Option<Entity> ),
+	Wall    ( Option<Entity> ),
+	Pathway ( Option<Entity> ), //通常の道
+	DeadEnd ( Option<Entity> ), //行き止まり目印用
+	Goal    ( Option<Entity> ),
 	Space,
 }
 
@@ -67,7 +66,6 @@ pub struct GameMap
 	pub count: [ [ usize ; MAP_HEIGHT ]; MAP_WIDTH ],
 	pub start_xy: ( usize, usize ),
 	pub goal_xy : ( usize, usize ),
-	pub count_dots: usize,
 }
 impl Default for GameMap
 {	fn default() -> Self
@@ -79,7 +77,6 @@ impl Default for GameMap
 			count: [ [ 0            ; MAP_HEIGHT ]; MAP_WIDTH ],
 			start_xy: ( 0, 0 ),
 			goal_xy : ( 0, 0 ),
-			count_dots: 0,
 		}
 	}
 }
@@ -96,6 +93,11 @@ struct SpriteGoal;
 const GOAL_PIXEL: f32 = PIXEL_PER_GRID / 2.0;
 const GOAL_COLOR: Color = Color::YELLOW;
 
+#[derive(Component)]
+struct SysinfoObj;
+const SYSTILE_PIXEL: f32 = PIXEL_PER_GRID;
+const SPRITE_DEPTH_SYSINFO: f32 =  5.0;
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //新しい迷路を作り表示して、Playへ遷移する
@@ -110,13 +112,12 @@ fn spawn_sprite_new_map
 	maze.map  .iter_mut().for_each( | x | x.fill( MapObj::Wall( None ) ) );
 	maze.stat .iter_mut().for_each( | x | x.fill( BIT_ALL_CLEAR        ) );
 	maze.count.iter_mut().for_each( | x | x.fill( 0                    ) );
-	maze.count_dots = 0;
 	sysparams.stage += 1;
 
 	//入口を掘る
 	let x = maze.rng.gen_range( MAP_DIGABLE_X );
-	maze.map[ x ][ MAP_HEIGHT - 2 ] = MapObj::PATHWAY;
-	maze.map[ x ][ MAP_HEIGHT - 1 ] = MapObj::DEADEND; //入口は行き止まり扱い
+	maze.map[ x ][ MAP_HEIGHT - 2 ] = MapObj::Pathway ( None );
+	maze.map[ x ][ MAP_HEIGHT - 1 ] = MapObj::DeadEnd ( None ); //入口は行き止まり扱い
 	maze.start_xy = ( x, MAP_HEIGHT - 1 );
 
 	//呼び出す関数を乱数で決め、迷路を掘らせる
@@ -145,33 +146,25 @@ fn spawn_sprite_new_map
 	//迷路の構造解析
 	maze.identify_halls_and_passageways();
 	maze.count_deadend_passageway_length();
-	maze.spawn_sysinfo_obj( sysparams.sysinfo, &mut cmds, &asset_svr );
-	let ( x, y ) = maze.start_xy; maze.set_flag_event_done( x, y ); //スタートでいきなりイベントを起こさないように
-	let ( x, y ) = maze.goal_xy ; maze.set_flag_event_done( x, y ); //コールでいきなりイベントを起こさないように
+//	maze.spawn_sysinfo_obj( sysparams.sysinfo, &mut cmds, &asset_svr );
 
 	//スプライトをspawnしてEntity IDを記録する
-	let mut count = 0;
 	for x in MAP_INDEX_X
 	{	for y in MAP_INDEX_Y
 		{	let xy = conv_sprite_coordinates( x , y );
+
 			let obj = &mut maze.map[ x ][ y ];
 			*obj = match obj
-			{	MapObj::PATHWAY =>
-				{	count += 1;
-					MapObj::PATHWAY
-				}
-				MapObj::DEADEND =>
-				{	MapObj::PATHWAY //DEADENDもPATHWAYへ変換する
-				}
-				MapObj::Goal(_) =>
+			{	MapObj::Pathway ( o_id ) => { MapObj::Pathway ( *o_id ) }
+				MapObj::DeadEnd ( o_id ) => { MapObj::Pathway ( *o_id ) }
+				MapObj::Goal ( _ ) =>
 				{	let id = cmds
 						.spawn_bundle( sprite_goal( xy ) )
 						.insert( SpriteGoal )
 						.id(); 
-					count += 1;
 					MapObj::Goal( Some( id ) )
 				}
-				MapObj::Wall(_) =>
+				MapObj::Wall ( _ ) =>
 				{	let id = cmds
 						.spawn_bundle( sprite_wall( xy, &asset_svr, sysparams.darkmode ) )
 						.insert( SpriteWall { x, y } )
@@ -180,12 +173,61 @@ fn spawn_sprite_new_map
 				}
 				_ => { MapObj::Space }
 			};
+
+			//行き止まり、広間のEntityを作成
+			if maze.is_dead_end( x, y )
+			{	let count = maze.count[ x ][ y ];
+				if count > 0
+				{	let info = count.to_string();
+					let id = cmds
+						.spawn_bundle ( text2d_sysinfo( xy, &asset_svr, &info ) )
+						.insert( SysinfoObj )
+						.id();
+					maze.map[ x ][ y ] = MapObj::DeadEnd( Some( id ) );
+				}
+			}
+			else if ! maze.is_wall( x, y ) && ! maze.is_passageway( x, y )
+			{	cmds.spawn_bundle( sprite_sysinfo( xy, Color::INDIGO ) )
+					.insert( SysinfoObj );
+			}
 		}
 	}
-	maze.count_dots = count;
 
 	//Playへ遷移する
 	let _ = state.overwrite_set( GameState::Play );
+}
+
+//システム情報用のスプライトバンドルを生成
+fn sprite_sysinfo( ( x, y ): ( f32, f32 ), color: Color ) -> SpriteBundle
+{	let custom_size = Some( Vec2::new( SYSTILE_PIXEL, SYSTILE_PIXEL ) * 0.9 );
+
+	let sprite = Sprite { color, custom_size, ..Default::default() };
+	let transform = Transform::from_translation( Vec3::new( x, y, SPRITE_DEPTH_SYSINFO ) );
+
+	SpriteBundle { sprite, transform, ..Default::default() }
+}
+
+//システム情報用のテキスト2Dバンドルを生成
+fn text2d_sysinfo
+(	( x, y ): ( f32, f32 ),
+	asset_svr: &Res<AssetServer>,
+	info: &str,
+) -> Text2dBundle
+{	let style = TextStyle
+	{	font: asset_svr.load( FONT_MESSAGE_TEXT ),
+		font_size: PIXEL_PER_GRID,
+		color: Color::GRAY,
+	};
+	let align = TextAlignment
+	{	vertical: VerticalAlign::Center,
+		horizontal: HorizontalAlign::Center,
+	};
+
+	Text2dBundle
+	{	text     : Text::with_section( info, style, align ),
+		transform: Transform::from_translation( Vec3::new( x, y, 15.0 ) ),
+		..Default::default()
+	}
 }
 
 //ゴールのスプライトをアニメーションさせる

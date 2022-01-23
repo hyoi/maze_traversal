@@ -164,7 +164,7 @@ fn spawn_hp_gauge_sprite( mut cmds: Commands )
 fn update_ui_upper_left
 (	mut q_gauge: Query<( &mut Transform, &mut Sprite ), With<HpGauge>>,
 	mut q_ui: Query<&mut Text, With<UiUpperLeft>>,
-	o_player: Option<Res<PlayerParameters>>,
+	o_player: Option<Res<SystemParameters>>,
 )
 {	if let Ok( mut ui ) = q_ui.get_single_mut()
 	{	let hp_gauge = match o_player
@@ -205,12 +205,12 @@ fn update_ui_upper_right
 {	if let Ok( mut ui ) = q.get_single_mut()
 	{	let na5 = NA_STR5.to_string();
 		let na3 = NA_STR3.to_string();
-		let ( score, stage ) = o_record.map_or( ( na5, na3 ), | x | ( format!( "{:05} ", x.score ), format!( "{:03} ", x.stage ) ) );
-		ui.sections[ 1 ].value = score;
-		ui.sections[ 3 ].value = stage;
-
-		// ui.sections[ 1 ].value = o_record.map_or( na5, | x | format!( "{:05}", x.score ) );
-		// ui.sections[ 3 ].value = o_record.map_or( na3, | x | format!( "{:03}", x.stage ) );
+		let ( score, stage ) = o_record.map_or
+		(	( na5, na3 ),
+			| x | ( format!( "{} ", x.score ), format!( "{} ", x.stage ) )
+		);
+		ui.sections[ 0 ].value = score;
+		ui.sections[ 2 ].value = stage;
 	}
 }
 

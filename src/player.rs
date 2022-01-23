@@ -2,11 +2,6 @@ use super::*;
 
 //external modules
 use bevy_prototype_lyon::{ prelude::*, entity::ShapeBundle };
-// use rand::prelude::*;
-
-//internal modules
-// mod skill;
-// pub use skill::*;
 
 //Pluginの手続き
 pub struct PluginPlayer;
@@ -14,24 +9,21 @@ impl Plugin for PluginPlayer
 {	fn build( &self, app: &mut App )
 	{	app
 		//------------------------------------------------------------------------------------------
-		.add_plugin( ShapePlugin )						// bevy_prototype_lyon
-		//------------------------------------------------------------------------------------------
-		.init_resource::<PlayerParameters>()			// PlayerParameters型のResource
-//		.init_resource::<SkillParameters>()				// SkillParameters型のResource
-		//------------------------------------------------------------------------------------------
-		.add_system_set									// ＜GameState::Start＞
-		(	SystemSet::on_exit( GameState::Start )		// ＜on_exit()＞
-				.with_system( spawn_sprite_player )		// マップ生成後に自機を配置
+		.add_plugin( ShapePlugin )							// bevy_prototype_lyon
+		//==========================================================================================
+		.add_system_set										// ＜GameState::Start＞
+		(	SystemSet::on_exit( GameState::Start )			// ＜on_exit()＞
+				.with_system( spawn_sprite_player )			// マップ生成後に自機を配置
 		)
 		//------------------------------------------------------------------------------------------
-		.add_system_set									// ＜GameState::Play＞
-		(	SystemSet::on_update( GameState::Play )		// ＜on_update()＞
-				.with_system( move_sprite_player )		// 自機の移動、ゴール⇒GameState::Clearへ
+		.add_system_set										// ＜GameState::Play＞
+		(	SystemSet::on_update( GameState::Play )			// ＜on_update()＞
+				.with_system( move_sprite_player )			// 自機の移動、ゴール⇒GameState::Clearへ
 		)
 		//------------------------------------------------------------------------------------------
-		.add_system_set									// ＜GameState::Clear＞
-		(	SystemSet::on_exit( GameState::Clear )		// ＜on_exit()＞
-				.with_system( despawn_sprite_player )	// 自機を削除
+		.add_system_set										// ＜GameState::Clear＞
+		(	SystemSet::on_exit( GameState::Clear )			// ＜on_exit()＞
+				.with_system( despawn_entity::<Player> )	// 自機を削除
 		)
 		//------------------------------------------------------------------------------------------
 		;
@@ -68,8 +60,6 @@ struct Player
 	stop: bool,
 }
 
-//pub struct AutoMap ( pub i32 );
-
 //Sprite
 const SPRITE_DEPTH_PLAYER: f32 = 20.0;
 const PLAYER_PIXEL: f32   = PIXEL_PER_GRID / 2.5;
@@ -80,7 +70,7 @@ const PLAYER_COLOR: Color = Color::YELLOW;
 //自機のスプライトを初期位置に配置する
 fn spawn_sprite_player( maze: Res<GameMap>, mut cmds: Commands )
 {	let ( map_x, map_y ) = maze.start_xy;
-	let ( sprite_x, sprite_y ) = conv_sprite_coordinates( map_x as usize, map_y as usize );
+	let ( sprite_x, sprite_y ) = conv_sprite_coordinates( map_x, map_y );
 
 	let player = Player
 	{	wait: Timer::from_seconds( PLAYER_WAIT, false ),
@@ -96,14 +86,27 @@ fn spawn_sprite_player( maze: Res<GameMap>, mut cmds: Commands )
 	cmds.spawn_bundle( sprite ).insert( player );
 }
 
+//自機のスプライトバンドルを生成
+fn sprite_player( ( x, y ): ( f32, f32 ) ) -> ShapeBundle
+{	let triangle = &shapes::RegularPolygon
+	{	sides: 3,
+		feature: shapes::RegularPolygonFeature::Radius( PLAYER_PIXEL ),
+		..shapes::RegularPolygon::default()
+	};
+	let drawmode  = DrawMode::Fill( FillMode { options: FillOptions::default(), color: PLAYER_COLOR } );
+	let transform = Transform::from_translation( Vec3::new( x, y, SPRITE_DEPTH_PLAYER ) );
+
+	GeometryBuilder::build_as( triangle, drawmode, transform )
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 //自機のスプライトを移動する
 fn move_sprite_player
 (	mut q: Query<( &mut Player, &mut Transform )>,
-	q_visible: Query<&mut Visibility>,
 	mut state : ResMut<State<GameState>>,
+	o_record: Option<ResMut<SystemParameters>>,
 	mut maze: ResMut<GameMap>,
-	mut player_params: ResMut<PlayerParameters>,
-//	skill_params: Res<SkillParameters>,
 	( mut cmds, time, inkey ): ( Commands, Res<Time>, Res<Input<KeyCode>> ),
 )
 {	let time_delta = time.delta();
@@ -135,7 +138,7 @@ fn move_sprite_player
 	else
 	{	//スプライトの表示位置を更新する
 		let ( mut map_x, mut map_y ) = player.map_location;
-		let ( sprite_x, sprite_y ) = conv_sprite_coordinates( map_x as usize, map_y as usize );
+		let ( sprite_x, sprite_y ) = conv_sprite_coordinates( map_x, map_y );
 		let position = &mut transform.translation;
 		position.x = sprite_x;
 		position.y = sprite_y;
@@ -149,7 +152,7 @@ fn move_sprite_player
 			player.direction = player.new_direction;
 		}
 
-		//ゴールしたので、Clearへ遷移する
+		//ゴールしたら、Clearへ遷移する
 		if ( map_x, map_y ) == maze.goal_xy
 		{	if let MapObj::Goal ( opt_dot ) = maze.map[ map_x as usize ][ map_y as usize ]
 			{	cmds.entity( opt_dot.unwrap() ).despawn();
@@ -158,17 +161,17 @@ fn move_sprite_player
 			return;
 		}
 
-		// //エンカウント
-		// if ! maze.is_event_done( map_x, map_y )
-		// {	maze.set_flag_event_done( map_x, map_y );
-		// 	let threshold = if maze.is_passageway( map_x, map_y ) { 10 } else { 30 };
-		// 	let mut rng = rand::thread_rng();
-		// 	if rng.gen_range( 0..100 ) < threshold
-		// 	{	player_params.hp_now -= 1.0;
-		// 		let _ = state.overwrite_set( GameState::Event );
-		// 		return;
-		// 	}
-		// }
+		//ゴールドを拾う
+		if maze.is_dead_end( map_x, map_y )
+		{	if let Some ( mut record ) = o_record
+			{	record.score += maze.count[ map_x ][ map_y ];
+				maze.count[ map_x ][ map_y ] = 0;
+				if let MapObj::DeadEnd( Some( id ) ) = maze.map[ map_x ][ map_y ]
+				{	cmds.entity( id ).despawn_recursive();
+					maze.map[ map_x ][ map_y ] = MapObj::Pathway ( None );
+				}
+			}
+		}
 
 		//キー入力を取得する
 		let key_left  = inkey.pressed( KeyCode::Left  );
@@ -202,14 +205,6 @@ fn move_sprite_player
 		}
 		player.map_location = ( map_x, map_y );
 
-		// //Dark Modeでプレイヤーの周囲を視覚化する
-		// maze.show_enclosure_obj
-		// (	map_x, map_y,
-		// 	*player_params.skill_set.get( SKILL_AUTO_MAPPING ).unwrap(),
-		// 	q_visible,
-		// 	&skill_params.auto_mapping,
-		// );
-
 		//ウェイトをリセットする
 		player.wait.reset();
 	}
@@ -238,26 +233,6 @@ fn decide_angle( old: Direction, new: Direction ) -> f32
 
 	//呼出側でold != newが保証されているので、±90°以外はすべて180°
 	180.0
-}
-
-//自機のスプライトを削除する
-fn despawn_sprite_player( mut q: Query<Entity, With<Player>>, mut cmds: Commands )
-{	cmds.entity( q.get_single_mut().unwrap() ).despawn();
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-//自機のスプライトバンドルを生成
-fn sprite_player( ( x, y ): ( f32, f32 ) ) -> ShapeBundle
-{	let triangle = &shapes::RegularPolygon
-	{	sides: 3,
-		feature: shapes::RegularPolygonFeature::Radius( PLAYER_PIXEL ),
-		..shapes::RegularPolygon::default()
-	};
-	let drawmode  = DrawMode::Fill( FillMode { options: FillOptions::default(), color: PLAYER_COLOR } );
-	let transform = Transform::from_translation( Vec3::new( x, y, SPRITE_DEPTH_PLAYER ) );
-
-	GeometryBuilder::build_as( triangle, drawmode, transform )
 }
 
 //End of code.

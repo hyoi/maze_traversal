@@ -19,7 +19,7 @@ impl GameMap
 			if MAP_DIGABLE_X.contains( &tmp_x )
 			&& MAP_DIGABLE_Y.contains( &tmp_y )
 			&& self.is_dig_or_not( tmp_x, tmp_y )
-			{	self.map[ tmp_x as usize ][ tmp_y as usize ] = MapObj::PATHWAY;
+			{	self.map[ tmp_x as usize ][ tmp_y as usize ] = MapObj::Pathway ( None );
 				map_xy = ( tmp_x, tmp_y );
 			}
 		}

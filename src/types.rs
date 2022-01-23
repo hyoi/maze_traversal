@@ -1,5 +1,3 @@
-use super::*;
-
 //ゲームの状態遷移
 #[derive(Clone,Copy,Debug,Eq,PartialEq,Hash)]
 pub enum GameState
@@ -20,6 +18,8 @@ pub enum SelectMazeType { Random, Type1, Type2, Type3 }
 pub struct SystemParameters
 {	pub stage    : usize,
 	pub score    : usize,
+	pub hp_max   : f32,
+	pub hp_now   : f32,
 	pub maze_type: SelectMazeType,
 	pub darkmode : bool,
 	pub sysinfo  : bool,
@@ -29,32 +29,11 @@ impl Default for SystemParameters
 	{	Self
 		{	stage    : 0,
 			score    : 0,
+			hp_max   : 100.0,
+			hp_now   : 100.0,
 			maze_type: SelectMazeType::Random,
 			darkmode : false,
 			sysinfo  : true,
-		}
-	}
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-//Playerの変数を格納するResource
-#[allow(dead_code)]
-pub struct PlayerParameters
-{	name: String,
-	flavor_text: String,
-	level: usize,
-	pub hp_max: f32,
-	pub hp_now: f32,
-}
-impl Default for PlayerParameters
-{	fn default() -> Self
-	{	Self
-		{	name: "".to_string(),
-			flavor_text: "".to_string(),		
-			level: 1,
-			hp_max: 100.0,
-			hp_now: 100.0,
 		}
 	}
 }

@@ -61,21 +61,21 @@ pub const UI_UPPER_LEFT: [ MessageSect; 2 ] =
 [	( " HP " , FONT_MESSAGE_TEXT, PIXEL_PER_GRID * 0.8, Color::ORANGE ),
 	( NA_STR3, FONT_MESSAGE_TEXT, PIXEL_PER_GRID * 1.0, Color::WHITE  ),
 ];
-
+/*
 #[derive(Component)]
 pub struct UiUpperCenter;
 pub const UI_UPPER_CENTER: [ MessageSect; 2 ] =
 [	( APP_TITLE, FONT_TITLE_TEXT, PIXEL_PER_GRID * 1.3, Color::ORANGE ),
 	( "迷路踏破", FONT_TITLE_TEXT, PIXEL_PER_GRID * 1.6, Color::WHITE  ),
 ];
-
+*/
 #[derive(Component)]
 pub struct UiUpperRight;
 pub const UI_UPPER_RIGHT: [ MessageSect; 4 ] =
-[	( "SCORE"  , FONT_MESSAGE_TEXT, PIXEL_PER_GRID * 0.8, Color::ORANGE ),
+[	( ""       , FONT_MESSAGE_TEXT, PIXEL_PER_GRID * 1.0, Color::WHITE  ),
+	( "GOLD / ", FONT_MESSAGE_TEXT, PIXEL_PER_GRID * 0.8, Color::ORANGE ),
 	( ""       , FONT_MESSAGE_TEXT, PIXEL_PER_GRID * 1.0, Color::WHITE  ),
-	( "/ STAGE", FONT_MESSAGE_TEXT, PIXEL_PER_GRID * 0.8, Color::ORANGE ),
-	( ""       , FONT_MESSAGE_TEXT, PIXEL_PER_GRID * 1.0, Color::WHITE  ),
+	( "FLOOR " , FONT_MESSAGE_TEXT, PIXEL_PER_GRID * 0.8, Color::ORANGE ),
 ];
 
 #[derive(Component)]

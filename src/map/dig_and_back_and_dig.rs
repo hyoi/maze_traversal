@@ -24,8 +24,9 @@ impl GameMap
 				let tmp_xy = ( tmp_x, tmp_y );
 				let direct = ( dx, dy );
 				match self.map[ tmp_x as usize ][ tmp_y as usize ]
-				{	MapObj::PATHWAY => backtrack = tmp_xy,
-					MapObj::Wall(_) if self.is_digable_wall( tmp_xy, direct ) => digable_walls.push( tmp_xy ),
+				{	MapObj::Pathway ( _ ) => backtrack = tmp_xy,
+					MapObj::Wall    ( _ ) if self.is_digable_wall( tmp_xy, direct )
+										  => digable_walls.push( tmp_xy ),
 					_ => {}
 				}
 			}
@@ -36,13 +37,13 @@ impl GameMap
 				if backtrack == ( 0, 0 ) { break }
 
 				//現在位置に行き止まり情報「dot2」を書き込み、後戻りする
-				self.map[ map_xy.0 as usize ][ map_xy.1 as usize ] = MapObj::DEADEND;
+				self.map[ map_xy.0 ][ map_xy.1 ] = MapObj::DeadEnd ( None );
 				map_xy = backtrack;
 			}
 			else
 			{	//掘れる壁が見つかったので、方向をランダムに決めて、掘る
 				map_xy = digable_walls[ self.rng.gen_range( 0..digable_walls.len() ) ];
-				self.map[ map_xy.0 as usize ][ map_xy.1 as usize ] = MapObj::PATHWAY;
+				self.map[ map_xy.0 ][ map_xy.1 ] = MapObj::Pathway ( None );
 			}
 		}
 

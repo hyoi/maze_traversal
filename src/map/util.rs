@@ -39,7 +39,6 @@ pub const BIT_ALL_CLEAR: usize = 0;
 const BIT_IS_VISIBLE   : usize = 0b0001;
 const BIT_IS_PASSAGEWAY: usize = 0b0010;
 const BIT_IS_DEAD_END  : usize = 0b0100;
-const BIT_IS_EVENT_DONE: usize = 0b1000;
 
 impl GameMap
 {	//指定されたマスのフラグを返す
@@ -47,22 +46,10 @@ impl GameMap
 	pub fn is_visible    ( &self, x: usize, y: usize ) -> bool { self.stat[ x ][ y ] & BIT_IS_VISIBLE    != 0 }
 	pub fn is_passageway ( &self, x: usize, y: usize ) -> bool { self.stat[ x ][ y ] & BIT_IS_PASSAGEWAY != 0 }
 	pub fn is_dead_end   ( &self, x: usize, y: usize ) -> bool { self.stat[ x ][ y ] & BIT_IS_DEAD_END   != 0 }
-	pub fn is_event_done ( &self, x: usize, y: usize ) -> bool { self.stat[ x ][ y ] & BIT_IS_EVENT_DONE != 0 }
 
 	//指定されたマスのフラグを立てる
 	pub fn set_flag_passageway ( &mut self, x: usize, y: usize ) { self.stat[ x ][ y ] |= BIT_IS_PASSAGEWAY; }
 	pub fn set_flag_dead_end   ( &mut self, x: usize, y: usize ) { self.stat[ x ][ y ] |= BIT_IS_DEAD_END;   }
-	pub fn set_flag_event_done ( &mut self, x: usize, y: usize ) { self.stat[ x ][ y ] |= BIT_IS_EVENT_DONE; }
-
-	//指定されたマスのVISIBLEフラグを立ててスプライトを可視化する
-	pub fn show( &mut self, x: usize, y: usize, q: &mut Query<&mut Visibility> )
-	{	if ! MAP_INDEX_X.contains( &x ) || ! MAP_INDEX_Y.contains( &y ) { return }
-
-		self.stat[ x ][ y ] |= BIT_IS_VISIBLE;
-		if let MapObj::Wall( Some( id ) ) = self.map[ x ][ y ]
-		{	q.get_component_mut::<Visibility>( id ).unwrap().is_visible = true;
-		}
-	}
 }
 
 //End of code
