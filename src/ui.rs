@@ -24,9 +24,10 @@ impl Plugin for PluginUi
 				.with_system( hide_clear_message )				// CLEARメッセージを隠す
 		)
 		//------------------------------------------------------------------------------------------
-		.add_startup_system( spawn_hp_gauge_sprite )			//
-		.add_system( update_ui_upper_left )						// 情報を更新
-		.add_system( update_ui_lower_left )						// 情報を更新
+		.add_startup_system( spawn_hp_gauge_sprite )			// HPゲージを作成
+		.add_system( update_ui_upper_left )						// UIの表示を更新
+		.add_system( update_ui_upper_right )					// UIの表示を更新
+		.add_system( update_ui_lower_left )						// UIの表示を更新
 		//------------------------------------------------------------------------------------------
 		;
 	}
@@ -45,17 +46,27 @@ fn spawn_text_ui_message( mut cmds: Commands, asset_svr: Res<AssetServer> )
 	event_text.visibility.is_visible = false;
 
 	//上端・下端に表示するtext
-	let mut ui_upper_right = text_ui( &UI_UPPER_RIGHT, &asset_svr );
-	let mut ui_upper_left  = text_ui( &UI_UPPER_LEFT , &asset_svr );
-	let mut ui_lower_left  = text_ui( &UI_LOWER_LEFT , &asset_svr );
+	let mut ui_upper_left   = text_ui( &UI_UPPER_LEFT  , &asset_svr );
+//	let mut ui_upper_center = text_ui( &UI_UPPER_CENTER, &asset_svr );
+	let mut ui_upper_right  = text_ui( &UI_UPPER_RIGHT , &asset_svr );
+	let mut ui_lower_left   = text_ui( &UI_LOWER_LEFT  , &asset_svr );
+	let mut ui_lower_center = text_ui( &UI_LOWER_CENTER, &asset_svr );
+	let mut ui_lower_right  = text_ui( &UI_LOWER_RIGHT , &asset_svr );
 
-	ui_upper_right.style.align_self = AlignSelf::FlexEnd;
-	ui_upper_left.style.align_self  = AlignSelf::FlexStart;
-	ui_lower_left.style.align_self  = AlignSelf::FlexStart;
+	ui_upper_left.style.align_self   = AlignSelf::FlexStart;
+//	ui_upper_center.style.align_self = AlignSelf::Center;
+	ui_upper_right.style.align_self  = AlignSelf::FlexEnd;
+	ui_lower_left.style.align_self   = AlignSelf::FlexStart;
+	ui_lower_center.style.align_self = AlignSelf::Center;
+	ui_lower_right.style.align_self  = AlignSelf::FlexEnd;
 
-	ui_upper_right.text.alignment.horizontal = HorizontalAlign::Right;
-	ui_upper_left.text.alignment.horizontal  = HorizontalAlign::Left;
-	ui_lower_left.text.alignment.horizontal  = HorizontalAlign::Left;
+	ui_upper_left.text.alignment.horizontal   = HorizontalAlign::Left;
+//	ui_upper_center.text.alignment.horizontal = HorizontalAlign::Center;
+	ui_upper_right.text.alignment.horizontal  = HorizontalAlign::Right;
+	ui_lower_left.text.alignment.horizontal   = HorizontalAlign::Left;
+	ui_lower_center.text.alignment.horizontal = HorizontalAlign::Center;
+	ui_lower_right.text.alignment.horizontal  = HorizontalAlign::Right;
+
 
 	//レイアウト用の隠しフレームを作る
 	let per100 = Val::Percent( 100.0 );
@@ -95,10 +106,9 @@ fn spawn_text_ui_message( mut cmds: Commands, asset_svr: Res<AssetServer> )
 
 		cmds.spawn_bundle( lower_frame ).with_children( | cmds |
 		{	cmds.spawn_bundle( ui_lower_left   ).insert( UiLowerLeft   );
-//			cmds.spawn_bundle( ui_lower_center ).insert( UiLowerCenter );
-//			cmds.spawn_bundle( ui_lower_right  ).insert( UiLowerRight  );
+			cmds.spawn_bundle( ui_lower_center ).insert( UiLowerCenter );
+			cmds.spawn_bundle( ui_lower_right  ).insert( UiLowerRight  );
 		} );
-
 	} );
 }
 
@@ -184,6 +194,23 @@ fn update_ui_upper_left
 			None => NA_STR3.to_string()
 		};
 		ui.sections[ 1 ].value = hp_gauge;
+	}
+}
+
+//スコアとステージの表示を更新する
+fn update_ui_upper_right
+(	mut q: Query<&mut Text, With<UiUpperRight>>,
+	o_record: Option<Res<SystemParameters>>,
+)
+{	if let Ok( mut ui ) = q.get_single_mut()
+	{	let na5 = NA_STR5.to_string();
+		let na3 = NA_STR3.to_string();
+		let ( score, stage ) = o_record.map_or( ( na5, na3 ), | x | ( format!( "{:05} ", x.score ), format!( "{:03} ", x.stage ) ) );
+		ui.sections[ 1 ].value = score;
+		ui.sections[ 3 ].value = stage;
+
+		// ui.sections[ 1 ].value = o_record.map_or( na5, | x | format!( "{:05}", x.score ) );
+		// ui.sections[ 3 ].value = o_record.map_or( na3, | x | format!( "{:03}", x.stage ) );
 	}
 }
 

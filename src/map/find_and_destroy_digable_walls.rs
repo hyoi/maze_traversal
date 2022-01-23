@@ -7,8 +7,8 @@ impl GameMap
 		loop
 		{	//マップを全面走査して拡張条件を満たす壁を記録する
 			digable_walls.clear();
-			for ( x, ary ) in ( 0i32.. ).zip( self.map.iter() )	// i32の.enumerate()
-			{	for ( y, _obj ) in ( 0i32.. ).zip( ary.iter() )	// i32の.enumerate()
+			for ( x, ary ) in ( 0.. ).zip( self.map.iter() )	// i32の.enumerate()
+			{	for ( y, _obj ) in ( 0.. ).zip( ary.iter() )	// i32の.enumerate()
 				{	if MAP_DIGABLE_X.contains( &x )
 					&& MAP_DIGABLE_Y.contains( &y )
 					&& self.is_maze_expandable( x, y ) { digable_walls.push( ( x, y ) ) }
@@ -20,12 +20,12 @@ impl GameMap
 
 			//複数候補の中からランダムに壊す壁を決め、道にする
 			let ( x, y ) = digable_walls[ self.rng.gen_range( 0..digable_walls.len() ) ];
-			self.map[ x as usize ][ y as usize ] = MapObj::Dot1;
+			self.map[ x as usize ][ y as usize ] = MapObj::PATHWAY;
 		}
 	}
 
 	//迷路拡張条件を満たす壁か？
-	fn is_maze_expandable( &self, x: i32, y: i32 ) -> bool
+	fn is_maze_expandable( &self, x: usize, y: usize ) -> bool
 	{	//そもそも壁ではないので掘れない
 		if ! self.is_wall( x, y ) { return false }
 

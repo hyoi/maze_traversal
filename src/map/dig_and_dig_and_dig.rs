@@ -1,7 +1,7 @@
 use super::*;
 
 impl GameMap
-{	//一型迷路：ランダムに掘り進み、壊すと合流する壁は、確率で破壊する
+{	//一型迷路：ランダムに掘り進み、壊すと貫通する壁は、確率で破壊する
 	pub fn dig_and_dig_and_dig( &mut self )
 	{	let mut map_xy = self.start_xy;
 		map_xy.1 -= 1; //maze.start_xyの直上(y-1)がトンネル掘りの開始座標
@@ -9,8 +9,8 @@ impl GameMap
 		loop
 		{	//ランダムに上下左右へ進む方向を決める
 			let ( dx, dy ) = DIRECTION[ self.rng.gen_range( 0..DIRECTION.len() ) ];
-			let tmp_x = map_xy.0 + dx;
-			let tmp_y = map_xy.1 + dy;
+			let tmp_x = ( map_xy.0 as i32 + dx ) as usize;
+			let tmp_y = ( map_xy.1 as i32 + dy ) as usize;
 
 			//上端に達したら迷路完成
 			if tmp_y == 0 { break }
@@ -19,14 +19,14 @@ impl GameMap
 			if MAP_DIGABLE_X.contains( &tmp_x )
 			&& MAP_DIGABLE_Y.contains( &tmp_y )
 			&& self.is_dig_or_not( tmp_x, tmp_y )
-			{	self.map[ tmp_x as usize ][ tmp_y as usize ] = MapObj::Dot1;
+			{	self.map[ tmp_x as usize ][ tmp_y as usize ] = MapObj::PATHWAY;
 				map_xy = ( tmp_x, tmp_y );
 			}
 		}
 	}
 
 	//さいころを振って、進むか(true)、やり直すか(false)決める
-	fn is_dig_or_not( &mut self, x: i32, y: i32 ) -> bool
+	fn is_dig_or_not( &mut self, x: usize, y: usize ) -> bool
 	{	//そもそも壁じゃないならtrue
 		if ! self.is_wall( x, y ) { return true }
 

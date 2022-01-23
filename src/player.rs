@@ -5,8 +5,8 @@ use bevy_prototype_lyon::{ prelude::*, entity::ShapeBundle };
 // use rand::prelude::*;
 
 //internal modules
-mod skill;
-pub use skill::*;
+// mod skill;
+// pub use skill::*;
 
 //Pluginの手続き
 pub struct PluginPlayer;
@@ -17,7 +17,7 @@ impl Plugin for PluginPlayer
 		.add_plugin( ShapePlugin )						// bevy_prototype_lyon
 		//------------------------------------------------------------------------------------------
 		.init_resource::<PlayerParameters>()			// PlayerParameters型のResource
-		.init_resource::<SkillParameters>()				// SkillParameters型のResource
+//		.init_resource::<SkillParameters>()				// SkillParameters型のResource
 		//------------------------------------------------------------------------------------------
 		.add_system_set									// ＜GameState::Start＞
 		(	SystemSet::on_exit( GameState::Start )		// ＜on_exit()＞
@@ -61,7 +61,7 @@ enum Direction
 #[derive(Component)]
 struct Player
 {	wait: Timer,
-	map_location: ( i32, i32 ),
+	map_location: ( usize, usize ),
 	sprite_location: ( f32, f32 ),
 	direction: Direction,
 	new_direction: Direction,
@@ -103,7 +103,7 @@ fn move_sprite_player
 	mut state : ResMut<State<GameState>>,
 	mut maze: ResMut<GameMap>,
 	mut player_params: ResMut<PlayerParameters>,
-	skill_params: Res<SkillParameters>,
+//	skill_params: Res<SkillParameters>,
 	( mut cmds, time, inkey ): ( Commands, Res<Time>, Res<Input<KeyCode>> ),
 )
 {	let time_delta = time.delta();
@@ -202,13 +202,13 @@ fn move_sprite_player
 		}
 		player.map_location = ( map_x, map_y );
 
-		//Dark Modeでプレイヤーの周囲を視覚化する
-		maze.show_enclosure_obj
-		(	map_x, map_y,
-			*player_params.skill_set.get( SKILL_AUTO_MAPPING ).unwrap(),
-			q_visible,
-			&skill_params.auto_mapping,
-		);
+		// //Dark Modeでプレイヤーの周囲を視覚化する
+		// maze.show_enclosure_obj
+		// (	map_x, map_y,
+		// 	*player_params.skill_set.get( SKILL_AUTO_MAPPING ).unwrap(),
+		// 	q_visible,
+		// 	&skill_params.auto_mapping,
+		// );
 
 		//ウェイトをリセットする
 		player.wait.reset();

@@ -33,7 +33,7 @@ impl GameMap
 	}
 
 	//通路か(true)広間か(false)判断する
-	fn judge_passageway( &self, x: i32, y: i32 ) -> bool
+	fn judge_passageway( &self, x: usize, y: usize ) -> bool
 	{	//通路ではない条件
 		if ! self.is_wall_upper_left   ( x, y ) // XX
 		&& ! self.is_wall_upper_center ( x, y ) // XO
@@ -54,7 +54,7 @@ impl GameMap
 		true
 	}
 
-	//行き止まりの道の長さを数える
+	//行き止まりの路地の長さを数える
 	pub fn count_deadend_passageway_length( &mut self )
 	{	//全面走査して壁以外のマスを調べる
 		for x in MAP_DIGABLE_X
@@ -64,14 +64,14 @@ impl GameMap
 	
 				//行き止まりから他の道との合流地点まで遡って道の長さを数える
 				let mut pedometer = 0;
-				let mut map_xy = ( x, y );
+				let mut map_xy = ( x as i32, y as i32 );
 				let mut old_xy = ( -1, -1 );
 				loop
 				{	let mut next_xy = ( -1, -1 );
 					let mut count = 0;
 					for ( dx, dy ) in DIRECTION
 					{	let tmp_xy = ( map_xy.0 + dx, map_xy.1 + dy );
-						if self.is_wall( tmp_xy.0, tmp_xy.1 ) { continue }
+						if self.is_wall( tmp_xy.0 as usize, tmp_xy.1 as usize ) { continue }
 						if tmp_xy == old_xy { continue }
 						next_xy = tmp_xy;
 						count += 1;

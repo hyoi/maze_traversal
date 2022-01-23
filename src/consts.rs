@@ -1,8 +1,8 @@
 use super::*;
 
 //マップの縦横のマス数
-pub const MAP_WIDTH : i32 = 35;	//66
-pub const MAP_HEIGHT: i32 = 35;
+pub const MAP_WIDTH : usize = 35;	//66
+pub const MAP_HEIGHT: usize = 35;
 
 //アプリのTitle
 pub const APP_TITLE: &str = "maze traversal";
@@ -53,26 +53,48 @@ pub const MESSAGE_EVENT: [ MessageSect; 3 ] =
 ];
 
 pub const NA_STR3: &str = "---";
+pub const NA_STR5: &str = "-----";
 
 #[derive(Component)]
-pub struct UiUpperRight;
-pub const UI_UPPER_RIGHT: [ MessageSect; 2 ] =
+pub struct UiUpperLeft;
+pub const UI_UPPER_LEFT: [ MessageSect; 2 ] =
+[	( " HP " , FONT_MESSAGE_TEXT, PIXEL_PER_GRID * 0.8, Color::ORANGE ),
+	( NA_STR3, FONT_MESSAGE_TEXT, PIXEL_PER_GRID * 1.0, Color::WHITE  ),
+];
+
+#[derive(Component)]
+pub struct UiUpperCenter;
+pub const UI_UPPER_CENTER: [ MessageSect; 2 ] =
 [	( APP_TITLE, FONT_TITLE_TEXT, PIXEL_PER_GRID * 1.3, Color::ORANGE ),
 	( "迷路踏破", FONT_TITLE_TEXT, PIXEL_PER_GRID * 1.6, Color::WHITE  ),
 ];
 
 #[derive(Component)]
-pub struct UiUpperLeft;
-pub const UI_UPPER_LEFT: [ MessageSect; 2 ] =
-[	( "HP "  , FONT_MESSAGE_TEXT, PIXEL_PER_GRID * 0.9, Color::ORANGE ),
-	( NA_STR3, FONT_MESSAGE_TEXT, PIXEL_PER_GRID * 1.0, Color::WHITE  ),
+pub struct UiUpperRight;
+pub const UI_UPPER_RIGHT: [ MessageSect; 4 ] =
+[	( "SCORE"  , FONT_MESSAGE_TEXT, PIXEL_PER_GRID * 0.8, Color::ORANGE ),
+	( ""       , FONT_MESSAGE_TEXT, PIXEL_PER_GRID * 1.0, Color::WHITE  ),
+	( "/ STAGE", FONT_MESSAGE_TEXT, PIXEL_PER_GRID * 0.8, Color::ORANGE ),
+	( ""       , FONT_MESSAGE_TEXT, PIXEL_PER_GRID * 1.0, Color::WHITE  ),
 ];
 
 #[derive(Component)]
 pub struct UiLowerLeft;
 pub const UI_LOWER_LEFT: [ MessageSect; 2 ] =
-[	( "FPS " , FONT_MESSAGE_TEXT, PIXEL_PER_GRID * 0.9, Color::ORANGE ),
+[	( "FPS " , FONT_MESSAGE_TEXT, PIXEL_PER_GRID * 0.8, Color::ORANGE ),
 	( NA_STR3, FONT_MESSAGE_TEXT, PIXEL_PER_GRID * 1.0, Color::WHITE  ),
+];
+
+#[derive(Component)]
+pub struct UiLowerCenter;
+pub const UI_LOWER_CENTER: [ MessageSect; 1 ] =
+[	( "2021 - 2022 hyoi", FONT_MESSAGE_TEXT, PIXEL_PER_GRID * 0.7, Color::WHITE ),
+];
+
+#[derive(Component)]
+pub struct UiLowerRight;
+pub const UI_LOWER_RIGHT: [ MessageSect; 1 ] =
+[	( "powered by Rust&Bevy", FONT_MESSAGE_TEXT, PIXEL_PER_GRID * 0.7, Color::WHITE ),
 ];
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -87,19 +109,5 @@ pub const GAUGE_RECTANGLE: ( f32, f32, f32, f32 ) =
 	PIXEL_PER_GRID *  0.2,							//高さ
 );
 pub const GAUGE_DEPTH: f32 = 30.0;
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-//スキル・オートマッピングのパラメータ
-pub const SKILL_AUTO_MAPPING: &str = "auto_mapping";
-pub const AUTO_MAPPING_LV_AND_AREA: [ &str; 7 ] = 
-[	"  545  ",
-	" 43234 ",
-	"5311135",
-	"4210124",	// 中心0
-	"5311135",
-	" 43234 ",
-	"  545  ",
-];
 
 //End of code.

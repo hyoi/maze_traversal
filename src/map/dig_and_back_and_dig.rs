@@ -14,8 +14,8 @@ impl GameMap
 			digable_walls.clear();
 			backtrack = ( 0, 0 );
 			for ( dx, dy ) in DIRECTION
-			{	let tmp_x = map_xy.0 + dx;
-				let tmp_y = map_xy.1 + dy;
+			{	let tmp_x = ( map_xy.0 as i32 + dx ) as usize;
+				let tmp_y = ( map_xy.1 as i32 + dy ) as usize;
 
 				//外壁は掘れない
 				if ! MAP_DIGABLE_X.contains( &tmp_x ) || ! MAP_DIGABLE_Y.contains( &tmp_y ) { continue }
@@ -24,7 +24,7 @@ impl GameMap
 				let tmp_xy = ( tmp_x, tmp_y );
 				let direct = ( dx, dy );
 				match self.map[ tmp_x as usize ][ tmp_y as usize ]
-				{	MapObj::Dot1 => backtrack = tmp_xy,
+				{	MapObj::PATHWAY => backtrack = tmp_xy,
 					MapObj::Wall(_) if self.is_digable_wall( tmp_xy, direct ) => digable_walls.push( tmp_xy ),
 					_ => {}
 				}
@@ -36,13 +36,13 @@ impl GameMap
 				if backtrack == ( 0, 0 ) { break }
 
 				//現在位置に行き止まり情報「dot2」を書き込み、後戻りする
-				self.map[ map_xy.0 as usize ][ map_xy.1 as usize ] = MapObj::Dot2;
+				self.map[ map_xy.0 as usize ][ map_xy.1 as usize ] = MapObj::DEADEND;
 				map_xy = backtrack;
 			}
 			else
 			{	//掘れる壁が見つかったので、方向をランダムに決めて、掘る
 				map_xy = digable_walls[ self.rng.gen_range( 0..digable_walls.len() ) ];
-				self.map[ map_xy.0 as usize ][ map_xy.1 as usize ] = MapObj::Dot1;
+				self.map[ map_xy.0 as usize ][ map_xy.1 as usize ] = MapObj::PATHWAY;
 			}
 		}
 
@@ -51,7 +51,7 @@ impl GameMap
 	} 
 
 	//進行方向の壁が掘れるか調べる
-	fn is_digable_wall( &self, ( x, y ): ( i32, i32 ), direction: ( i32, i32 ) ) -> bool
+	fn is_digable_wall( &self, ( x, y ): ( usize, usize ), direction: ( i32, i32 ) ) -> bool
 	{	match direction
 		{	UP    if self.is_wall_upper_left   ( x, y )
 				  && self.is_wall_upper_center ( x, y )	// 壁壁壁

@@ -53,8 +53,8 @@ impl Plugin for PluginMap
 pub enum MapObj
 {	None,
 	Wall ( Option<Entity> ),
-	Dot1 ,	//通常の道
-	Dot2 ,	//行き止まり目印用
+	PATHWAY, //通常の道
+	DEADEND, //行き止まり目印用
 	Goal ( Option<Entity> ),
 	Space,
 }
@@ -62,11 +62,11 @@ pub enum MapObj
 //MAP情報のResource
 pub struct GameMap
 {	pub rng: rand::prelude::StdRng,	//再現性がある乱数を使いたいので
-	pub map  : [ [ MapObj; MAP_HEIGHT as usize ]; MAP_WIDTH as usize ],
-	pub stat : [ [ usize ; MAP_HEIGHT as usize ]; MAP_WIDTH as usize ],
-	pub count: [ [ usize ; MAP_HEIGHT as usize ]; MAP_WIDTH as usize ],
-	pub start_xy: ( i32, i32 ),
-	pub goal_xy : ( i32, i32 ),
+	pub map  : [ [ MapObj; MAP_HEIGHT ]; MAP_WIDTH ],
+	pub stat : [ [ usize ; MAP_HEIGHT ]; MAP_WIDTH ],
+	pub count: [ [ usize ; MAP_HEIGHT ]; MAP_WIDTH ],
+	pub start_xy: ( usize, usize ),
+	pub goal_xy : ( usize, usize ),
 	pub count_dots: usize,
 }
 impl Default for GameMap
@@ -74,9 +74,9 @@ impl Default for GameMap
 	{	Self
 		{	rng: StdRng::seed_from_u64( rand::thread_rng().gen::<u64>() ),	//本番用
 		//	rng: StdRng::seed_from_u64( 1234567890 ),	//開発用：再現性がある乱数を使いたい場合
-			map  : [ [ MapObj::None ; MAP_HEIGHT as usize ]; MAP_WIDTH as usize ],
-			stat : [ [ BIT_ALL_CLEAR; MAP_HEIGHT as usize ]; MAP_WIDTH as usize ],
-			count: [ [ 0            ; MAP_HEIGHT as usize ]; MAP_WIDTH as usize ],
+			map  : [ [ MapObj::None ; MAP_HEIGHT ]; MAP_WIDTH ],
+			stat : [ [ BIT_ALL_CLEAR; MAP_HEIGHT ]; MAP_WIDTH ],
+			count: [ [ 0            ; MAP_HEIGHT ]; MAP_WIDTH ],
 			start_xy: ( 0, 0 ),
 			goal_xy : ( 0, 0 ),
 			count_dots: 0,
@@ -88,7 +88,7 @@ impl Default for GameMap
 const SPRITE_DEPTH_MAZE   : f32 = 10.0;
 
 #[derive(Component)]
-pub struct SpriteWall { pub x: i32, pub y: i32 }
+pub struct SpriteWall { pub x: usize, pub y: usize }
 const WALL_PIXEL: f32 = PIXEL_PER_GRID;
 
 #[derive(Component)]
@@ -115,8 +115,8 @@ fn spawn_sprite_new_map
 
 	//入口を掘る
 	let x = maze.rng.gen_range( MAP_DIGABLE_X );
-	maze.map[ x as usize ][ ( MAP_HEIGHT - 2 ) as usize ] = MapObj::Dot1;
-	maze.map[ x as usize ][ ( MAP_HEIGHT - 1 ) as usize ] = MapObj::Dot2; //入口は行き止まり扱い
+	maze.map[ x ][ MAP_HEIGHT - 2 ] = MapObj::PATHWAY;
+	maze.map[ x ][ MAP_HEIGHT - 1 ] = MapObj::DEADEND; //入口は行き止まり扱い
 	maze.start_xy = ( x, MAP_HEIGHT - 1 );
 
 	//呼び出す関数を乱数で決め、迷路を掘らせる
@@ -136,10 +136,10 @@ fn spawn_sprite_new_map
 	//出口を掘れる場所を探し、乱数で決める
 	let mut exit_x = Vec::new();
 	MAP_DIGABLE_X.for_each( | x |
-		if ! matches!( maze.map[ x as usize ][ 1 ], MapObj::Wall(_) ) { exit_x.push( x ) }
+		if ! matches!( maze.map[ x ][ 1 ], MapObj::Wall(_) ) { exit_x.push( x ) }
 	);
 	let x = exit_x[ maze.rng.gen_range( 0..exit_x.len() ) ];
-	maze.map[ x as usize ][ 0 ] = MapObj::Goal( None );
+	maze.map[ x ][ 0 ] = MapObj::Goal( None );
 	maze.goal_xy = ( x, 0 );
 
 	//迷路の構造解析
@@ -153,15 +153,15 @@ fn spawn_sprite_new_map
 	let mut count = 0;
 	for x in MAP_INDEX_X
 	{	for y in MAP_INDEX_Y
-		{	let xy = conv_sprite_coordinates( x as usize, y as usize );
-			let obj = &mut maze.map[ x as usize ][ y as usize ];
+		{	let xy = conv_sprite_coordinates( x , y );
+			let obj = &mut maze.map[ x ][ y ];
 			*obj = match obj
-			{	MapObj::Dot1 =>
+			{	MapObj::PATHWAY =>
 				{	count += 1;
-					MapObj::Dot1
+					MapObj::PATHWAY
 				}
-				MapObj::Dot2 =>
-				{	MapObj::Dot1 //Dot2もDot1へ変換する
+				MapObj::DEADEND =>
+				{	MapObj::PATHWAY //DEADENDもPATHWAYへ変換する
 				}
 				MapObj::Goal(_) =>
 				{	let id = cmds
