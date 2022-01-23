@@ -88,6 +88,8 @@ const SPRITE_DEPTH_MAZE   : f32 = 10.0;
 pub struct SpriteWall { pub x: usize, pub y: usize }
 const WALL_PIXEL: f32 = PIXEL_PER_GRID;
 
+const COIN_PIXEL: f32 = PIXEL_PER_GRID;
+
 #[derive(Component)]
 struct SpriteGoal;
 const GOAL_PIXEL: f32 = PIXEL_PER_GRID / 2.0;
@@ -146,7 +148,6 @@ fn spawn_sprite_new_map
 	//迷路の構造解析
 	maze.identify_halls_and_passageways();
 	maze.count_deadend_passageway_length();
-//	maze.spawn_sysinfo_obj( sysparams.sysinfo, &mut cmds, &asset_svr );
 
 	//スプライトをspawnしてEntity IDを記録する
 	for x in MAP_INDEX_X
@@ -166,7 +167,7 @@ fn spawn_sprite_new_map
 				}
 				MapObj::Wall ( _ ) =>
 				{	let id = cmds
-						.spawn_bundle( sprite_wall( xy, &asset_svr, sysparams.darkmode ) )
+						.spawn_bundle( sprite_wall( xy, &asset_svr ) )
 						.insert( SpriteWall { x, y } )
 						.id();
 					MapObj::Wall( Some( id ) )
@@ -179,8 +180,12 @@ fn spawn_sprite_new_map
 			{	let count = maze.count[ x ][ y ];
 				if count > 0
 				{	let info = count.to_string();
+//					let id = cmds
+//						.spawn_bundle ( text2d_sysinfo( xy, &asset_svr, &info ) )
+//						.insert( SysinfoObj )
+//						.id();
 					let id = cmds
-						.spawn_bundle ( text2d_sysinfo( xy, &asset_svr, &info ) )
+						.spawn_bundle( sprite_coin( xy, &asset_svr ) )
 						.insert( SysinfoObj )
 						.id();
 					maze.map[ x ][ y ] = MapObj::DeadEnd( Some( id ) );
@@ -277,16 +282,28 @@ fn sprite_goal( ( x, y ): ( f32, f32 ) ) -> SpriteBundle
 fn sprite_wall
 (	( x, y ): ( f32, f32 ),
 	asset_svr: &Res<AssetServer>,
-	darkmode: bool,
 ) -> SpriteBundle
 {	let custom_size = Some( Vec2::new( WALL_PIXEL, WALL_PIXEL ) );
 
 	let sprite     = Sprite { custom_size, ..Default::default() };
 	let texture    = asset_svr.load( WALL_SPRITE_FILE );
 	let transform  = Transform::from_translation( Vec3::new( x, y, SPRITE_DEPTH_MAZE ) );
-	let visibility = Visibility { is_visible: ! darkmode };
 
-	SpriteBundle { sprite, texture, transform, visibility, ..Default::default() }
+	SpriteBundle { sprite, texture, transform, ..Default::default() }
+}
+
+//コイン用のスプライトバンドルを生成
+fn sprite_coin
+(	( x, y ): ( f32, f32 ),
+	asset_svr: &Res<AssetServer>,
+) -> SpriteBundle
+{	let custom_size = Some( Vec2::new( COIN_PIXEL, COIN_PIXEL ) );
+
+	let sprite     = Sprite { custom_size, ..Default::default() };
+	let texture    = asset_svr.load( COIN_SPRITE_FILE );
+	let transform  = Transform::from_translation( Vec3::new( x, y, SPRITE_DEPTH_MAZE ) );
+
+	SpriteBundle { sprite, texture, transform, ..Default::default() }
 }
 
 //End of code.

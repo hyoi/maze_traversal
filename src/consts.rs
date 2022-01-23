@@ -20,11 +20,13 @@ pub const SCREEN_BGCOLOR: Color = Color::rgb_linear( 0.025, 0.025, 0.04 );
 pub const FONT_MESSAGE_TEXT: &str = "fonts/Orbitron-Black.ttf";
 pub const FONT_TITLE_TEXT  : &str = "fonts/ReggaeOne-Regular.ttf";
 pub const WALL_SPRITE_FILE : &str = "sprites/wall.png";
+pub const COIN_SPRITE_FILE : &str = "sprites/coin.png";
 
-pub const FETCH_ASSETS: [ &str; 3 ] =
+pub const FETCH_ASSETS: [ &str; 4 ] =
 [	FONT_MESSAGE_TEXT,
 	FONT_TITLE_TEXT,
 	WALL_SPRITE_FILE,
+	COIN_SPRITE_FILE,
 ];
 
 //TEXT UIのメッセージセクションの型
