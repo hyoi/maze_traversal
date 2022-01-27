@@ -10,23 +10,21 @@ impl GameMap
 		let mut digable_walls = Vec::new();
 		let mut backtrack;
 		loop
-		{	//上下左右にある掘削候補と戻り路を記録する
-			digable_walls.clear();
+		{	digable_walls.clear();
 			backtrack = ( 0, 0 );
-			for ( dx, dy ) in DIRECTION
-			{	let tmp_x = ( map_xy.0 as i32 + dx ) as usize;
-				let tmp_y = ( map_xy.1 as i32 + dy ) as usize;
+
+			//上下左右にある掘削候補と戻り路を記録する
+			for dxy in FOUR_SIDES
+			{	let tmp_xy = ( map_xy.0 + dxy.0 - 1, map_xy.1 + dxy.1 - 1 );
 
 				//外壁は掘れない
-				if ! MAP_DIGABLE_X.contains( &tmp_x ) || ! MAP_DIGABLE_Y.contains( &tmp_y ) { continue }
+				if ! RANGE_MAP_INNER_X.contains( &tmp_xy.0 )
+				|| ! RANGE_MAP_INNER_Y.contains( &tmp_xy.1 ) { continue }
 
 				//上下左右の座標のオブジェクトを調べる
-				let tmp_xy = ( tmp_x, tmp_y );
-				let direct = ( dx, dy );
-				match self.map[ tmp_x as usize ][ tmp_y as usize ]
-				{	MapObj::Pathway ( _ ) => backtrack = tmp_xy,
-					MapObj::Wall    ( _ ) if self.is_digable_wall( tmp_xy, direct )
-										  => digable_walls.push( tmp_xy ),
+				match self.map[ tmp_xy.0 ][ tmp_xy.1 ]
+				{	MapObj::Pathway => backtrack = tmp_xy,
+					MapObj::Wall if self.is_digable_wall( tmp_xy, dxy ) => digable_walls.push( tmp_xy ),
 					_ => {}
 				}
 			}
@@ -36,14 +34,14 @@ impl GameMap
 			{	//戻り路も見つからないなら迷路完成
 				if backtrack == ( 0, 0 ) { break }
 
-				//現在位置に行き止まり情報「dot2」を書き込み、後戻りする
-				self.map[ map_xy.0 ][ map_xy.1 ] = MapObj::DeadEnd ( None );
+				//現在位置に行き止まり情報を書き込み、後戻りする
+				self.map[ map_xy.0 ][ map_xy.1 ] = MapObj::DeadEnd;
 				map_xy = backtrack;
 			}
 			else
 			{	//掘れる壁が見つかったので、方向をランダムに決めて、掘る
 				map_xy = digable_walls[ self.rng.gen_range( 0..digable_walls.len() ) ];
-				self.map[ map_xy.0 ][ map_xy.1 ] = MapObj::Pathway ( None );
+				self.map[ map_xy.0 ][ map_xy.1 ] = MapObj::Pathway;
 			}
 		}
 
@@ -52,8 +50,8 @@ impl GameMap
 	} 
 
 	//進行方向の壁が掘れるか調べる
-	fn is_digable_wall( &self, ( x, y ): ( usize, usize ), direction: ( i32, i32 ) ) -> bool
-	{	match direction
+	fn is_digable_wall( &self, ( x, y ): ( usize, usize ), four_sides: ( usize, usize ) ) -> bool
+	{	match four_sides
 		{	UP    if self.is_wall_upper_left   ( x, y )
 				  && self.is_wall_upper_center ( x, y )	// 壁壁壁
 				  && self.is_wall_upper_right  ( x, y )	// 壁Ｘ壁

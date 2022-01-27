@@ -2,23 +2,22 @@
 use bevy::{ prelude::*, diagnostic::*,};
 
 //internal modules
-mod types;
-mod consts;
-mod utils;
-
-use types::*;
-use consts::*;
-use utils::*;
+mod common;
+use common::types::*;
+use common::constants::*;
+use common::utilities::*;
 
 mod fetch_assets;
 mod ui;
 mod map;
 mod player;
+// mod chaser;
 
 use fetch_assets::*;
 use ui::*;
 use map::*;
 use player::*;
+// use chaser::*;
 
 //メイン関数
 fn main()
@@ -41,7 +40,6 @@ fn main()
 	.add_plugin( FrameTimeDiagnosticsPlugin::default() )	// fps計測のプラグイン
 	//----------------------------------------------------------------------------------------------
 	.add_state( GameState::Init )							// 状態遷移の初期値
-	.init_resource::<SystemParameters>()					// 全体に影響する変数を格納するResource
 	//----------------------------------------------------------------------------------------------
 	.add_startup_system( spawn_camera )						// bevyのカメラ設置
 	.add_system( handle_esc_key_for_pause )					// [Esc]でpause処理
@@ -50,6 +48,7 @@ fn main()
 	.add_plugin( PluginUi )
 	.add_plugin( PluginMap )
 	.add_plugin( PluginPlayer )
+	// .add_plugin( PluginChaser )
 	//----------------------------------------------------------------------------------------------
 	;
 

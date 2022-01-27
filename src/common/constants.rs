@@ -1,0 +1,148 @@
+use super::*;
+
+//マップの縦横のマス数
+pub const MAP_WIDTH : usize = 35;	//66
+pub const MAP_HEIGHT: usize = 35;
+
+//画面の縦横のマス数
+pub const GRID_WIDTH : usize = MAP_WIDTH;
+pub const GRID_HEIGHT: usize = MAP_HEIGHT + 2;	//マップ＋ヘッダ＋フッタ
+
+//アプリのTitle
+pub const APP_TITLE: &str = "maze traversal";
+
+//表示倍率、ウィンドウの縦横pixel数と背景色
+pub const SCREEN_SCALING: usize = 3;
+pub const PIXEL_PER_GRID: f32   = ( 8 * SCREEN_SCALING ) as f32;
+pub const SCREEN_WIDTH  : f32   = PIXEL_PER_GRID * GRID_WIDTH  as f32;
+pub const SCREEN_HEIGHT : f32   = PIXEL_PER_GRID * GRID_HEIGHT as f32;
+pub const SCREEN_BGCOLOR: Color = Color::rgb_linear( 0.025, 0.025, 0.04 );
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//迷路生成関数の選択
+#[allow(dead_code)]
+#[derive(PartialEq,Debug)]
+pub enum SelectMazeType { Random, Type1, Type2, Type3 }
+
+pub const SELECT_MAZE_TYPE: SelectMazeType = SelectMazeType::Random;
+//pub const SELECT_MAZE_TYPE: SelectMazeType = SelectMazeType::Type1;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//Asset（フォント、画像...etc）
+pub const FONT_ORBITRON_BLACK	: &str = "fonts/Orbitron-Black.ttf";
+pub const FONT_REGGAEONE_REGULAR: &str = "fonts/ReggaeOne-Regular.ttf";
+pub const IMAGE_SPRITE_WALL		: &str = "sprites/wall.png";
+pub const IMAGE_SPRITE_COIN		: &str = "sprites/coin.png";
+
+//事前ロード対象のAsset
+pub const FETCH_ASSETS: [ &str; 4 ] =
+[	FONT_ORBITRON_BLACK,
+	FONT_REGGAEONE_REGULAR,
+	IMAGE_SPRITE_WALL,
+	IMAGE_SPRITE_COIN,
+];
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//TEXT UIのメッセージセクションの型
+pub type MessageSect<'a> = ( &'a str, &'a str, f32, Color );
+
+#[derive(Component)]
+pub struct MessagePause;
+pub const MESSAGE_PAUSE: [ MessageSect; 1 ] =
+[	( "P A U S E", FONT_ORBITRON_BLACK, PIXEL_PER_GRID * 5.0, Color::SILVER ),
+];
+
+#[derive(Component)]
+pub struct MessageClear;
+pub const MESSAGE_CLEAR: [ MessageSect; 3 ] =
+[	( "C L E A R !!\n"   , FONT_ORBITRON_BLACK, PIXEL_PER_GRID * 5.0, Color::GOLD  ),
+	( "Next floor...\n\n", FONT_ORBITRON_BLACK, PIXEL_PER_GRID * 2.0, Color::WHITE ),
+	( ""                 , FONT_ORBITRON_BLACK, PIXEL_PER_GRID * 4.0, Color::WHITE ),
+];
+
+#[derive(Component)]
+pub struct MessageEvent;
+pub const MESSAGE_EVENT: [ MessageSect; 3 ] =
+[	( "E V E N T !!\n", FONT_REGGAEONE_REGULAR, PIXEL_PER_GRID * 5.0, Color::GOLD  ),
+	( "戦闘中...\n\n"  , FONT_REGGAEONE_REGULAR, PIXEL_PER_GRID * 2.0, Color::WHITE ),
+	( "Hit SPACE Kry!", FONT_REGGAEONE_REGULAR, PIXEL_PER_GRID * 2.5, Color::GOLD ),
+];
+
+#[derive(Component)]
+pub struct UiUpperLeft;
+pub const UI_UPPER_LEFT: [ MessageSect; 2 ] =
+[	( " HP ", FONT_ORBITRON_BLACK, PIXEL_PER_GRID * 0.8, Color::ORANGE ),
+	( ""    , FONT_ORBITRON_BLACK, PIXEL_PER_GRID * 1.0, Color::WHITE  ),
+];
+/*
+#[derive(Component)]
+pub struct UiUpperCenter;
+pub const UI_UPPER_CENTER: [ MessageSect; 2 ] =
+[	( APP_TITLE, FONT_REGGAEONE_REGULAR, PIXEL_PER_GRID * 1.3, Color::ORANGE ),
+	( "迷路踏破", FONT_REGGAEONE_REGULAR, PIXEL_PER_GRID * 1.6, Color::WHITE  ),
+];
+*/
+#[derive(Component)]
+pub struct UiUpperRight;
+pub const UI_UPPER_RIGHT: [ MessageSect; 4 ] =
+[	( ""        , FONT_ORBITRON_BLACK, PIXEL_PER_GRID * 1.0, Color::WHITE  ),
+	( " GOLD / ", FONT_ORBITRON_BLACK, PIXEL_PER_GRID * 0.8, Color::ORANGE ),
+	( ""        , FONT_ORBITRON_BLACK, PIXEL_PER_GRID * 1.0, Color::WHITE  ),
+	( " FLOOR " , FONT_ORBITRON_BLACK, PIXEL_PER_GRID * 0.8, Color::ORANGE ),
+];
+
+#[derive(Component)]
+pub struct UiLowerLeft;
+pub const UI_LOWER_LEFT: [ MessageSect; 2 ] =
+[	( "FPS ", FONT_ORBITRON_BLACK, PIXEL_PER_GRID * 0.8, Color::ORANGE ),
+	( ""    , FONT_ORBITRON_BLACK, PIXEL_PER_GRID * 1.0, Color::WHITE  ),
+];
+
+#[derive(Component)]
+pub struct UiLowerCenter;
+pub const UI_LOWER_CENTER: [ MessageSect; 1 ] =
+[	( "2021 - 2022 hyoi", FONT_ORBITRON_BLACK, PIXEL_PER_GRID * 0.7, Color::WHITE ),
+];
+
+#[derive(Component)]
+pub struct UiLowerRight;
+pub const UI_LOWER_RIGHT: [ MessageSect; 1 ] =
+[	( "powered by Rust&Bevy", FONT_ORBITRON_BLACK, PIXEL_PER_GRID * 0.7, Color::WHITE ),
+];
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//Spriteの深さ
+pub const SPRITE_DEPTH_CHASER: f32 = 30.0;	//追手
+pub const SPRITE_DEPTH_PLAYER: f32 = 20.0;	//自機
+pub const SPRITE_DEPTH_MAZE  : f32 = 10.0;	//壁、コイン etc
+pub const SPRITE_DEPTH_DEBUG : f32 =  5.0;
+
+//Player
+pub const PLAYER_PIXEL: f32   = PIXEL_PER_GRID / 2.5;
+pub const PLAYER_COLOR: Color = Color::YELLOW;
+
+//移動ウェイト
+pub const PLAYER_WAIT: f32 = 0.09;
+
+//スプライトの動きを滑らかにするための中割係数
+pub const PLAYER_MOVE_COEF: f32 = PIXEL_PER_GRID / PLAYER_WAIT;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//Chaser
+pub const SPRITE_CHASER_PIXEL: f32 = PIXEL_PER_GRID / 2.0;
+pub const SPRITE_CHASER_COLOR: Color = Color::RED;
+
+//移動ウェイト
+pub const CHASER_WAIT : f32 = 0.13;
+pub const CHASER_ACCEL: f32 = 0.4; //スピードアップの割増
+
+//スプライトの動きを滑らかにするための中割係数
+pub const CHASER_MOVE_COEF  : f32 = PIXEL_PER_GRID / CHASER_WAIT;
+pub const CHASER_ROTATE_COEF: f32 = 90. / CHASER_WAIT;
+
+//End of code.

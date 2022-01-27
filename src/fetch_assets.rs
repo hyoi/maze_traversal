@@ -9,19 +9,19 @@ impl Plugin for PluginFetchAssets
 {	fn build( &self, app: &mut App )
 	{	app
 		//------------------------------------------------------------------------------------------
-		.add_system_set													// ＜GameState::Init＞
-		(	SystemSet::on_enter( GameState::Init )						// ＜on_enter()＞
-				.with_system( start_fetching_assets )					// Assetの事前ロード開始
-				.with_system( spawn_preload_anime_tile )				// ローディングアニメ用スプライトの生成
+		.add_system_set											// ＜GameState::Init＞
+		(	SystemSet::on_enter( GameState::Init )				// ＜on_enter()＞
+				.with_system( start_fetching_assets )			// Assetの事前ロード開始
+				.with_system( spawn_entity_now_loading )		// ローディングアニメ用スプライトの生成
 		)
-		.add_system_set													// ＜GameState::Init＞
-		(	SystemSet::on_update( GameState::Init )						// ＜on_update()＞
-				.with_system( change_state_after_loading )				// ロード完了⇒GameState::DemoStartへ
-				.with_system( move_preload_anime_tile )					// ローディングアニメ
+		.add_system_set											// ＜GameState::Init＞
+		(	SystemSet::on_update( GameState::Init )				// ＜on_update()＞
+				.with_system( change_state_after_loading )		// ロード完了⇒GameState::DemoStartへ
+				.with_system( move_entity_now_loading )			// ローディングアニメ
 		)
-		.add_system_set													// ＜GameState::Init＞
-		(	SystemSet::on_exit( GameState::Init )						// ＜on_exit()＞
-				.with_system( despawn_entity::<PreloadingAnimeTile> )	// スプライトの削除
+		.add_system_set											// ＜GameState::Init＞
+		(	SystemSet::on_exit( GameState::Init )				// ＜on_exit()＞
+				.with_system( despawn_entity::<NowLoading> )	// スプライトの削除
 		)
 		//------------------------------------------------------------------------------------------
 		;
@@ -43,7 +43,7 @@ const PRELOADING_MESSAGE_ARRAY: [ &str; 13 ] =
 	" #  ## # #  # #  #    # # ### # # # # ## #  # ", //4
 	" #  ## ###  # #  #### ### # # ##  # #  #  ##  ", //5
 	"",												  //6
-	" ###                      #   #               ", //7
+	" ###                      #   #           # # ", //7
 	" #  # #   ###  #  ### ### # # #  #  # ### # # ", //8
 	" #  # #   #   # # #   #   # # # # #    #  # # ", //9
 	" ###  #   ### # # ### ### # # # # # #  #  # # ", //10
@@ -53,12 +53,12 @@ const PRELOADING_MESSAGE_ARRAY: [ &str; 13 ] =
 
 //スプライト識別用Component
 #[derive(Component)]
-struct PreloadingAnimeTile ( usize, usize );
+struct NowLoading { x: usize, y: usize }
 
 //タイルのスプライト
-const SPRITE_TILE_DEPTH: f32   = 0.0;
-const SPRITE_TILE_PIXEL: f32   = PIXEL_PER_GRID;
-const SPRITE_TILE_COLOR: Color = Color::rgb_linear( 0.25, 0.06, 0.04 );
+const SPRITE_DEPTH: f32   = 0.0;
+const SPRITE_PIXEL: f32   = PIXEL_PER_GRID;
+const SPRITE_COLOR: Color = Color::rgb( 0.5, 0.3, 0.2 );
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -71,6 +71,7 @@ fn start_fetching_assets
 	let mut preload = Vec::new();
 	FETCH_ASSETS.iter().for_each( | f | preload.push( asset_svr.load_untyped( *f ) ) );
 
+	//リソースに登録して解放しないようにする
 	cmds.insert_resource( LoadedAssets { preload } );
 }
 
@@ -89,65 +90,62 @@ fn change_state_after_loading
 		}
 	}
 
-	//DemoStartへ遷移する
+	//次のStateへ遷移する
 	let _ = state.overwrite_set( GameState::Start );
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //ローディングアニメ用スプライトを生成する
-fn spawn_preload_anime_tile( mut cmds: Commands )
+fn spawn_entity_now_loading( mut cmds: Commands )
 {	let mut rng = rand::thread_rng();
 
-	for ( grid_y, s ) in PRELOADING_MESSAGE_ARRAY.iter().enumerate()
-	{	for ( grid_x, c ) in s.chars().enumerate()
-		{	if c == ' ' { continue }	//空白文字は無視
+	for ( y, line ) in PRELOADING_MESSAGE_ARRAY.iter().enumerate()
+	{	for ( x, chara ) in line.chars().enumerate()
+		{	if chara == ' ' { continue }	//空白文字は無視
 
 			//スプライトの初期位置は乱数で決める
-			let x  = rng.gen_range( 0..MAP_WIDTH  );
-			let y  = rng.gen_range( 0..MAP_HEIGHT );
-			let xy = conv_sprite_coordinates( x as usize, y as usize );
+			let grid_x = rng.gen_range( 0..GRID_WIDTH  );
+			let grid_y = rng.gen_range( 0..GRID_HEIGHT );
+			let sprite_xy = into_pixel_xy( grid_x, grid_y );
 
-			cmds.spawn_bundle( sprite_preloading_anime_tile( xy ) )
-				.insert( PreloadingAnimeTile ( grid_x, grid_y ) );
+			cmds.spawn_bundle( sprite_now_loading( sprite_xy ) )
+				.insert( NowLoading { x, y } );
 		} 
 	}
 }
 
 //スプライトを動かしてローディングアニメを見せる
-fn move_preload_anime_tile
-(	mut q: Query<( &mut Transform, &PreloadingAnimeTile )>,
+fn move_entity_now_loading
+(	mut q: Query<( &mut Transform, &NowLoading )>,
 	time: Res<Time>,
 )
 {	let time_delta = time.delta().as_secs_f32() * 5.0;
 
 	let half_screen_w = SCREEN_WIDTH / 2.0;
-	let mess_width = PRELOADING_MESSAGE_ARRAY[ 0 ].len() as f32 * SPRITE_TILE_PIXEL;
-	let scale =  SCREEN_WIDTH / mess_width;
+	let mess_width = PRELOADING_MESSAGE_ARRAY[ 0 ].len() as f32 * SPRITE_PIXEL;
+	let scale = SCREEN_WIDTH / mess_width;
 
 	q.for_each_mut
-	(	| ( mut transform, tile ) |
-		{	let position = &mut transform.translation;
-			let ( grid_x, grid_y ) = ( tile.0 , tile.1 );
-			let ( goal_x, goal_y ) = conv_sprite_coordinates( grid_x, grid_y );
+	(	| ( mut transform, grid ) |
+		{	let ( pixel_x, pixel_y ) = into_pixel_xy( grid.x, grid.y );
+			let pixel_x = ( pixel_x + half_screen_w ) * scale - half_screen_w;	//横幅の調整
 
-			//横幅の調整
-			let goal_x = ( goal_x + half_screen_w ) * scale - half_screen_w;
-
-			position.x += ( goal_x - position.x ) * time_delta;
-			position.y += ( goal_y - position.y ) * time_delta;
+			let position = &mut transform.translation;
+			position.x += ( pixel_x - position.x ) * time_delta;
+			position.y += ( pixel_y - position.y ) * time_delta;
 		}
 	);
 }
 
 //ローディングアニメ用スプライトのバンドルを生成
-fn sprite_preloading_anime_tile( ( x, y ): ( f32, f32 ) ) -> SpriteBundle
+fn sprite_now_loading( ( x, y ): ( f32, f32 ) ) -> SpriteBundle
 {	let sprite = Sprite
-	{	color: SPRITE_TILE_COLOR,
-		custom_size: Some( Vec2::new( SPRITE_TILE_PIXEL, SPRITE_TILE_PIXEL ) ),
+	{	color: SPRITE_COLOR,
+		custom_size: Some( Vec2::new( SPRITE_PIXEL, SPRITE_PIXEL ) ),
 		..Default::default()
 	};
-	let transform = Transform::from_translation( Vec3::new( x, y, SPRITE_TILE_DEPTH ) );
+	let transform = Transform::from_translation( Vec3::new( x, y, SPRITE_DEPTH ) );
 
 	SpriteBundle { sprite, transform, ..Default::default() }
 }

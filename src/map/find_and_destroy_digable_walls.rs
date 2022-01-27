@@ -5,13 +5,12 @@ impl GameMap
 	pub fn find_and_destroy_digable_walls( &mut self )
 	{	let mut digable_walls = Vec::new();
 		loop
-		{	//マップを全面走査して拡張条件を満たす壁を記録する
-			digable_walls.clear();
-			for ( x, ary ) in ( 0.. ).zip( self.map.iter() )	// i32の.enumerate()
-			{	for ( y, _obj ) in ( 0.. ).zip( ary.iter() )	// i32の.enumerate()
-				{	if MAP_DIGABLE_X.contains( &x )
-					&& MAP_DIGABLE_Y.contains( &y )
-					&& self.is_maze_expandable( x, y ) { digable_walls.push( ( x, y ) ) }
+		{	digable_walls.clear();
+
+			//マップを全面走査して拡張条件を満たす壁を記録する
+			for x in RANGE_MAP_INNER_X
+			{	for y in RANGE_MAP_INNER_Y
+				{	if self.is_maze_expandable( x, y ) { digable_walls.push( ( x, y ) ) }
 				}
 			}
 
@@ -20,7 +19,7 @@ impl GameMap
 
 			//複数候補の中からランダムに壊す壁を決め、道にする
 			let ( x, y ) = digable_walls[ self.rng.gen_range( 0..digable_walls.len() ) ];
-			self.map[ x as usize ][ y as usize ] = MapObj::Pathway ( None ) ;
+			self.map[ x ][ y ] = MapObj::Pathway;
 		}
 	}
 
