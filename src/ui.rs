@@ -9,9 +9,10 @@ impl Plugin for PluginUi
 		.add_system_set									// ＜GameState::Init＞
 		(	SystemSet::on_exit( GameState::Init )		// ＜on_exit()＞
 				.with_system( spawn_text_ui_message )	// assetesプリロード後にUIを非表示で生成
+				.with_system( spawn_sprite_hp_gauge )	// HPゲージを作成
 		)
 		//==========================================================================================
-		.add_startup_system( spawn_sprite_hp_gauge )	// HPゲージを作成
+//		.add_startup_system( spawn_sprite_hp_gauge )	// HPゲージを作成
 		.add_system( update_ui_upper_left )				// UIの表示を更新
 		.add_system( update_ui_upper_right )			// UIの表示を更新
 		.add_system( update_ui_lower_left )				// UIの表示を更新
@@ -174,27 +175,27 @@ fn update_ui_upper_left
 {	if let Ok( mut ui ) = q_ui.get_single_mut()
 	{	let hp = match o_record
 		{	Some( record ) =>
-			{	let hp_now = record.hp_now.max( 0.0 );
+			{	let hp = record.hp.max( 0.0 );
 				let ( mut transform, mut sprite ) = q_gauge.get_single_mut().unwrap();
 
 				//スプライトの幅のスケールを縮小する。
 				//すると両端が縮むので、スプライトを左に移動して右端が縮んだように見せる
 				let scale_width = &mut transform.scale[ 0 ];
 				if 	*scale_width > 0.0
-				{	*scale_width = ( hp_now / record.hp_max ).max( 0.0 );
+				{	*scale_width = ( hp / MAX_HP ).max( 0.0 );
 					let ( x, _, w, _ ) = GAUGE_RECTANGLE;
 					let translation = &mut transform.translation;
-					translation.x = x - ( record.hp_max - hp_now ) * w / 200.0;	
+					translation.x = x - ( MAX_HP - hp ) * w / 200.0;	
 				}
 
 				//色を変える(緑色⇒黄色⇒赤色)
-				let temp = hp_now / record.hp_max;
+				let temp = hp / MAX_HP;
 				sprite.color = Color::rgb
 				(	1.0 - ( temp - 0.6 ).max( 0.0 ) * 2.0,
 					( temp.min( 0.7 ) * 2.0 - 0.4 ).max( 0.0 ),
 					0.0
 				);
-				hp_now.to_string()
+				hp.to_string()
 			},
 			None => NA_STR3.to_string()
 		};

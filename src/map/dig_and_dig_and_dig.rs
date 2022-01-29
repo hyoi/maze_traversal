@@ -18,7 +18,7 @@ impl GameMap
 			//掘れるなら一歩進む
 			if RANGE_MAP_INNER_X.contains( &x )
 			&& RANGE_MAP_INNER_Y.contains( &y )
-			&& self.to_dig_or_not( x, y )
+			&& self.dig_or_not( x, y )
 			{	self.map[ x ][ y ] = MapObj::Pathway;	//道を掘る
 				map = MapGrid { x, y };
 			}
@@ -26,7 +26,7 @@ impl GameMap
 	}
 
 	//さいころを振って、進むか(true)、やり直すか(false)決める
-	fn to_dig_or_not( &mut self, x: usize, y: usize ) -> bool
+	fn dig_or_not( &mut self, x: usize, y: usize ) -> bool
 	{	//そもそも壁じゃないならtrue
 		if ! self.is_wall( x, y ) { return true }
 

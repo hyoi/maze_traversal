@@ -46,14 +46,13 @@ impl GameMap
 		true
 	}
 
-	//行き止まりの路地の長さを数える
+	//行き止まりの路地の長さを数えてコインを設定する
 	pub fn length_of_deadend( &mut self )
 	{	//全面走査して壁以外のマスを調べる
 		for x in RANGE_MAP_INNER_X
 		{	for y in RANGE_MAP_INNER_Y
-			{	//袋小路を見つける
-				if ! self.is_dead_end( x, y ) { continue }
-	
+			{	if ! self.is_dead_end( x, y ) { continue }	//袋小路を見つける
+
 				//袋小路から他の道との合流地点まで遡って道の長さを数える
 				let mut pedometer = 0;
 				let mut map_xy = ( x, y );
@@ -75,7 +74,7 @@ impl GameMap
 					old_xy = map_xy;
 					map_xy = next_xy;
 				}
-				self.count[ x as usize ][ y as usize ] = pedometer;
+				self.coin[ x ][ y ] = pedometer;
 			}
 		}
 	}

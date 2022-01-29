@@ -19,9 +19,9 @@ pub const FOUR_SIDES: [ ( usize, usize ); 4 ] = [ UP, LEFT, RIGHT, DOWN ];
 impl GameMap
 {	//配列を初期化する
 	pub fn clear_map( &mut self )
-	{	self.map  .iter_mut().for_each( | x | x.fill( MapObj::Wall ) );
-		self.bits .iter_mut().for_each( | x | x.fill( 0            ) );
-		self.count.iter_mut().for_each( | x | x.fill( 0            ) );
+	{	self.map .iter_mut().for_each( | x | x.fill( MapObj::Wall ) );
+		self.bits.iter_mut().for_each( | x | x.fill( 0            ) );
+		self.coin.iter_mut().for_each( | x | x.fill( 0            ) );
 	}
 }
 
@@ -31,7 +31,7 @@ impl GameMap
 impl GameMap
 {	pub fn is_wall( &self, x: usize, y: usize ) -> bool
 	{	if ! RANGE_MAP_X.contains( &x ) || ! RANGE_MAP_Y.contains( &y ) { return true } //配列の添字外は壁
-		matches!( self.map[ x as usize ][ y as usize ], MapObj::Wall )
+		matches!( self.map[ x ][ y ], MapObj::Wall )
 	}
 	pub fn is_wall_upper_left   ( &self, x: usize, y: usize ) -> bool { self.is_wall( x - 1, y - 1 ) }
 	pub fn is_wall_upper_center ( &self, x: usize, y: usize ) -> bool { self.is_wall( x    , y - 1 ) }

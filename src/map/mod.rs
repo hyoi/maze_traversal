@@ -145,9 +145,9 @@ fn spawn_sprite_map
 				_ => {}
 			};
 
-			//袋小路、広間のEntityを作成
+			//袋小路のコイン、広間のEntityを作成
 			if maze.is_dead_end( x, y )
-			{	let count = maze.count[ x ][ y ];
+			{	let count = maze.coin[ x ][ y ];
 				if count > 0
 				{	//コインのスプライトを表示する
 					let custom_size = Some( Vec2::new( COIN_PIXEL, COIN_PIXEL ) );

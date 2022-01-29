@@ -1,7 +1,7 @@
 use super::*;
 
 //external modules
-use bevy_prototype_lyon::{ prelude::*, entity::ShapeBundle };
+use bevy_prototype_lyon::prelude::*;
 
 //Pluginの手続き
 pub struct PluginPlayer;
@@ -16,12 +16,12 @@ impl Plugin for PluginPlayer
 		(	SystemSet::on_exit( GameState::Start )				// ＜on_exit()＞
 				.with_system( spawn_sprite_player )				// マップ生成後に自機を配置
 		)
-		//------------------------------------------------------------------------------------------
+		//==========================================================================================
 		.add_system_set											// ＜GameState::Play＞
 		(	SystemSet::on_update( GameState::Play )				// ＜on_update()＞
 				.with_system( move_sprite_player )				// 自機の移動、ゴール⇒GameState::Clearへ
 		)
-		//------------------------------------------------------------------------------------------
+		//==========================================================================================
 		.add_system_set											// ＜GameState::Clear＞
 		(	SystemSet::on_enter( GameState::Clear )				// ＜on_enter()＞
 				.with_system( show_ui::<MessageClear> )			// CLEARメッセージを表示する
@@ -56,11 +56,10 @@ const PLAYER_MOVE_COEF: f32 = PIXEL_PER_GRID / PLAYER_WAIT;
 impl Default for Player
 {	fn default() -> Self
 	{	Self
-		{	wait: Timer::from_seconds( PLAYER_WAIT, false ),
-			map_postion: MapGrid::default(),
-			sprite_postion: Pixel::default(),
-			direction: common::types::Direction::Up,
-			new_direction: common::types::Direction::Up,
+		{	map_xy   : MapGrid::default(),
+			direction: FourSides::Up,
+			key_input: FourSides::Up,
+			wait: Timer::from_seconds( PLAYER_WAIT, false ),
 			stop: true,
 		}
 	}
@@ -70,32 +69,19 @@ impl Default for Player
 
 //自機のスプライトを初期位置に配置する
 fn spawn_sprite_player( maze: Res<GameMap>, mut cmds: Commands )
-{	let sprite_postion = maze.start_xy.into_pixel();
+{	let pixel = maze.start_xy.into_pixel();
 
-	let player = Player
-	{	map_postion: maze.start_xy,
-		sprite_postion,
-		..Default::default()
-	};
-
-	//スプライトを初期位置に配置する
-	cmds.spawn_bundle( sprite_player( sprite_postion ) ).insert( player );
-}
-
-//自機のスプライトバンドルを生成
-fn sprite_player( pixel: Pixel ) -> ShapeBundle
-{	let triangle = &shapes::RegularPolygon
+	let triangle = &shapes::RegularPolygon
 	{	sides: 3,
 		feature: shapes::RegularPolygonFeature::Radius( PLAYER_PIXEL ),
 		..shapes::RegularPolygon::default()
 	};
-	let drawmode  = DrawMode::Fill( FillMode { options: FillOptions::default(), color: PLAYER_COLOR } );
+	let drawmode = DrawMode::Fill( FillMode { options: FillOptions::default(), color: PLAYER_COLOR } );
 	let transform = Transform::from_translation( Vec3::new( pixel.x, pixel.y, SPRITE_DEPTH_PLAYER ) );
 
-	GeometryBuilder::build_as( triangle, drawmode, transform )
+	cmds.spawn_bundle( GeometryBuilder::build_as( triangle, drawmode, transform ) )
+		.insert( Player { map_xy: maze.start_xy, ..Default::default() } );
 }
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //自機のスプライトを移動する
 fn move_sprite_player
@@ -107,46 +93,28 @@ fn move_sprite_player
 {	let time_delta = time.delta();
 	let ( mut player, mut transform ) = q.get_single_mut().unwrap();
 
-	//bevyのDirectionと名前が被ったので
-	use common::types::Direction::*;
-
-	if ! player.wait.tick( time_delta ).finished()
-	{	if player.stop { return } //停止中なら何も処理しない
-
-		//スプライトを滑らかに移動させるための中割アニメーション
-		let delta = PLAYER_MOVE_COEF * time_delta.as_secs_f32();
-		let position = &mut transform.translation;
-		match player.direction
-		{	Up    => position.y += delta,
-			Left  => position.x -= delta,
-			Right => position.x += delta,
-			Down  => position.y -= delta,
-		}
-		player.sprite_postion = Pixel { x: position.x, y: position.y };
-
-		//スプライト(三角形)の表示向きを更新する
-		if player.direction != player.new_direction
-		{	let angle = decide_angle( player.direction, player.new_direction );
-			let quat = Quat::from_rotation_z( angle.to_radians() );
-			transform.rotate( quat );
-			player.direction = player.new_direction;
-		}
-	}
-	else
-	{	//スプライトの表示位置を更新する
-		let mut map = player.map_postion;
+	if player.wait.tick( time_delta ).finished()
+	{	//スプライトの表示位置をグリッドに合わせて更新する
+		let mut map = player.map_xy;
 		let pixel = map.into_pixel();
 		let position = &mut transform.translation;
 		position.x = pixel.x;
 		position.y = pixel.y;
-		player.sprite_postion = Pixel { x: position.x, y: position.y };
 
-		//スプライト(三角形)の表示向きを更新する
-		if player.direction != player.new_direction
-		{	let angle = decide_angle( player.direction, player.new_direction );
-			let quat = Quat::from_rotation_z( angle.to_radians() );
-			transform.rotate( quat );
-			player.direction = player.new_direction;
+		//自機のの表示向きを更新する
+		if player.direction != player.key_input
+		{	rotate_player_sprite( &player, &mut transform );
+			player.direction = player.key_input;
+		}
+
+		//ゴールドを拾う
+		if maze.is_dead_end( map.x, map.y )
+		{	if let MapObj::Coin ( Some( id ) ) = maze.map[ map.x ][ map.y ]
+			{	if let Some( mut record ) = o_record { record.score += maze.coin[ map.x ][ map.y ] }
+				maze.coin[ map.x ][ map.y ] = 0;
+				maze.map [ map.x ][ map.y ] = MapObj::Pathway;
+				cmds.entity( id ).despawn();
+			}
 		}
 
 		//ゴールしたら、Clearへ遷移する
@@ -158,80 +126,87 @@ fn move_sprite_player
 			return;
 		}
 
-		//ゴールドを拾う
-		if maze.is_dead_end( map.x, map.y )
-		{	if let Some ( mut record ) = o_record
-			{	record.score += maze.count[ map.x ][ map.y ];
-				maze.count[ map.x ][ map.y ] = 0;
-				if let MapObj::Coin ( Some( id ) ) = maze.map[ map.x ][ map.y ]
-				{	cmds.entity( id ).despawn_recursive();
-					maze.map[ map.x ][ map.y ] = MapObj::Pathway;
-				}
-			}
-		}
-
 		//キー入力を取得する
 		let key_left  = inkey.pressed( KeyCode::Left  );
 		let key_right = inkey.pressed( KeyCode::Right );
 		let key_up    = inkey.pressed( KeyCode::Up    );
 		let key_down  = inkey.pressed( KeyCode::Down  );
 
-		//カーソルキーの入力により自機の向きを変える
+		//キー入力により自機の向きを変える(スプライトの回転はまだ)
 		if key_left
-		{	player.new_direction = Left;
+		{	player.key_input = FourSides::Left;
 			player.stop = maze.is_wall_middle_left( map.x, map.y );
 			if ! player.stop { map.x -= 1 }
 		}
 		else if key_right
-		{	player.new_direction = Right;
+		{	player.key_input = FourSides::Right;
 			player.stop = maze.is_wall_middle_right( map.x, map.y );
 			if ! player.stop { map.x += 1 }
 		}
 		else if key_up
-		{	player.new_direction = Up;
+		{	player.key_input = FourSides::Up;
 			player.stop = maze.is_wall_upper_center( map.x, map.y );
 			if ! player.stop { map.y -= 1 }
 		}
 		else if key_down
-		{	player.new_direction = Down;
+		{	player.key_input = FourSides::Down;
 			player.stop = maze.is_wall_lower_center( map.x, map.y );
 			if ! player.stop { map.y += 1 }
 		}
 		else
 		{	player.stop = true
 		}
-		player.map_postion = map;
+		player.map_xy = map;
 
 		//ウェイトをリセットする
 		player.wait.reset();
 	}
-}
+	else if ! player.stop
+	{	//スプライトを滑らかに移動させるための中割アニメーション
+		let delta = PLAYER_MOVE_COEF * time_delta.as_secs_f32();
+		let position = &mut transform.translation;
+		match player.direction
+		{	FourSides::Up    => position.y += delta,
+			FourSides::Left  => position.x -= delta,
+			FourSides::Right => position.x += delta,
+			FourSides::Down  => position.y -= delta,
+		}
 
-//自機(三角形)の新旧の向きから、表示角度差分を決める
-fn decide_angle( old: common::types::Direction, new: common::types::Direction ) -> f32
-{	use common::types::Direction::*;
-
-	match old
-	{	Up =>
-		{	if matches!( new, Left  ) { return  90.0 }
-			if matches!( new, Right ) { return -90.0 }
-		}
-		Left =>
-		{	if matches!( new, Down  ) { return  90.0 }
-			if matches!( new, Up    ) { return -90.0 }
-		}
-		Right =>
-		{	if matches!( new, Up    ) { return  90.0 }
-			if matches!( new, Down  ) { return -90.0 }
-		}
-		Down =>
-		{	if matches!( new, Right ) { return  90.0 }
-			if matches!( new, Left  ) { return -90.0 }
+		//自機のの表示向きを更新する
+		if player.direction != player.key_input
+		{	rotate_player_sprite( &player, &mut transform );
+			player.direction = player.key_input;
 		}
 	}
+}
 
-	//呼出側でold != newが保証されているので、±90°以外はすべて180°
-	180.0
+//現在の自機の向きとキー入力から角度の差分を求めて、自機を回転させる
+fn rotate_player_sprite( player: &Player, transform: &mut Mut<Transform> )
+{	let angle: f32 = match player.direction
+	{	FourSides::Up =>
+		{	if      player.key_input.is_left()  {  90.0 }
+			else if player.key_input.is_right() { -90.0 }
+			else    { 180.0 }
+		}
+		FourSides::Left =>
+		{	if      player.key_input.is_down() {  90.0 }
+			else if player.key_input.is_up()   { -90.0 }
+			else    { 180.0 }
+		}
+		FourSides::Right =>
+		{	if      player.key_input.is_up()   {  90.0 }
+			else if player.key_input.is_down() { -90.0 }
+			else    { 180.0 }
+		}
+		FourSides::Down =>
+		{	if      player.key_input.is_right() {  90.0 }
+			else if player.key_input.is_left()  { -90.0 }
+			else    { 180.0 }
+		}
+	};
+
+	let quat = Quat::from_rotation_z( angle.to_radians() );
+	transform.rotate( quat );
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
