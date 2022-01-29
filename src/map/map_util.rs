@@ -46,16 +46,14 @@ impl GameMap
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //MAPのマスの状態の制御に使うbit
-const BIT_IS_VISIBLE   : usize = 0b0001;
 const BIT_IS_PASSAGEWAY: usize = 0b0010;
 const BIT_IS_DEAD_END  : usize = 0b0100;
 
 impl GameMap
 {	//指定されたマスのフラグを返す
-	#[allow(dead_code)]
-	pub fn is_visible    ( &self, x: usize, y: usize ) -> bool { self.bits[ x ][ y ] & BIT_IS_VISIBLE    != 0 }
 	pub fn is_passageway ( &self, x: usize, y: usize ) -> bool { self.bits[ x ][ y ] & BIT_IS_PASSAGEWAY != 0 }
 	pub fn is_dead_end   ( &self, x: usize, y: usize ) -> bool { self.bits[ x ][ y ] & BIT_IS_DEAD_END   != 0 }
+	pub fn is_hall       ( &self, x: usize, y: usize ) -> bool { ! self.is_wall( x, y ) && ! self.is_passageway( x, y ) }
 
 	//指定されたマスのフラグを立てる
 	pub fn set_flag_passageway ( &mut self, x: usize, y: usize ) { self.bits[ x ][ y ] |= BIT_IS_PASSAGEWAY; }

@@ -21,7 +21,7 @@ impl Plugin for PluginFetchAssets
 		)
 		.add_system_set											// ＜GameState::Init＞
 		(	SystemSet::on_exit( GameState::Init )				// ＜on_exit()＞
-				.with_system( despawn_entity::<NowLoading> )	// スプライトの削除
+				.with_system( despawn_entity::<SpriteTile> )	// スプライトの削除
 		)
 		//------------------------------------------------------------------------------------------
 		;
@@ -33,7 +33,7 @@ impl Plugin for PluginFetchAssets
 //ロードしたAssetのハンドルの保存先
 struct LoadedAssets { preload: Vec<HandleUntyped> }
 
-//ローディングアニメ関係
+//ローディングメッセージ
 const PRELOADING_MESSAGE_ARRAY: [ &str; 13 ] = 
 [//	 0123456789 123456789 123456789 123456789 12345
 	" ##  #           #                            ", //0
@@ -51,14 +51,12 @@ const PRELOADING_MESSAGE_ARRAY: [ &str; 13 ] =
 	" #    ### ### # # ### ###  # #  # # #  #  # # ", //12
 ];
 
-//スプライト識別用Component
+//スプライト
 #[derive(Component)]
-struct NowLoading { x: usize, y: usize }
-
-//タイルのスプライト
-const SPRITE_DEPTH: f32   = 0.0;
+struct SpriteTile ( MapGrid );
 const SPRITE_PIXEL: f32   = PIXEL_PER_GRID;
 const SPRITE_COLOR: Color = Color::rgb( 0.5, 0.3, 0.2 );
+const SPRITE_DEPTH: f32   = 0.0;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -100,24 +98,32 @@ fn change_state_after_loading
 fn spawn_entity_now_loading( mut cmds: Commands )
 {	let mut rng = rand::thread_rng();
 
-	for ( y, line ) in PRELOADING_MESSAGE_ARRAY.iter().enumerate()
-	{	for ( x, chara ) in line.chars().enumerate()
+	for ( goal_y, line ) in PRELOADING_MESSAGE_ARRAY.iter().enumerate()
+	{	for ( goal_x, chara ) in line.chars().enumerate()
 		{	if chara == ' ' { continue }	//空白文字は無視
 
-			//スプライトの初期位置は乱数で決める
-			let grid_x = rng.gen_range( 0..GRID_WIDTH  );
-			let grid_y = rng.gen_range( 0..GRID_HEIGHT );
-			let sprite_xy = into_pixel_xy( grid_x, grid_y );
+			//スプライトの初期座標と最終座標
+			let x = rng.gen_range( 0..MAP_WIDTH  );
+			let y = rng.gen_range( 0..MAP_HEIGHT );
+			let start = MapGrid { x, y }.into_pixel();
+			let goal  = MapGrid { x: goal_x, y: goal_y };
 
-			cmds.spawn_bundle( sprite_now_loading( sprite_xy ) )
-				.insert( NowLoading { x, y } );
+			//スプライトを作成する
+			cmds.spawn_bundle( SpriteBundle::default() )
+				.insert( Sprite
+				{	color: SPRITE_COLOR,
+					custom_size: Some( Vec2::new( SPRITE_PIXEL, SPRITE_PIXEL ) ),
+					..Default::default()
+				} )
+				.insert( Transform::from_translation( Vec3::new( start.x, start.y, SPRITE_DEPTH ) ) )
+				.insert( SpriteTile ( goal ) );
 		} 
 	}
 }
 
 //スプライトを動かしてローディングアニメを見せる
 fn move_entity_now_loading
-(	mut q: Query<( &mut Transform, &NowLoading )>,
+(	mut q: Query<( &mut Transform, &SpriteTile )>,
 	time: Res<Time>,
 )
 {	let time_delta = time.delta().as_secs_f32() * 5.0;
@@ -127,27 +133,15 @@ fn move_entity_now_loading
 	let scale = SCREEN_WIDTH / mess_width;
 
 	q.for_each_mut
-	(	| ( mut transform, grid ) |
-		{	let ( pixel_x, pixel_y ) = into_pixel_xy( grid.x, grid.y );
-			let pixel_x = ( pixel_x + half_screen_w ) * scale - half_screen_w;	//横幅の調整
+	(	| ( mut transform, goal_xy ) |
+		{	let mut goal = goal_xy.0.into_pixel();
+			goal.x = ( goal.x + half_screen_w ) * scale - half_screen_w;	//横幅の調整
 
 			let position = &mut transform.translation;
-			position.x += ( pixel_x - position.x ) * time_delta;
-			position.y += ( pixel_y - position.y ) * time_delta;
+			position.x += ( goal.x - position.x ) * time_delta;
+			position.y += ( goal.y - position.y ) * time_delta;
 		}
 	);
-}
-
-//ローディングアニメ用スプライトのバンドルを生成
-fn sprite_now_loading( ( x, y ): ( f32, f32 ) ) -> SpriteBundle
-{	let sprite = Sprite
-	{	color: SPRITE_COLOR,
-		custom_size: Some( Vec2::new( SPRITE_PIXEL, SPRITE_PIXEL ) ),
-		..Default::default()
-	};
-	let transform = Transform::from_translation( Vec3::new( x, y, SPRITE_DEPTH ) );
-
-	SpriteBundle { sprite, transform, ..Default::default() }
 }
 
 //End of code.

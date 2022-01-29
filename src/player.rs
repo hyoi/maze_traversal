@@ -10,7 +10,7 @@ impl Plugin for PluginPlayer
 	{	app
 		//------------------------------------------------------------------------------------------
 		.add_plugin( ShapePlugin )								// bevy_prototype_lyon
-		.init_resource::<Record>()					// 全体に影響する変数を格納するResource
+		.init_resource::<Record>()								// スコア等のResource
 		//==========================================================================================
 		.add_system_set											// ＜GameState::Start＞
 		(	SystemSet::on_exit( GameState::Start )				// ＜on_exit()＞
@@ -32,8 +32,8 @@ impl Plugin for PluginPlayer
 		)
 		.add_system_set											// ＜GameState::Clear＞
 		(	SystemSet::on_exit( GameState::Clear )				// ＜on_exit()＞
-			.with_system( despawn_entity::<Player> )			// 自機を削除
-			.with_system( hide_ui::<MessageClear> )				// CLEARメッセージを隠す
+				.with_system( despawn_entity::<Player> )		// 自機を削除
+				.with_system( hide_ui::<MessageClear> )			// CLEARメッセージを隠す
 		)
 		//------------------------------------------------------------------------------------------
 		;
@@ -42,31 +42,55 @@ impl Plugin for PluginPlayer
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+//Sprite
+const PLAYER_PIXEL: f32   = PIXEL_PER_GRID / 2.5;
+const PLAYER_COLOR: Color = Color::YELLOW;
+
+//移動ウェイト
+const PLAYER_WAIT: f32 = 0.09;
+
+//スプライトの動きを滑らかにするための中割係数
+const PLAYER_MOVE_COEF: f32 = PIXEL_PER_GRID / PLAYER_WAIT;
+
+//Default
+impl Default for Player
+{	fn default() -> Self
+	{	Self
+		{	wait: Timer::from_seconds( PLAYER_WAIT, false ),
+			map_postion: MapGrid::default(),
+			sprite_postion: Pixel::default(),
+			direction: common::types::Direction::Up,
+			new_direction: common::types::Direction::Up,
+			stop: true,
+		}
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 //自機のスプライトを初期位置に配置する
 fn spawn_sprite_player( maze: Res<GameMap>, mut cmds: Commands )
-{	let ( map_x, map_y ) = maze.start_xy;
-	let ( sprite_x, sprite_y ) = into_pixel_xy( map_x, map_y );
+{	let sprite_postion = maze.start_xy.into_pixel();
 
 	let player = Player
-	{	map_postion: ( map_x, map_y ),
-		sprite_postion: ( sprite_x, sprite_y ),
+	{	map_postion: maze.start_xy,
+		sprite_postion,
 		..Default::default()
 	};
 
 	//スプライトを初期位置に配置する
-	let sprite = sprite_player( player.sprite_postion );
-	cmds.spawn_bundle( sprite ).insert( player );
+	cmds.spawn_bundle( sprite_player( sprite_postion ) ).insert( player );
 }
 
 //自機のスプライトバンドルを生成
-fn sprite_player( ( x, y ): ( f32, f32 ) ) -> ShapeBundle
+fn sprite_player( pixel: Pixel ) -> ShapeBundle
 {	let triangle = &shapes::RegularPolygon
 	{	sides: 3,
 		feature: shapes::RegularPolygonFeature::Radius( PLAYER_PIXEL ),
 		..shapes::RegularPolygon::default()
 	};
 	let drawmode  = DrawMode::Fill( FillMode { options: FillOptions::default(), color: PLAYER_COLOR } );
-	let transform = Transform::from_translation( Vec3::new( x, y, SPRITE_DEPTH_PLAYER ) );
+	let transform = Transform::from_translation( Vec3::new( pixel.x, pixel.y, SPRITE_DEPTH_PLAYER ) );
 
 	GeometryBuilder::build_as( triangle, drawmode, transform )
 }
@@ -76,19 +100,18 @@ fn sprite_player( ( x, y ): ( f32, f32 ) ) -> ShapeBundle
 //自機のスプライトを移動する
 fn move_sprite_player
 (	mut q: Query<( &mut Player, &mut Transform )>,
-	mut state : ResMut<State<GameState>>,
 	o_record: Option<ResMut<Record>>,
-	mut maze: ResMut<GameMap>,
+	( mut maze, mut state ): ( ResMut<GameMap>, ResMut<State<GameState>> ),
 	( mut cmds, time, inkey ): ( Commands, Res<Time>, Res<Input<KeyCode>> ),
 )
 {	let time_delta = time.delta();
 	let ( mut player, mut transform ) = q.get_single_mut().unwrap();
 
+	//bevyのDirectionと名前が被ったので
 	use common::types::Direction::*;
 
 	if ! player.wait.tick( time_delta ).finished()
-	{	//停止中なら何も処理しない
-		if player.stop { return }
+	{	if player.stop { return } //停止中なら何も処理しない
 
 		//スプライトを滑らかに移動させるための中割アニメーション
 		let delta = PLAYER_MOVE_COEF * time_delta.as_secs_f32();
@@ -99,7 +122,7 @@ fn move_sprite_player
 			Right => position.x += delta,
 			Down  => position.y -= delta,
 		}
-		player.sprite_postion = ( position.x, position.y );
+		player.sprite_postion = Pixel { x: position.x, y: position.y };
 
 		//スプライト(三角形)の表示向きを更新する
 		if player.direction != player.new_direction
@@ -111,12 +134,12 @@ fn move_sprite_player
 	}
 	else
 	{	//スプライトの表示位置を更新する
-		let ( mut map_x, mut map_y ) = player.map_postion;
-		let ( sprite_x, sprite_y ) = into_pixel_xy( map_x, map_y );
+		let mut map = player.map_postion;
+		let pixel = map.into_pixel();
 		let position = &mut transform.translation;
-		position.x = sprite_x;
-		position.y = sprite_y;
-		player.sprite_postion = ( position.x, position.y );
+		position.x = pixel.x;
+		position.y = pixel.y;
+		player.sprite_postion = Pixel { x: position.x, y: position.y };
 
 		//スプライト(三角形)の表示向きを更新する
 		if player.direction != player.new_direction
@@ -127,8 +150,8 @@ fn move_sprite_player
 		}
 
 		//ゴールしたら、Clearへ遷移する
-		if ( map_x, map_y ) == maze.goal_xy
-		{	if let MapObj::Goal ( Some( id ) ) = maze.map[ map_x as usize ][ map_y as usize ]
+		if map == maze.goal_xy
+		{	if let MapObj::Goal ( Some( id ) ) = maze.map[ map.x ][ map.y ]
 			{	cmds.entity( id ).despawn();
 			}
 			let _ = state.overwrite_set( GameState::Clear );
@@ -136,13 +159,13 @@ fn move_sprite_player
 		}
 
 		//ゴールドを拾う
-		if maze.is_dead_end( map_x, map_y )
+		if maze.is_dead_end( map.x, map.y )
 		{	if let Some ( mut record ) = o_record
-			{	record.score += maze.count[ map_x ][ map_y ];
-				maze.count[ map_x ][ map_y ] = 0;
-				if let MapObj::Coin ( Some( id ) ) = maze.map[ map_x ][ map_y ]
+			{	record.score += maze.count[ map.x ][ map.y ];
+				maze.count[ map.x ][ map.y ] = 0;
+				if let MapObj::Coin ( Some( id ) ) = maze.map[ map.x ][ map.y ]
 				{	cmds.entity( id ).despawn_recursive();
-					maze.map[ map_x ][ map_y ] = MapObj::Pathway;
+					maze.map[ map.x ][ map.y ] = MapObj::Pathway;
 				}
 			}
 		}
@@ -156,28 +179,28 @@ fn move_sprite_player
 		//カーソルキーの入力により自機の向きを変える
 		if key_left
 		{	player.new_direction = Left;
-			player.stop = maze.is_wall_middle_left( map_x, map_y );
-			if ! player.stop { map_x -= 1 }
+			player.stop = maze.is_wall_middle_left( map.x, map.y );
+			if ! player.stop { map.x -= 1 }
 		}
 		else if key_right
 		{	player.new_direction = Right;
-			player.stop = maze.is_wall_middle_right( map_x, map_y );
-			if ! player.stop { map_x += 1 }
+			player.stop = maze.is_wall_middle_right( map.x, map.y );
+			if ! player.stop { map.x += 1 }
 		}
 		else if key_up
 		{	player.new_direction = Up;
-			player.stop = maze.is_wall_upper_center( map_x, map_y );
-			if ! player.stop { map_y -= 1 }
+			player.stop = maze.is_wall_upper_center( map.x, map.y );
+			if ! player.stop { map.y -= 1 }
 		}
 		else if key_down
 		{	player.new_direction = Down;
-			player.stop = maze.is_wall_lower_center( map_x, map_y );
-			if ! player.stop { map_y += 1 }
+			player.stop = maze.is_wall_lower_center( map.x, map.y );
+			if ! player.stop { map.y += 1 }
 		}
 		else
 		{	player.stop = true
 		}
-		player.map_postion = ( map_x, map_y );
+		player.map_postion = map;
 
 		//ウェイトをリセットする
 		player.wait.reset();

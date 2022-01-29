@@ -3,24 +3,24 @@ use super::*;
 impl GameMap
 {	//一型迷路：ランダムに掘り進み、壊すと貫通する壁は、確率で破壊する
 	pub fn dig_and_dig_and_dig( &mut self )
-	{	let mut map_xy = self.start_xy;
-		map_xy.1 -= 1; //maze.start_xyの直上(y-1)がトンネル掘りの開始座標
+	{	let mut map = self.start_xy;
+		map.y -= 1; //maze.start_xyの直上(y-1)がトンネル掘りの開始座標
 
 		loop
 		{	//ランダムに上下左右へ進む方向を決める
 			let ( dx, dy ) = FOUR_SIDES[ self.rng.gen_range( 0..FOUR_SIDES.len() ) ];
-			let tmp_x = map_xy.0 + dx - 1;
-			let tmp_y = map_xy.1 + dy - 1;
+			let x = map.x + dx - 1;
+			let y = map.y + dy - 1;
 
 			//上端に達したら迷路完成
-			if tmp_y == 0 { break }
+			if y == 0 { break }
 
 			//掘れるなら一歩進む
-			if RANGE_MAP_INNER_X.contains( &tmp_x )
-			&& RANGE_MAP_INNER_Y.contains( &tmp_y )
-			&& self.to_dig_or_not( tmp_x, tmp_y )
-			{	self.map[ tmp_x ][ tmp_y ] = MapObj::Pathway;	//道を掘る
-				map_xy = ( tmp_x, tmp_y );
+			if RANGE_MAP_INNER_X.contains( &x )
+			&& RANGE_MAP_INNER_Y.contains( &y )
+			&& self.to_dig_or_not( x, y )
+			{	self.map[ x ][ y ] = MapObj::Pathway;	//道を掘る
+				map = MapGrid { x, y };
 			}
 		}
 	}

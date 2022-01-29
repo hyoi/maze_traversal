@@ -49,8 +49,25 @@ pub enum MapObj
 	DeadEnd, //行き止まり目印用
 	Coin ( Option<Entity> ),
 	Goal ( Option<Entity> ),
-	Space,
 }
+
+//Map用の二次元配列での座標
+#[derive(Copy,Clone,PartialEq)]
+pub struct MapGrid { pub x: usize, pub y: usize }
+impl Default for MapGrid { fn default() -> Self { Self { x: 0, y: 0 } } }
+impl MapGrid
+{	//二次元配列の座標から画面座標を算出する
+	pub fn into_pixel( &self ) -> Pixel
+	{	let x = ( PIXEL_PER_GRID - SCREEN_WIDTH  ) / 2.0 + PIXEL_PER_GRID * self.x as f32;
+		let y = ( SCREEN_HEIGHT - PIXEL_PER_GRID ) / 2.0 - PIXEL_PER_GRID * self.y as f32 - PIXEL_PER_GRID;
+		Pixel { x, y }
+	}
+}
+
+//スプライト等の画面座標
+#[derive(Copy,Clone,PartialEq)]
+pub struct Pixel { pub x: f32, pub y: f32 }
+impl Default for Pixel { fn default() -> Self { Self { x: 0.0, y: 0.0 } } }
 
 //MAP情報のResource
 pub struct GameMap
@@ -58,8 +75,8 @@ pub struct GameMap
 	pub map  : [ [ MapObj; MAP_HEIGHT ]; MAP_WIDTH ],
 	pub bits : [ [ usize ; MAP_HEIGHT ]; MAP_WIDTH ],
 	pub count: [ [ usize ; MAP_HEIGHT ]; MAP_WIDTH ],
-	pub start_xy: ( usize, usize ),
-	pub goal_xy : ( usize, usize ),
+	pub start_xy: MapGrid,
+	pub goal_xy : MapGrid,
 }
 impl Default for GameMap
 {	fn default() -> Self
@@ -69,8 +86,8 @@ impl Default for GameMap
 			map  : [ [ MapObj::None ; MAP_HEIGHT ]; MAP_WIDTH ],
 			bits : [ [ 0; MAP_HEIGHT ]; MAP_WIDTH ], //BIT_ALL_CLEAR
 			count: [ [ 0; MAP_HEIGHT ]; MAP_WIDTH ],
-			start_xy: ( 0, 0 ),
-			goal_xy : ( 0, 0 ),
+			start_xy: MapGrid::default(),
+			goal_xy : MapGrid::default(),
 		}
 	}
 }
@@ -90,31 +107,19 @@ pub enum Direction
 #[derive(Component)]
 pub struct Player
 {	pub wait: Timer,
-	pub map_postion: ( usize, usize ),
-	pub sprite_postion: ( f32, f32 ),
+	pub map_postion: MapGrid,
+	pub sprite_postion: Pixel,
 	pub direction: Direction,
 	pub new_direction: Direction,
 	pub stop: bool,
-}
-impl Default for Player
-{	fn default() -> Self
-	{	Self
-		{	wait: Timer::from_seconds( PLAYER_WAIT, false ),
-			map_postion: ( 0, 0 ),
-			sprite_postion: ( 0.0, 0.0 ),
-			direction: Direction::Up,
-			new_direction: Direction::Up,
-			stop: true,
-		}
-	}
 }
 
 //追手のComponent
 #[derive(Component)]
 pub struct Chaser
-{	pub map_position: ( usize, usize ),
-	pub pixel_position: ( f32, f32 ),
-	pub pixel_position_old: ( f32, f32 ),
+{	pub map_position: MapGrid,
+	pub pixel_position: Pixel,
+	pub pixel_position_old: Pixel,
 	pub direction: Direction,
 	pub wait: Timer,
 	pub stop: bool,

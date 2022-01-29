@@ -26,7 +26,7 @@ pub const SCREEN_BGCOLOR: Color = Color::rgb_linear( 0.025, 0.025, 0.04 );
 pub enum SelectMazeType { Random, Type1, Type2, Type3 }
 
 pub const SELECT_MAZE_TYPE: SelectMazeType = SelectMazeType::Random;
-//pub const SELECT_MAZE_TYPE: SelectMazeType = SelectMazeType::Type1;
+//pub const SELECT_MAZE_TYPE: SelectMazeType = SelectMazeType::Type3;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -120,16 +120,6 @@ pub const SPRITE_DEPTH_CHASER: f32 = 30.0;	//追手
 pub const SPRITE_DEPTH_PLAYER: f32 = 20.0;	//自機
 pub const SPRITE_DEPTH_MAZE  : f32 = 10.0;	//壁、コイン etc
 pub const SPRITE_DEPTH_DEBUG : f32 =  5.0;
-
-//Player
-pub const PLAYER_PIXEL: f32   = PIXEL_PER_GRID / 2.5;
-pub const PLAYER_COLOR: Color = Color::YELLOW;
-
-//移動ウェイト
-pub const PLAYER_WAIT: f32 = 0.09;
-
-//スプライトの動きを滑らかにするための中割係数
-pub const PLAYER_MOVE_COEF: f32 = PIXEL_PER_GRID / PLAYER_WAIT;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 

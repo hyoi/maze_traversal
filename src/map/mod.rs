@@ -4,8 +4,8 @@ use super::*;
 use rand::prelude::*;
 
 //internal modules
-mod util;
-pub use util::*;
+mod map_util;
+use map_util::*;
 
 mod dig_and_dig_and_dig;			//迷路作成
 mod dig_and_back_and_dig;			//迷路作成
@@ -22,7 +22,11 @@ impl Plugin for PluginMap
 		//==========================================================================================
 		.add_system_set											// ＜GameState::Start＞
 		(	SystemSet::on_enter( GameState::Start )				// ＜on_enter()＞
-				.with_system( spawn_sprite_new_map )			// 新マップ表示⇒GameState::Playへ
+				.with_system( generate_new_map )				// 新マップ作成⇒GameState::Playへ
+		)
+		.add_system_set											// ＜GameState::Start＞
+		(	SystemSet::on_exit( GameState::Start )				// ＜on_exit()＞
+				.with_system( spawn_sprite_map )				// 新マップのスプライト表示
 		)
 		//==========================================================================================
 		.add_system_set											// ＜GameState::Play＞
@@ -62,13 +66,11 @@ const DEBUG_PIXEL: f32 = PIXEL_PER_GRID;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-//新しい迷路を作り表示して、Playへ遷移する
-fn spawn_sprite_new_map
+//新しい迷路を作りGameState::Playへ遷移
+fn generate_new_map
 (	mut maze: ResMut<GameMap>,
 	mut state: ResMut<State<GameState>>,
 	o_record: Option<ResMut<Record>>,
-	mut cmds: Commands,
-	asset_svr: Res<AssetServer>,
 )
 {	//初期化する
 	maze.clear_map();
@@ -76,7 +78,7 @@ fn spawn_sprite_new_map
 
 	//入口を掘る
 	let x = maze.rng.gen_range( RANGE_MAP_INNER_X );
-	maze.start_xy = ( x, MAP_HEIGHT - 1 );
+	maze.start_xy = MapGrid { x, y: MAP_HEIGHT - 1 };
 	maze.map[ x ][ MAP_HEIGHT - 1 ] = MapObj::DeadEnd; //入口は行き止まり扱い
 	maze.map[ x ][ MAP_HEIGHT - 2 ] = MapObj::Pathway; //入口直上は無条件で道
 
@@ -95,32 +97,50 @@ fn spawn_sprite_new_map
 	}
 
 	//出口を掘れる場所を探し、乱数で決める
-	let mut exit_x = Vec::new();
-	RANGE_MAP_INNER_X.for_each( | x |
-		if ! matches!( maze.map[ x ][ 1 ], MapObj::Wall ) { exit_x.push( x ) }
-	);
-	let x = exit_x[ maze.rng.gen_range( 0..exit_x.len() ) ];
-	maze.goal_xy = ( x, 0 );
+	let mut exit = Vec::new();
+	RANGE_MAP_INNER_X.for_each( | x | if ! maze.is_wall( x, 1 ) { exit.push( x ) } );
+	let x = exit[ maze.rng.gen_range( 0..exit.len() ) ];
+	maze.goal_xy = MapGrid { x, y: 0 };
 	maze.map[ x ][ 0 ] = MapObj::Goal ( None );
 
 	//迷路の構造解析
 	maze.distinguish_halls_and_passages();	//広間と通路を区別し袋小路をマークする
-	maze.length_of_deadend();	//袋小路の深さ
+	maze.length_of_deadend();				//袋小路の深さを記録する
 
-//--------------------------------------------------------------------------------------------------
-	
-	//スプライトをspawnして必要ならEntity IDを記録する
-	for x in RANGE_MAP_X
+	//Playへ遷移する
+	let _ = state.overwrite_set( GameState::Play );
+}
+
+//迷路のスプライトをspawnして必要ならEntity IDを記録する
+fn spawn_sprite_map
+(	mut maze: ResMut<GameMap>,
+	mut cmds: Commands,
+	asset_svr: Res<AssetServer>,
+)
+{	for x in RANGE_MAP_X
 	{	for y in RANGE_MAP_Y
-		{	let xy = into_pixel_xy( x , y );
-
+		{	let xy = MapGrid { x, y }.into_pixel();
 			match maze.map[ x ][ y ]
 			{	MapObj::Goal (_) =>
-				{	let id = cmds.spawn_bundle( sprite_goal( xy ) ).insert( SpriteGoal ).id(); 
+				{	//	ゴールのスプライトを表示する 
+					let custom_size = Some( Vec2::new( GOAL_PIXEL, GOAL_PIXEL ) );
+					let position = Vec3::new( xy.x, xy.y, SPRITE_DEPTH_MAZE );
+					let quat = Quat::from_rotation_z( 45_f32.to_radians() ); //45°傾ける
+					let id = cmds.spawn_bundle( SpriteBundle::default() )
+						.insert( Sprite { color: GOAL_COLOR, custom_size, ..Default::default() } )
+						.insert( Transform::from_translation( position ).with_rotation( quat ) )
+						.insert( SpriteGoal )
+						.id(); 
 					maze.map[ x ][ y ] = MapObj::Goal ( Some ( id ) );
 				}
 				MapObj::Wall =>
-				{	cmds.spawn_bundle( sprite_wall( xy, &asset_svr ) ).insert( SpriteWall );
+				{	//壁のストライプを表示する
+					let custom_size = Some( Vec2::new( WALL_PIXEL, WALL_PIXEL ) );
+					cmds.spawn_bundle( SpriteBundle::default() )
+						.insert( Sprite { custom_size, ..Default::default() } )
+						.insert( asset_svr.load( IMAGE_SPRITE_WALL ) as Handle<Image> )
+						.insert( Transform::from_translation( Vec3::new( xy.x, xy.y, SPRITE_DEPTH_MAZE ) ) )
+						.insert( SpriteWall );
 				}
 				_ => {}
 			};
@@ -129,19 +149,27 @@ fn spawn_sprite_new_map
 			if maze.is_dead_end( x, y )
 			{	let count = maze.count[ x ][ y ];
 				if count > 0
-				{	let id = cmds.spawn_bundle( sprite_coin( xy, &asset_svr ) ).insert( SpriteCoin ).id();
+				{	//コインのスプライトを表示する
+					let custom_size = Some( Vec2::new( COIN_PIXEL, COIN_PIXEL ) );
+					let id = cmds.spawn_bundle( SpriteBundle::default() )
+						.insert( Sprite { custom_size, ..Default::default() } )
+						.insert( asset_svr.load( IMAGE_SPRITE_COIN ) as Handle<Image> )
+						.insert( Transform::from_translation( Vec3::new( xy.x, xy.y, SPRITE_DEPTH_MAZE ) ) )
+						.insert( SpriteCoin )
+						.id();
 					maze.map[ x ][ y ] = MapObj::Coin ( Some ( id ) );
 				}
 			}
-			else if ! maze.is_wall( x, y ) && ! maze.is_passageway( x, y )
-			{	cmds.spawn_bundle( sprite_debug( xy ) )
+			else if maze.is_hall( x, y )
+			{	//デバッグ用に広間のスプライトを表示する
+				let custom_size = Some( Vec2::new( DEBUG_PIXEL, DEBUG_PIXEL ) * 0.9 );
+				cmds.spawn_bundle( SpriteBundle::default() )
+					.insert( Sprite { color: Color::INDIGO, custom_size, ..Default::default() } )
+					.insert( Transform::from_translation( Vec3::new( xy.x, xy.y, SPRITE_DEPTH_DEBUG ) ) )
 					.insert( DebugSprite );
 			}
 		}
 	}
-
-	//Playへ遷移する
-	let _ = state.overwrite_set( GameState::Play );
 }
 
 //ゴールのスプライトをアニメーションさせる
@@ -149,7 +177,7 @@ fn rotate_sprite_goal
 (	mut q: Query<( &mut Transform, &mut Sprite ), With<SpriteGoal>>,
 	time: Res<Time>,
 )
-{	let ( mut transform, mut sprite) = q.get_single_mut().unwrap();
+{	let ( mut transform, mut sprite ) = q.get_single_mut().unwrap();
 
 	//回転させる
 	let angle = 360.0 * time.delta().as_secs_f32();
@@ -160,56 +188,6 @@ fn rotate_sprite_goal
 	let hue = ( ( time.seconds_since_startup() * 500. ) as usize % 360 ) as f32;
 	let ( saturation, lightness, alpha ) = ( 1., 0.5, 1. );
 	sprite.color = Color::Hsla{ hue, saturation, lightness, alpha };
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-//ゴールのスプライトバンドルを生成
-fn sprite_goal( ( x, y ): ( f32, f32 ) ) -> SpriteBundle
-{	let color = GOAL_COLOR;
-	let custom_size = Some( Vec2::new( GOAL_PIXEL, GOAL_PIXEL ) );
-	let position = Vec3::new( x, y, SPRITE_DEPTH_MAZE );
-	let quat = Quat::from_rotation_z( 45_f32.to_radians() ); //45°傾ける
-
-	let sprite = Sprite { color, custom_size, ..Default::default() };
-	let transform = Transform::from_translation( position ).with_rotation( quat );
-
-	SpriteBundle { sprite, transform, ..Default::default() }
-}
-
-//壁用のスプライトバンドルを生成
-fn sprite_wall( ( x, y ): ( f32, f32 ), asset_svr: &Res<AssetServer> ) -> SpriteBundle
-{	let custom_size = Some( Vec2::new( WALL_PIXEL, WALL_PIXEL ) );
-	let position = Vec3::new( x, y, SPRITE_DEPTH_MAZE );
-
-	let sprite = Sprite { custom_size, ..Default::default() };
-	let texture = asset_svr.load( IMAGE_SPRITE_WALL );
-	let transform = Transform::from_translation( position );
-
-	SpriteBundle { sprite, texture, transform, ..Default::default() }
-}
-
-//コイン用のスプライトバンドルを生成
-fn sprite_coin ( ( x, y ): ( f32, f32 ), asset_svr: &Res<AssetServer> ) -> SpriteBundle
-{	let custom_size = Some( Vec2::new( COIN_PIXEL, COIN_PIXEL ) );
-	let position =  Vec3::new( x, y, SPRITE_DEPTH_MAZE );
-
-	let sprite = Sprite { custom_size, ..Default::default() };
-	let texture = asset_svr.load( IMAGE_SPRITE_COIN );
-	let transform = Transform::from_translation( position );
-
-	SpriteBundle { sprite, texture, transform, ..Default::default() }
-}
-
-//システム情報用のスプライトバンドルを生成
-fn sprite_debug( ( x, y ): ( f32, f32 ) ) -> SpriteBundle
-{	let color = Color::INDIGO;
-	let custom_size = Some( Vec2::new( DEBUG_PIXEL, DEBUG_PIXEL ) * 0.9 );
-
-	let sprite = Sprite { color, custom_size, ..Default::default() };
-	let transform = Transform::from_translation( Vec3::new( x, y, SPRITE_DEPTH_DEBUG ) );
-
-	SpriteBundle { sprite, transform, ..Default::default() }
 }
 
 //End of code.
