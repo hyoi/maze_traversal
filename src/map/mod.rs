@@ -5,7 +5,7 @@ use rand::prelude::*;
 
 //internal modules
 mod map_util;
-use map_util::*;
+pub use map_util::*; //再エクスポート
 
 mod dig_and_dig_and_dig;			//迷路作成
 mod dig_and_back_and_dig;			//迷路作成

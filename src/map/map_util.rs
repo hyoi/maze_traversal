@@ -7,13 +7,6 @@ pub const RANGE_MAP_Y      : RangeInclusive<usize> = 0..= MAP_HEIGHT - 1;	//MAP�
 pub const RANGE_MAP_INNER_X: RangeInclusive<usize> = 1..= MAP_WIDTH  - 2;	//掘削可能なレンジ（最外壁は掘れない）
 pub const RANGE_MAP_INNER_Y: RangeInclusive<usize> = 1..= MAP_HEIGHT - 2;	//掘削可能なレンジ（最外壁は掘れない）
 
-//MAP座標の上下左右を表す定数（usizeは-1をもてないので+1している。使う側で-1する）
-pub const UP   : ( usize, usize ) = ( 1, 0 );
-pub const LEFT : ( usize, usize ) = ( 0, 1 );
-pub const RIGHT: ( usize, usize ) = ( 2, 1 );
-pub const DOWN : ( usize, usize ) = ( 1, 2 );
-pub const FOUR_SIDES: [ ( usize, usize ); 4 ] = [ UP, LEFT, RIGHT, DOWN ];
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 impl GameMap

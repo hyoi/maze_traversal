@@ -115,8 +115,17 @@ pub const UI_LOWER_RIGHT: [ MessageSect; 1 ] =
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+//MAP座標の上下左右を表す定数（usizeは-1をもてないので+1している。使う側で-1する）
+pub const UP   : ( usize, usize ) = ( 1, 0 );
+pub const LEFT : ( usize, usize ) = ( 0, 1 );
+pub const RIGHT: ( usize, usize ) = ( 2, 1 );
+pub const DOWN : ( usize, usize ) = ( 1, 2 );
+pub const FOUR_SIDES: [ ( usize, usize ); 4 ] = [ UP, LEFT, RIGHT, DOWN ];
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 //Spriteの深さ
-//pub const SPRITE_DEPTH_CHASER: f32 = 30.0;	//追手
+pub const SPRITE_DEPTH_CHASER: f32 = 30.0;	//追手
 pub const SPRITE_DEPTH_PLAYER: f32 = 20.0;	//自機
 pub const SPRITE_DEPTH_MAZE  : f32 = 10.0;	//壁、コイン etc
 pub const SPRITE_DEPTH_DEBUG : f32 =  5.0;	//広間
@@ -127,15 +136,5 @@ pub const SPRITE_DEPTH_DEBUG : f32 =  5.0;	//広間
 pub const MAX_HP: f32 = 100.0;
 /*
 //Chaser
-pub const SPRITE_CHASER_PIXEL: f32 = PIXEL_PER_GRID / 2.0;
-pub const SPRITE_CHASER_COLOR: Color = Color::RED;
-
-//移動ウェイト
-pub const CHASER_WAIT : f32 = 0.13;
-pub const CHASER_ACCEL: f32 = 0.4; //スピードアップの割増
-
-//スプライトの動きを滑らかにするための中割係数
-pub const CHASER_MOVE_COEF  : f32 = PIXEL_PER_GRID / CHASER_WAIT;
-pub const CHASER_ROTATE_COEF: f32 = 90. / CHASER_WAIT;
 */
 //End of code.

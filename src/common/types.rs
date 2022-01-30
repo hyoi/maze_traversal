@@ -111,18 +111,18 @@ pub struct Player
 	pub wait: Timer,
 	pub stop: bool,
 }
-/*
+
 //追手のComponent
 #[derive(Component)]
 pub struct Chaser
-{	pub map_position: MapGrid,
-	pub pixel_position: Pixel,
-	pub pixel_position_old: Pixel,
-	pub direction: Direction,
+{	pub map_xy: MapGrid,
+	pub pixel_xy: Pixel,
+	pub pixel_xy_old: Pixel,
+	pub direction: FourSides,
 	pub wait: Timer,
 	pub stop: bool,
 	pub collision: bool,
 	pub speedup: f32,
 }
-*/
+
 //End of code.

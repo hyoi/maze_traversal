@@ -11,13 +11,13 @@ mod fetch_assets;
 mod ui;
 mod map;
 mod player;
-// mod chaser;
+mod chasers;
 
 use fetch_assets::*;
 use ui::*;
 use map::*;
 use player::*;
-// use chaser::*;
+use chasers::*;
 
 //メイン関数
 fn main()
@@ -48,7 +48,7 @@ fn main()
 	.add_plugin( PluginUi )
 	.add_plugin( PluginMap )
 	.add_plugin( PluginPlayer )
-	// .add_plugin( PluginChaser )
+	.add_plugin( PluginChaser )
 	//----------------------------------------------------------------------------------------------
 	;
 
