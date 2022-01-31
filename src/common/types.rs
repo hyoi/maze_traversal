@@ -120,6 +120,7 @@ pub struct Chaser
 	pub pixel_xy_old: Pixel,
 	pub direction: FourSides,
 	pub wait: Timer,
+	pub wandering: Timer,
 	pub stop: bool,
 	pub collision: bool,
 	pub speedup: f32,

@@ -160,14 +160,14 @@ fn spawn_sprite_map
 					maze.map[ x ][ y ] = MapObj::Coin ( Some ( id ) );
 				}
 			}
-			else if maze.is_hall( x, y )
-			{	//デバッグ用に広間のスプライトを表示する
-				let custom_size = Some( Vec2::new( DEBUG_PIXEL, DEBUG_PIXEL ) * 0.9 );
-				cmds.spawn_bundle( SpriteBundle::default() )
-					.insert( Sprite { color: Color::INDIGO, custom_size, ..Default::default() } )
-					.insert( Transform::from_translation( Vec3::new( xy.x, xy.y, SPRITE_DEPTH_DEBUG ) ) )
-					.insert( DebugSprite );
-			}
+			// else if maze.is_hall( x, y )
+			// {	//デバッグ用に広間のスプライトを表示する
+			// 	let custom_size = Some( Vec2::new( DEBUG_PIXEL, DEBUG_PIXEL ) * 0.9 );
+			// 	cmds.spawn_bundle( SpriteBundle::default() )
+			// 		.insert( Sprite { color: Color::INDIGO, custom_size, ..Default::default() } )
+			// 		.insert( Transform::from_translation( Vec3::new( xy.x, xy.y, SPRITE_DEPTH_DEBUG ) ) )
+			// 		.insert( DebugSprite );
+			// }
 		}
 	}
 }
