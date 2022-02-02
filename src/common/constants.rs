@@ -1,28 +1,28 @@
 use super::*;
 
+//アプリのTitle
+pub const APP_TITLE: &str = "maze traversal";
+
 //マップの縦横のマス数
 pub const MAP_WIDTH : usize = 35;	//66
 pub const MAP_HEIGHT: usize = 35;
 
 //画面の縦横のマス数
 pub const GRID_WIDTH : usize = MAP_WIDTH;
-pub const GRID_HEIGHT: usize = MAP_HEIGHT + 2;	//マップ＋ヘッダ＋フッタ
-
-//アプリのTitle
-pub const APP_TITLE: &str = "maze traversal";
+pub const GRID_HEIGHT: usize = MAP_HEIGHT + 2;	//マップの高さ＋ヘッダ＋フッタ
 
 //表示倍率、ウィンドウの縦横pixel数と背景色
 pub const SCREEN_SCALING: usize = 3;
 pub const PIXEL_PER_GRID: f32   = ( 8 * SCREEN_SCALING ) as f32;
 pub const SCREEN_WIDTH  : f32   = PIXEL_PER_GRID * GRID_WIDTH  as f32;
 pub const SCREEN_HEIGHT : f32   = PIXEL_PER_GRID * GRID_HEIGHT as f32;
-pub const SCREEN_BGCOLOR: Color = Color::rgb_linear( 0.025, 0.025, 0.04 );
+pub const SCREEN_BGCOLOR: Color = Color::rgb( 0.1, 0.1, 0.1 );
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //迷路生成関数の選択
 #[allow(dead_code)]
-#[derive(PartialEq,Debug)]
+#[derive(PartialEq)]
 pub enum SelectMazeType { Random, Type1, Type2, Type3 }
 
 pub const SELECT_MAZE_TYPE: SelectMazeType = SelectMazeType::Random;
@@ -30,7 +30,7 @@ pub const SELECT_MAZE_TYPE: SelectMazeType = SelectMazeType::Random;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-//Asset（フォント、画像...etc）
+//Assets（フォント、画像...etc）
 pub const FONT_ORBITRON_BLACK	: &str = "fonts/Orbitron-Black.ttf";
 pub const FONT_REGGAEONE_REGULAR: &str = "fonts/ReggaeOne-Regular.ttf";
 pub const IMAGE_SPRITE_WALL		: &str = "sprites/wall.png";
@@ -115,12 +115,12 @@ pub const UI_LOWER_RIGHT: [ MessageSect; 1 ] =
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-//MAP座標の上下左右を表す定数（usizeは-1をもてないので+1している。使う側で-1する）
-pub const UP   : ( usize, usize ) = ( 1, 0 );
-pub const LEFT : ( usize, usize ) = ( 0, 1 );
-pub const RIGHT: ( usize, usize ) = ( 2, 1 );
-pub const DOWN : ( usize, usize ) = ( 1, 2 );
-pub const FOUR_SIDES: [ ( usize, usize ); 4 ] = [ UP, LEFT, RIGHT, DOWN ];
+//MAP座標の上下左右を表す定数
+pub const UP   : DxDy = DxDy { dx:  0, dy: -1 };
+pub const LEFT : DxDy = DxDy { dx: -1, dy:  0 };
+pub const RIGHT: DxDy = DxDy { dx:  1, dy:  0 };
+pub const DOWN : DxDy = DxDy { dx:  0, dy:  1 };
+pub const FOUR_SIDES: [ DxDy; 4 ] = [ UP, LEFT, RIGHT, DOWN ];
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -132,9 +132,7 @@ pub const SPRITE_DEPTH_DEBUG : f32 =  5.0;	//広間
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-//Player
+//Record
 pub const MAX_HP: f32 = 100.0;
-/*
-//Chaser
-*/
+
 //End of code.

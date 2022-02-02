@@ -1,8 +1,5 @@
 use super::*;
 
-//external modules
-use rand::prelude::*;
-
 //ゲームの状態遷移
 #[allow(dead_code)]
 #[derive(Clone,Copy,Debug,Eq,PartialEq,Hash)]
@@ -18,6 +15,59 @@ pub enum GameState
 	DemoLoop,
 }
 
+//スコア等のResource
+pub struct Record
+{	pub stage: usize,
+	pub score: usize,
+	pub hp	 : f32,
+}
+impl Default for Record
+{	fn default() -> Self { Self { stage: 0, score: 0, hp: MAX_HP, } }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//Map用の二次元配列での座標
+#[derive(Default,Copy,Clone,PartialEq,Eq)]
+pub struct MapGrid { pub x: usize, pub y: usize }
+impl MapGrid
+{	//二次元配列の座標から画面座標を算出する
+	pub fn into_pixel( self ) -> Pixel
+	{	let x = ( PIXEL_PER_GRID - SCREEN_WIDTH  ) / 2.0 + PIXEL_PER_GRID * self.x as f32;
+		let y = ( SCREEN_HEIGHT - PIXEL_PER_GRID ) / 2.0 - PIXEL_PER_GRID * self.y as f32 - PIXEL_PER_GRID;
+		Pixel { x, y }
+	}
+}
+
+//方向（上下左右）の座標増分
+#[derive(Default,Copy,Clone,PartialEq,Eq)]
+pub struct DxDy { pub dx: i32, pub dy: i32 }
+
+//MapGridとDxDyを加算できるようAdd()をオーバーロードする
+use std::ops;
+//MapGrid = MapGrid + DxDy
+impl ops::Add<DxDy> for MapGrid
+{	type Output = MapGrid;
+	fn add( self, rhs: DxDy ) -> MapGrid
+	{	let x = ( self.x as i32 + rhs.dx ) as usize;
+		let y = ( self.y as i32 + rhs.dy ) as usize;
+		MapGrid { x, y }
+	}
+}
+//MapGrid = DxDy + MapGrid 
+impl ops::Add<MapGrid> for DxDy
+{	type Output = MapGrid;
+	fn add( self, rhs: MapGrid ) -> MapGrid
+	{	let x = ( rhs.x as i32 + self.dx ) as usize;
+		let y = ( rhs.y as i32 + self.dy ) as usize;
+		MapGrid { x, y }
+	}
+}
+
+//スプライト等の画面座標
+#[derive(Default,Copy,Clone,PartialEq)]
+pub struct Pixel { pub x: f32, pub y: f32 }
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //MAPのマスの種類
@@ -29,25 +79,6 @@ pub enum MapObj
 	Coin ( Option<Entity> ),
 	Goal ( Option<Entity> ),
 }
-
-//Map用の二次元配列での座標
-#[derive(Copy,Clone,PartialEq)]
-#[derive(Default)]
-pub struct MapGrid { pub x: usize, pub y: usize }
-//impl Default for MapGrid { fn default() -> Self { Self { x: 0, y: 0 } } }
-impl MapGrid
-{	//二次元配列の座標から画面座標を算出する
-	pub fn into_pixel( self ) -> Pixel
-	{	let x = ( PIXEL_PER_GRID - SCREEN_WIDTH  ) / 2.0 + PIXEL_PER_GRID * self.x as f32;
-		let y = ( SCREEN_HEIGHT - PIXEL_PER_GRID ) / 2.0 - PIXEL_PER_GRID * self.y as f32 - PIXEL_PER_GRID;
-		Pixel { x, y }
-	}
-}
-
-//スプライト等の画面座標
-#[derive(Copy,Clone,PartialEq)]
-pub struct Pixel { pub x: f32, pub y: f32 }
-impl Default for Pixel { fn default() -> Self { Self { x: 0.0, y: 0.0 } } }
 
 //MAP情報のResource
 pub struct GameMap
@@ -74,24 +105,6 @@ impl Default for GameMap
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-//スコア等のResource
-pub struct Record
-{	pub stage: usize,
-	pub score: usize,
-	pub hp	 : f32,
-}
-impl Default for Record
-{	fn default() -> Self
-	{	Self
-		{	stage: 0,
-			score: 0,
-			hp   : MAX_HP,
-		}
-	}
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
 //向きを表す列挙型
 #[derive(Clone,Copy,PartialEq)]
 pub enum FourSides { Up, Left, Right, Down }
@@ -101,6 +114,8 @@ impl FourSides
 	pub fn is_right( &self ) -> bool { matches!( self, FourSides::Right ) }
 	pub fn is_down ( &self ) -> bool { matches!( self, FourSides::Down  ) }
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //自機のComponent
 #[derive(Component)]

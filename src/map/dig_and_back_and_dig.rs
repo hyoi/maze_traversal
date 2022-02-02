@@ -3,8 +3,8 @@ use super::*;
 impl GameMap
 {	//二型迷路：ランダムに掘り進み、行き止まりは後戻りして掘れる場所を探す。掘り尽くすまで掘りまくる
 	pub fn dig_and_back_and_dig( &mut self )
-	{	let mut map = self.start_xy;
-		map.y -= 1; //maze.start_xyの直上(y-1)がトンネル掘りの開始座標
+	{	let mut grid = self.start_xy;
+		grid.y -= 1; //maze.start_xyの直上(y-1)がトンネル掘りの開始座標
 
 		//トンネルを掘る
 		let mut digable_walls = Vec::new();
@@ -14,17 +14,17 @@ impl GameMap
 			backtrack = MapGrid { x: 0, y: 0 };
 
 			//上下左右にある掘削候補と戻り路を記録する
-			for dxy in FOUR_SIDES
-			{	let tmp = MapGrid { x: map.x + dxy.0 - 1, y: map.y + dxy.1 - 1 };
+			for dxdy in FOUR_SIDES
+			{	let next = grid + dxdy;
 
 				//外壁は掘れない
-				if ! RANGE_MAP_INNER_X.contains( &tmp.x )
-				|| ! RANGE_MAP_INNER_Y.contains( &tmp.y ) { continue }
+				if ! RANGE_MAP_INNER_X.contains( &next.x )
+				|| ! RANGE_MAP_INNER_Y.contains( &next.y ) { continue }
 
 				//上下左右の座標のオブジェクトを調べる
-				match self.map[ tmp.x ][ tmp.y ]
-				{	MapObj::Pathway => backtrack = tmp,
-					MapObj::Wall if self.is_digable_wall( tmp, dxy ) => digable_walls.push( tmp ),
+				match self.map[ next.x ][ next.y ]
+				{	MapObj::Pathway => backtrack = next,
+					MapObj::Wall if self.is_digable_wall( next, dxdy ) => digable_walls.push( next ),
 					_ => {}
 				}
 			}
@@ -35,13 +35,13 @@ impl GameMap
 				if matches!( backtrack, MapGrid { x: 0, y: 0 } ) { break }
 
 				//現在位置に行き止まり情報を書き込み、後戻りする
-				self.map[ map.x ][ map.y ] = MapObj::DeadEnd;
-				map = backtrack;
+				self.map[ grid.x ][ grid.y ] = MapObj::DeadEnd;
+				grid = backtrack;
 			}
 			else
 			{	//掘れる壁が見つかったので、方向をランダムに決めて、掘る
-				map = digable_walls[ self.rng.gen_range( 0..digable_walls.len() ) ];
-				self.map[ map.x ][ map.y ] = MapObj::Pathway;
+				grid = digable_walls[ self.rng.gen_range( 0..digable_walls.len() ) ];
+				self.map[ grid.x ][ grid.y ] = MapObj::Pathway;
 			}
 		}
 
@@ -50,7 +50,7 @@ impl GameMap
 	} 
 
 	//進行方向の壁が掘れるか調べる
-	fn is_digable_wall( &self, map: MapGrid, four_sides: ( usize, usize ) ) -> bool
+	fn is_digable_wall( &self, map: MapGrid, four_sides: DxDy ) -> bool
 	{	match four_sides
 		{	UP    if self.is_wall_upper_left   ( map.x, map.y )
 				  && self.is_wall_upper_center ( map.x, map.y )	// 壁壁壁

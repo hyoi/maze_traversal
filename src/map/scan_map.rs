@@ -55,19 +55,21 @@ impl GameMap
 
 				//袋小路から他の道との合流地点まで遡って道の長さを数える
 				let mut pedometer = 0;
-				let mut map_xy = ( x, y );
+				let mut map_xy = MapGrid { x, y };
 				let mut old_xy = map_xy;	//初期値に意味なし
 				loop
 				{	let mut next_xy = map_xy;	//初期値に意味なし
 					let mut count = 0;
-					for ( dx, dy ) in FOUR_SIDES
-					{	let tmp_xy = ( map_xy.0 + dx - 1, map_xy.1 + dy - 1 );
-						if self.is_wall( tmp_xy.0, tmp_xy.1 ) { continue }	//壁なら無視
+					for dxdy in FOUR_SIDES
+					{//	let tmp_xy = ( map_xy.0 + dx - 1, map_xy.1 + dy - 1 );
+						let tmp_xy = map_xy + dxdy;
+
+						if self.is_wall( tmp_xy.x, tmp_xy.y ) { continue }	//壁なら無視
 						if tmp_xy == old_xy { continue }	//自分が来た方向は無視
 						next_xy = tmp_xy;	//進める方向を記録
 						count += 1;			//進める方向を数える
 					}
-					if count != 1 { break }	//進める方向が複数あるなら広間か別の道と合流した
+					if count != 1 { break }	//count==1ならnext_xyが進行できる唯一の道
 
 					//道の長さを＋１する
 					pedometer += 1;

@@ -1,8 +1,5 @@
 use super::*;
 
-//external modules
-use rand::prelude::*;
-
 //Pluginの手続き
 pub struct PluginFetchAssets;
 impl Plugin for PluginFetchAssets

@@ -1,8 +1,5 @@
 use super::*;
 
-//external modules
-use rand::prelude::*;
-
 //internal modules
 mod map_util;
 pub use map_util::*; //再エクスポート
@@ -97,9 +94,9 @@ fn generate_new_map
 	}
 
 	//出口を掘れる場所を探し、乱数で決める
-	let mut exit = Vec::new();
-	RANGE_MAP_INNER_X.for_each( | x | if ! maze.is_wall( x, 1 ) { exit.push( x ) } );
-	let x = exit[ maze.rng.gen_range( 0..exit.len() ) ];
+	let mut exit_x = Vec::new();
+	RANGE_MAP_INNER_X.for_each( | x | if ! maze.is_wall( x, 1 ) { exit_x.push( x ) } );
+	let x = exit_x[ maze.rng.gen_range( 0..exit_x.len() ) ];
 	maze.goal_xy = MapGrid { x, y: 0 };
 	maze.map[ x ][ 0 ] = MapObj::Goal ( None );
 
@@ -145,7 +142,7 @@ fn spawn_sprite_map
 				_ => {}
 			};
 
-			//袋小路のコイン、広間のEntityを作成
+			//袋小路のコイン、広間デバッグ用のEntityを作成
 			if maze.is_dead_end( x, y )
 			{	let count = maze.coin[ x ][ y ];
 				if count > 0
@@ -160,14 +157,14 @@ fn spawn_sprite_map
 					maze.map[ x ][ y ] = MapObj::Coin ( Some ( id ) );
 				}
 			}
-			// else if maze.is_hall( x, y )
-			// {	//デバッグ用に広間のスプライトを表示する
-			// 	let custom_size = Some( Vec2::new( DEBUG_PIXEL, DEBUG_PIXEL ) * 0.9 );
-			// 	cmds.spawn_bundle( SpriteBundle::default() )
-			// 		.insert( Sprite { color: Color::INDIGO, custom_size, ..Default::default() } )
-			// 		.insert( Transform::from_translation( Vec3::new( xy.x, xy.y, SPRITE_DEPTH_DEBUG ) ) )
-			// 		.insert( DebugSprite );
-			// }
+			else if maze.is_hall( x, y )
+			{	//デバッグ用に広間のスプライトを表示する
+				let custom_size = Some( Vec2::new( DEBUG_PIXEL, DEBUG_PIXEL ) * 0.9 );
+				cmds.spawn_bundle( SpriteBundle::default() )
+					.insert( Sprite { color: Color::INDIGO, custom_size, ..Default::default() } )
+					.insert( Transform::from_translation( Vec3::new( xy.x, xy.y, SPRITE_DEPTH_DEBUG ) ) )
+					.insert( DebugSprite );
+			}
 		}
 	}
 }

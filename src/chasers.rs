@@ -1,8 +1,5 @@
 use super::*;
 
-//external modules
-use rand::prelude::*;
-
 //Pluginの手続き
 pub struct PluginChaser;
 impl Plugin for PluginChaser
@@ -155,15 +152,13 @@ fn move_sprite_chasers
 
 				//四方でホールのマスを探す
 				let mut four_sides = Vec::new();
-				for ( dx, dy ) in FOUR_SIDES
-				{	let MapGrid { mut x, mut y } = grid;
-					x += dx - 1;
-					y += dy - 1;
-					if maze.is_hall( x, y )
-					{	if matches!( ( dx, dy ), UP    ) { four_sides.push( ( MapGrid { x, y }, FourSides::Up    ) ) }
-						if matches!( ( dx, dy ), LEFT  ) { four_sides.push( ( MapGrid { x, y }, FourSides::Left  ) ) }
-						if matches!( ( dx, dy ), RIGHT ) { four_sides.push( ( MapGrid { x, y }, FourSides::Right ) ) }
-						if matches!( ( dx, dy ), DOWN  ) { four_sides.push( ( MapGrid { x, y }, FourSides::Down  ) ) }
+				for dxdy in FOUR_SIDES
+				{	let next = grid + dxdy;
+					if maze.is_hall( next.x, next.y )
+					{	if matches!( dxdy, UP    ) { four_sides.push( ( next, FourSides::Up    ) ) }
+						if matches!( dxdy, LEFT  ) { four_sides.push( ( next, FourSides::Left  ) ) }
+						if matches!( dxdy, RIGHT ) { four_sides.push( ( next, FourSides::Right ) ) }
+						if matches!( dxdy, DOWN  ) { four_sides.push( ( next, FourSides::Down  ) ) }
 					}
 				}
 
