@@ -84,9 +84,10 @@ fn generate_new_map
 
 	//入口を掘る
 	let x = maze.rng.gen_range( RANGE_MAP_INNER_X );
-	maze.start_xy = MapGrid { x, y: MAP_HEIGHT - 1 };
-	maze.map[ x ][ MAP_HEIGHT - 1 ] = MapObj::DeadEnd; //入口は行き止まり扱い
-	maze.map[ x ][ MAP_HEIGHT - 2 ] = MapObj::Pathway; //入口直上は無条件で道
+	let grid = MapGrid { x, y: MAP_HEIGHT - 1 };
+	maze.start_xy = grid;
+	maze.set_mapobj( grid	  , MapObj::DeadEnd ); //入口は行き止まり扱い
+	maze.set_mapobj( grid + UP, MapObj::Pathway ); //入口直上は無条件で道
 
 	//迷路作成関数を乱数で決め、迷路を掘らせる
 	let maze_type = match SELECT_MAZE_TYPE
@@ -110,8 +111,9 @@ fn generate_new_map
 		if ! maze.is_wall( grid ) { exit_x.push( x ) }
 	} );
 	let x = exit_x[ maze.rng.gen_range( 0..exit_x.len() ) ];
-	maze.goal_xy = MapGrid { x, y: 0 };
-	maze.map[ x ][ 0 ] = MapObj::Goal ( None );
+	grid = MapGrid { x, y: 0 };
+	maze.goal_xy = grid;
+	maze.set_mapobj( grid, MapObj::Goal ( None ) );
 
 	//迷路の構造解析
 	maze.distinguish_halls_and_passages();	//広間と通路を区別し袋小路をマークする
@@ -142,7 +144,7 @@ fn spawn_sprite_map
 						.insert( Transform::from_translation( position ).with_rotation( quat ) )
 						.insert( SpriteGoal )
 						.id(); 
-					maze.map[ x ][ y ] = MapObj::Goal ( Some ( id ) );
+					maze.set_mapobj( grid, MapObj::Goal ( Some ( id ) ) );
 				}
 				MapObj::Wall =>
 				{	//壁のストライプを表示する
@@ -168,7 +170,7 @@ fn spawn_sprite_map
 						.insert( Transform::from_translation( Vec3::new( pixel.x, pixel.y, SPRITE_DEPTH_MAZE ) ) )
 						.insert( SpriteCoin )
 						.id();
-					maze.map[ x ][ y ] = MapObj::Coin ( Some ( id ) );
+					maze.set_mapobj( grid, MapObj::Coin ( Some ( id ) ) );
 				}
 			}
 			else if maze.is_hall( grid )

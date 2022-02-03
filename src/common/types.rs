@@ -105,11 +105,6 @@ impl Default for GameMap
 		}
 	}
 }
-impl GameMap
-{	pub fn map ( &self, grid: MapGrid ) -> MapObj { self.map [ grid.x ][ grid.y ] }
-	pub fn bits( &self, grid: MapGrid ) -> usize  { self.bits[ grid.x ][ grid.y ] }
-	pub fn coin( &self, grid: MapGrid ) -> usize  { self.coin[ grid.x ][ grid.y ] }
-}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 

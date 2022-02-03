@@ -16,14 +16,22 @@ impl GameMap
 		self.bits.iter_mut().for_each( | x | x.fill( 0            ) );
 		self.coin.iter_mut().for_each( | x | x.fill( 0            ) );
 	}
+
+	//配列の値を返す
+	pub fn map ( &self, grid: MapGrid ) -> MapObj { self.map [ grid.x ][ grid.y ] }
+	pub fn bits( &self, grid: MapGrid ) -> usize  { self.bits[ grid.x ][ grid.y ] }
+	pub fn coin( &self, grid: MapGrid ) -> usize  { self.coin[ grid.x ][ grid.y ] }
+
+	//配列の値をセットする
+	pub fn set_mapobj( &mut self, grid: MapGrid, obj : MapObj ) { self.map [ grid.x ][ grid.y ] = obj  }
+	pub fn set_coin  ( &mut self, grid: MapGrid, coin: usize  ) { self.coin[ grid.x ][ grid.y ] = coin }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //壁判定のメソッド: is_wall()系 -> true: 壁である、false: 壁ではない
 impl GameMap
-{//	pub fn is_wall( &self, x: usize, y: usize ) -> bool
-	pub fn is_wall( &self, grid: MapGrid ) -> bool
+{	pub fn is_wall( &self, grid: MapGrid ) -> bool
 	{	if ! RANGE_MAP_X.contains( &grid.x )
 		|| ! RANGE_MAP_Y.contains( &grid.y ) { return true } //配列の添字外は壁
 		matches!( self.map( grid ), MapObj::Wall )

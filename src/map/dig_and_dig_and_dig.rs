@@ -16,7 +16,7 @@ impl GameMap
 			//掘れるなら一歩進む
 			if RANGE_MAP_INNER_X.contains( &next.x )
 			&& RANGE_MAP_INNER_Y.contains( &next.y ) && self.dig_or_not( next )
-			{	self.map[ next.x ][ next.y ] = MapObj::Pathway;	//道を掘る
+			{	self.set_mapobj( next, MapObj::Pathway );	//道を掘る
 				grid = next;
 			}
 		}

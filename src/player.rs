@@ -111,8 +111,8 @@ fn move_sprite_player
 		if maze.is_dead_end( grid )
 		{	if let MapObj::Coin ( Some( id ) ) = maze.map( grid )
 			{	if let Some( mut record ) = o_record { record.score += maze.coin( grid ) }
-				maze.coin[ grid.x ][ grid.y ] = 0;
-				maze.map [ grid.x ][ grid.y ] = MapObj::Pathway;
+				maze.set_coin( grid, 0 );
+				maze.set_mapobj( grid, MapObj::Pathway );
 				cmds.entity( id ).despawn();
 			}
 		}

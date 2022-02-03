@@ -75,7 +75,7 @@ impl GameMap
 					back = grid;
 					grid = next;
 				}
-				self.coin[ x ][ y ] = pedometer;
+				self.set_coin( MapGrid{ x, y }, pedometer );
 			}
 		}
 	}

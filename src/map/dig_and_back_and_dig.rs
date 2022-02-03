@@ -35,13 +35,13 @@ impl GameMap
 				if matches!( backtrack, MapGrid { x: 0, y: 0 } ) { break }
 
 				//現在位置に行き止まり情報を書き込み、後戻りする
-				self.map[ grid.x ][ grid.y ] = MapObj::DeadEnd;
+				self.set_mapobj( grid, MapObj::DeadEnd );
 				grid = backtrack;
 			}
 			else
 			{	//掘れる壁が見つかったので、方向をランダムに決めて、掘る
 				grid = digable_walls[ self.rng.gen_range( 0..digable_walls.len() ) ];
-				self.map[ grid.x ][ grid.y ] = MapObj::Pathway;
+				self.set_mapobj( grid, MapObj::Pathway );
 			}
 		}
 
