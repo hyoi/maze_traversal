@@ -20,16 +20,6 @@ pub const SCREEN_BGCOLOR: Color = Color::rgb( 0.1, 0.1, 0.1 );
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-//迷路生成関数の選択
-#[allow(dead_code)]
-#[derive(PartialEq)]
-pub enum SelectMazeType { Random, Type1, Type2, Type3 }
-
-pub const SELECT_MAZE_TYPE: SelectMazeType = SelectMazeType::Random;
-//pub const SELECT_MAZE_TYPE: SelectMazeType = SelectMazeType::Type3;
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
 //Assets（フォント、画像...etc）
 pub const FONT_ORBITRON_BLACK	: &str = "fonts/Orbitron-Black.ttf";
 pub const FONT_REGGAEONE_REGULAR: &str = "fonts/ReggaeOne-Regular.ttf";

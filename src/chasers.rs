@@ -67,24 +67,23 @@ pub fn spawn_sprite_chasers
 )
 {	//追手は複数なのでループする
 	( 0..=10 ).for_each( | _ |		//取り敢えず10個固定
-	{	let ( mut x, mut y );
+	{	let mut grid = MapGrid::default();
 		loop
-		{	x = maze.rng.gen_range( RANGE_MAP_INNER_X );
-			y = maze.rng.gen_range( RANGE_MAP_INNER_Y );
-			if maze.is_hall( x, y ) { break }
+		{	grid.x = maze.rng.gen_range( RANGE_MAP_INNER_X );
+			grid.y = maze.rng.gen_range( RANGE_MAP_INNER_Y );
+			if maze.is_hall( grid ) { break }
 		}
-		let map_xy   = MapGrid { x, y };
-		let pixel_xy = map_xy.into_pixel();
+		let pixel = grid.into_pixel();
 
 		//スプライトを初期位置に配置する
-		let position = Vec3::new( pixel_xy.x, pixel_xy.y, SPRITE_DEPTH_CHASER );
+		let position = Vec3::new( pixel.x, pixel.y, SPRITE_DEPTH_CHASER );
 		let quat = Quat::from_rotation_z( 45_f32.to_radians() ); //45°傾ける
 		let custom_size = Some( Vec2::new( CHASER_PIXEL, CHASER_PIXEL ) );
 
 		cmds.spawn_bundle( SpriteBundle::default() )
 			.insert( Sprite { color: CHASER_COLOR, custom_size, ..Default::default() } )
 			.insert( Transform::from_translation( position ).with_rotation( quat ) )
-			.insert( Chaser { map_xy, pixel_xy, ..Default::default() } );
+			.insert( Chaser { map_xy: grid, pixel_xy: pixel, ..Default::default() } );
 	} );
 }
 
@@ -113,7 +112,7 @@ fn move_sprite_chasers
 			chaser.stop = true;		//一旦 停止フラグを立てる
 
 			//自機と重なったらOverへ（暫定処理）
-			if grid.x == player.map_xy.x && grid.y == player.map_xy.y
+			if grid == player.map_xy
 			{	let _ = state.overwrite_set( GameState::Over );
 				return;
 			}
@@ -132,18 +131,20 @@ fn move_sprite_chasers
 				let range_y = if grid.y < py { grid.y..py } else { py..grid.y };
 				let mut flag_x = false;
 				let mut flag_y = false;
-				range_x.for_each( | x | if maze.is_wall( x, grid.y ) { flag_x = true } );
-				range_y.for_each( | y | if maze.is_wall( grid.x, y ) { flag_y = true } );
+				range_x.for_each( | x | if maze.is_wall( MapGrid { x, y: grid.y } ) { flag_x = true } );
+				range_y.for_each( | y | if maze.is_wall( MapGrid { x: grid.x, y } ) { flag_y = true } );
 
 				flag_chase = ! flag_x && ! flag_y;
 			}
 
 			if flag_chase
 			{	//追跡モード
+				dbg!(1);
 				chaser.wait.reset();	//ウェイトをリセットする
 			}
-			else if maze.is_passageway( grid.x, grid.y )
+			else if maze.is_passageway( grid )
 			{	//通路モード
+				dbg!(2);
 				chaser.wait.reset();	//ウェイトをリセットする
 			}
 			else
@@ -154,7 +155,7 @@ fn move_sprite_chasers
 				let mut four_sides = Vec::new();
 				for dxdy in FOUR_SIDES
 				{	let next = grid + dxdy;
-					if maze.is_hall( next.x, next.y )
+					if maze.is_hall( next )
 					{	if matches!( dxdy, UP    ) { four_sides.push( ( next, FourSides::Up    ) ) }
 						if matches!( dxdy, LEFT  ) { four_sides.push( ( next, FourSides::Left  ) ) }
 						if matches!( dxdy, RIGHT ) { four_sides.push( ( next, FourSides::Right ) ) }

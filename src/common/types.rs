@@ -25,6 +25,9 @@ impl Default for Record
 {	fn default() -> Self { Self { stage: 0, score: 0, hp: MAX_HP, } }
 }
 
+//デバッグ用のマーカーResource
+pub struct DbgPluginUi;
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //Map用の二次元配列での座標
@@ -101,6 +104,11 @@ impl Default for GameMap
 			goal_xy : MapGrid::default(),
 		}
 	}
+}
+impl GameMap
+{	pub fn map ( &self, grid: MapGrid ) -> MapObj { self.map [ grid.x ][ grid.y ] }
+	pub fn bits( &self, grid: MapGrid ) -> usize  { self.bits[ grid.x ][ grid.y ] }
+	pub fn coin( &self, grid: MapGrid ) -> usize  { self.coin[ grid.x ][ grid.y ] }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -95,8 +95,8 @@ fn move_sprite_player
 
 	if player.wait.tick( time_delta ).finished()
 	{	//スプライトの表示位置をグリッドに合わせて更新する
-		let mut map = player.map_xy;
-		let pixel = map.into_pixel();
+		let mut grid = player.map_xy;
+		let pixel = grid.into_pixel();
 		let position = &mut transform.translation;
 		position.x = pixel.x;
 		position.y = pixel.y;
@@ -108,18 +108,18 @@ fn move_sprite_player
 		}
 
 		//ゴールドを拾う
-		if maze.is_dead_end( map.x, map.y )
-		{	if let MapObj::Coin ( Some( id ) ) = maze.map[ map.x ][ map.y ]
-			{	if let Some( mut record ) = o_record { record.score += maze.coin[ map.x ][ map.y ] }
-				maze.coin[ map.x ][ map.y ] = 0;
-				maze.map [ map.x ][ map.y ] = MapObj::Pathway;
+		if maze.is_dead_end( grid )
+		{	if let MapObj::Coin ( Some( id ) ) = maze.map( grid )
+			{	if let Some( mut record ) = o_record { record.score += maze.coin( grid ) }
+				maze.coin[ grid.x ][ grid.y ] = 0;
+				maze.map [ grid.x ][ grid.y ] = MapObj::Pathway;
 				cmds.entity( id ).despawn();
 			}
 		}
 
 		//ゴールしたら、Clearへ遷移する
-		if map == maze.goal_xy
-		{	if let MapObj::Goal ( Some( id ) ) = maze.map[ map.x ][ map.y ]
+		if grid == maze.goal_xy
+		{	if let MapObj::Goal ( Some( id ) ) = maze.map( grid )
 			{	cmds.entity( id ).despawn();
 			}
 			let _ = state.overwrite_set( GameState::Clear );
@@ -135,28 +135,28 @@ fn move_sprite_player
 		//キー入力により自機の向きを変える(スプライトの回転はまだ)
 		if key_left
 		{	player.key_input = FourSides::Left;
-			player.stop = maze.is_wall_middle_left( map.x, map.y );
-			if ! player.stop { map.x -= 1 }
+			player.stop = maze.is_wall_middle_left( grid );
+			if ! player.stop { grid.x -= 1 }
 		}
 		else if key_right
 		{	player.key_input = FourSides::Right;
-			player.stop = maze.is_wall_middle_right( map.x, map.y );
-			if ! player.stop { map.x += 1 }
+			player.stop = maze.is_wall_middle_right( grid );
+			if ! player.stop { grid.x += 1 }
 		}
 		else if key_up
 		{	player.key_input = FourSides::Up;
-			player.stop = maze.is_wall_upper_center( map.x, map.y );
-			if ! player.stop { map.y -= 1 }
+			player.stop = maze.is_wall_upper_center( grid );
+			if ! player.stop { grid.y -= 1 }
 		}
 		else if key_down
 		{	player.key_input = FourSides::Down;
-			player.stop = maze.is_wall_lower_center( map.x, map.y );
-			if ! player.stop { map.y += 1 }
+			player.stop = maze.is_wall_lower_center( grid );
+			if ! player.stop { grid.y += 1 }
 		}
 		else
 		{	player.stop = true
 		}
-		player.map_xy = map;
+		player.map_xy = grid;
 
 		//ウェイトをリセットする
 		player.wait.reset();

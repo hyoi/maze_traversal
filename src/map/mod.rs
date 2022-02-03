@@ -44,6 +44,15 @@ impl Plugin for PluginMap
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+//迷路生成関数の選択
+#[allow(dead_code)]
+#[derive(PartialEq)]
+enum SelectMazeType { Random, Type1, Type2, Type3 }
+
+const SELECT_MAZE_TYPE: SelectMazeType = SelectMazeType::Random;
+//const SELECT_MAZE_TYPE: SelectMazeType = SelectMazeType::Type3;
+
+//Sprite
 #[derive(Component)]
 struct SpriteWall;
 const WALL_PIXEL: f32 = PIXEL_PER_GRID;
@@ -95,7 +104,11 @@ fn generate_new_map
 
 	//出口を掘れる場所を探し、乱数で決める
 	let mut exit_x = Vec::new();
-	RANGE_MAP_INNER_X.for_each( | x | if ! maze.is_wall( x, 1 ) { exit_x.push( x ) } );
+	let mut grid = MapGrid{ x: 0, y: 1 };
+	RANGE_MAP_INNER_X.for_each( | x |
+	{	grid.x = x;
+		if ! maze.is_wall( grid ) { exit_x.push( x ) }
+	} );
 	let x = exit_x[ maze.rng.gen_range( 0..exit_x.len() ) ];
 	maze.goal_xy = MapGrid { x, y: 0 };
 	maze.map[ x ][ 0 ] = MapObj::Goal ( None );
@@ -116,12 +129,13 @@ fn spawn_sprite_map
 )
 {	for x in RANGE_MAP_X
 	{	for y in RANGE_MAP_Y
-		{	let xy = MapGrid { x, y }.into_pixel();
-			match maze.map[ x ][ y ]
+		{	let grid = MapGrid { x, y };
+			let pixel = grid.into_pixel();
+			match maze.map( grid )
 			{	MapObj::Goal (_) =>
 				{	//	ゴールのスプライトを表示する 
 					let custom_size = Some( Vec2::new( GOAL_PIXEL, GOAL_PIXEL ) );
-					let position = Vec3::new( xy.x, xy.y, SPRITE_DEPTH_MAZE );
+					let position = Vec3::new( pixel.x, pixel.y, SPRITE_DEPTH_MAZE );
 					let quat = Quat::from_rotation_z( 45_f32.to_radians() ); //45°傾ける
 					let id = cmds.spawn_bundle( SpriteBundle::default() )
 						.insert( Sprite { color: GOAL_COLOR, custom_size, ..Default::default() } )
@@ -136,33 +150,33 @@ fn spawn_sprite_map
 					cmds.spawn_bundle( SpriteBundle::default() )
 						.insert( Sprite { custom_size, ..Default::default() } )
 						.insert( asset_svr.load( IMAGE_SPRITE_WALL ) as Handle<Image> )
-						.insert( Transform::from_translation( Vec3::new( xy.x, xy.y, SPRITE_DEPTH_MAZE ) ) )
+						.insert( Transform::from_translation( Vec3::new( pixel.x, pixel.y, SPRITE_DEPTH_MAZE ) ) )
 						.insert( SpriteWall );
 				}
 				_ => {}
 			};
 
 			//袋小路のコイン、広間デバッグ用のEntityを作成
-			if maze.is_dead_end( x, y )
-			{	let count = maze.coin[ x ][ y ];
+			if maze.is_dead_end( grid )
+			{	let count = maze.coin( grid );
 				if count > 0
 				{	//コインのスプライトを表示する
 					let custom_size = Some( Vec2::new( COIN_PIXEL, COIN_PIXEL ) );
 					let id = cmds.spawn_bundle( SpriteBundle::default() )
 						.insert( Sprite { custom_size, ..Default::default() } )
 						.insert( asset_svr.load( IMAGE_SPRITE_COIN ) as Handle<Image> )
-						.insert( Transform::from_translation( Vec3::new( xy.x, xy.y, SPRITE_DEPTH_MAZE ) ) )
+						.insert( Transform::from_translation( Vec3::new( pixel.x, pixel.y, SPRITE_DEPTH_MAZE ) ) )
 						.insert( SpriteCoin )
 						.id();
 					maze.map[ x ][ y ] = MapObj::Coin ( Some ( id ) );
 				}
 			}
-			else if maze.is_hall( x, y )
+			else if maze.is_hall( grid )
 			{	//デバッグ用に広間のスプライトを表示する
 				let custom_size = Some( Vec2::new( DEBUG_PIXEL, DEBUG_PIXEL ) * 0.9 );
 				cmds.spawn_bundle( SpriteBundle::default() )
 					.insert( Sprite { color: Color::INDIGO, custom_size, ..Default::default() } )
-					.insert( Transform::from_translation( Vec3::new( xy.x, xy.y, SPRITE_DEPTH_DEBUG ) ) )
+					.insert( Transform::from_translation( Vec3::new( pixel.x, pixel.y, SPRITE_DEPTH_DEBUG ) ) )
 					.insert( DebugSprite );
 			}
 		}

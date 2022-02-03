@@ -22,7 +22,7 @@ impl GameMap
 				|| ! RANGE_MAP_INNER_Y.contains( &next.y ) { continue }
 
 				//上下左右の座標のオブジェクトを調べる
-				match self.map[ next.x ][ next.y ]
+				match self.map( next )
 				{	MapObj::Pathway => backtrack = next,
 					MapObj::Wall if self.is_digable_wall( next, dxdy ) => digable_walls.push( next ),
 					_ => {}
@@ -50,28 +50,28 @@ impl GameMap
 	} 
 
 	//進行方向の壁が掘れるか調べる
-	fn is_digable_wall( &self, map: MapGrid, four_sides: DxDy ) -> bool
+	fn is_digable_wall( &self, grid: MapGrid, four_sides: DxDy ) -> bool
 	{	match four_sides
-		{	UP    if self.is_wall_upper_left   ( map.x, map.y )
-				  && self.is_wall_upper_center ( map.x, map.y )	// 壁壁壁
-				  && self.is_wall_upper_right  ( map.x, map.y )	// 壁Ｘ壁
-				  && self.is_wall_middle_left  ( map.x, map.y )
-				  && self.is_wall_middle_right ( map.x, map.y ) => true,
-			LEFT  if self.is_wall_upper_left   ( map.x, map.y )	// 壁壁
-				  && self.is_wall_upper_center ( map.x, map.y )	// 壁Ｘ
-				  && self.is_wall_middle_left  ( map.x, map.y )	// 壁壁
-				  && self.is_wall_lower_left   ( map.x, map.y )
-				  && self.is_wall_lower_center ( map.x, map.y ) => true,
-			RIGHT if self.is_wall_upper_center ( map.x, map.y )	// 壁壁
-				  && self.is_wall_upper_right  ( map.x, map.y )	// Ｘ壁
-				  && self.is_wall_middle_right ( map.x, map.y )	// 壁壁
-				  && self.is_wall_lower_center ( map.x, map.y )
-				  && self.is_wall_lower_right  ( map.x, map.y ) => true,
-			DOWN  if self.is_wall_middle_left  ( map.x, map.y )
-				  && self.is_wall_middle_right ( map.x, map.y )	// 壁Ｘ壁
-				  && self.is_wall_lower_left   ( map.x, map.y )	// 壁壁壁
-				  && self.is_wall_lower_center ( map.x, map.y )
-				  && self.is_wall_lower_right  ( map.x, map.y ) => true,
+		{	UP    if self.is_wall_upper_left   ( grid )
+				  && self.is_wall_upper_center ( grid )	// 壁壁壁
+				  && self.is_wall_upper_right  ( grid )	// 壁Ｘ壁
+				  && self.is_wall_middle_left  ( grid )
+				  && self.is_wall_middle_right ( grid ) => true,
+			LEFT  if self.is_wall_upper_left   ( grid )	// 壁壁
+				  && self.is_wall_upper_center ( grid )	// 壁Ｘ
+				  && self.is_wall_middle_left  ( grid )	// 壁壁
+				  && self.is_wall_lower_left   ( grid )
+				  && self.is_wall_lower_center ( grid ) => true,
+			RIGHT if self.is_wall_upper_center ( grid )	// 壁壁
+				  && self.is_wall_upper_right  ( grid )	// Ｘ壁
+				  && self.is_wall_middle_right ( grid )	// 壁壁
+				  && self.is_wall_lower_center ( grid )
+				  && self.is_wall_lower_right  ( grid ) => true,
+			DOWN  if self.is_wall_middle_left  ( grid )
+				  && self.is_wall_middle_right ( grid )	// 壁Ｘ壁
+				  && self.is_wall_lower_left   ( grid )	// 壁壁壁
+				  && self.is_wall_lower_center ( grid )
+				  && self.is_wall_lower_right  ( grid ) => true,
 			_ => { false }
 		}
 	}

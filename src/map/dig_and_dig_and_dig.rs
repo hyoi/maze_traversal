@@ -8,16 +8,14 @@ impl GameMap
 
 		loop
 		{	//ランダムに上下左右へ進む方向を決める
-			let dxdy = FOUR_SIDES[ self.rng.gen_range( 0..FOUR_SIDES.len() ) ];
-			let next = grid + dxdy;
+			let next = grid + FOUR_SIDES[ self.rng.gen_range( 0..FOUR_SIDES.len() ) ];
 
 			//上端に達したら迷路完成
 			if next.y == 0 { break }
 
 			//掘れるなら一歩進む
 			if RANGE_MAP_INNER_X.contains( &next.x )
-			&& RANGE_MAP_INNER_Y.contains( &next.y )
-			&& self.dig_or_not( next )
+			&& RANGE_MAP_INNER_Y.contains( &next.y ) && self.dig_or_not( next )
 			{	self.map[ next.x ][ next.y ] = MapObj::Pathway;	//道を掘る
 				grid = next;
 			}
@@ -27,14 +25,14 @@ impl GameMap
 	//さいころを振って、進むか(true)、やり直すか(false)決める
 	fn dig_or_not( &mut self, grid: MapGrid ) -> bool
 	{	//そもそも壁じゃないならtrue
-		if ! self.is_wall( grid.x, grid.y ) { return true }
+		if ! self.is_wall( grid ) { return true }
 
 		//上下左右のオブジェクトで壁ではないものを数える
 		let mut count = 0;
-		if ! self.is_wall_upper_center( grid.x, grid.y ) { count += 1 }
-		if ! self.is_wall_middle_left ( grid.x, grid.y ) { count += 1 }
-		if ! self.is_wall_middle_right( grid.x, grid.y ) { count += 1 }
-		if ! self.is_wall_lower_center( grid.x, grid.y ) { count += 1 }
+		if ! self.is_wall_upper_center( grid ) { count += 1 }
+		if ! self.is_wall_middle_left ( grid ) { count += 1 }
+		if ! self.is_wall_middle_right( grid ) { count += 1 }
+		if ! self.is_wall_lower_center( grid ) { count += 1 }
 
 		//２以上なら貫通させるか確率で決める
 		let dice = self.rng.gen_range( 0..100 );	//百面ダイスを振って‥‥

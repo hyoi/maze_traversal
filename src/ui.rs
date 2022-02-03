@@ -5,6 +5,7 @@ pub struct PluginUi;
 impl Plugin for PluginUi
 {	fn build( &self, app: &mut App )
 	{	app
+		.insert_resource( DbgPluginUi )					// デバッグ用のマーカーResource
 		//------------------------------------------------------------------------------------------
 		.add_system_set									// ＜GameState::Init＞
 		(	SystemSet::on_exit( GameState::Init )		// ＜on_exit()＞

@@ -7,41 +7,42 @@ impl GameMap
 		for x in RANGE_MAP_X
 		{	for y in RANGE_MAP_Y
 			{	//通路にマークする
-				if self.is_wall( x, y ) { continue } //壁
-				if ! self.judge_passageway( x, y ) { continue } //広間
-				self.set_flag_passageway( x, y );
+				let grid = MapGrid{ x, y };
+				if self.is_wall( grid ) { continue } //壁
+				if ! self.judge_passageway( grid ) { continue } //広間
+				self.set_flag_passageway( grid );
 
 				//上下左右に壁がいくつあるか
 				let mut count = 0;
-				if self.is_wall_upper_center ( x, y ) { count += 1 }
-				if self.is_wall_middle_left  ( x, y ) { count += 1 }
-				if self.is_wall_middle_right ( x, y ) { count += 1 }
-				if self.is_wall_lower_center ( x, y ) { count += 1 }
+				if self.is_wall_upper_center ( grid ) { count += 1 }
+				if self.is_wall_middle_left  ( grid ) { count += 1 }
+				if self.is_wall_middle_right ( grid ) { count += 1 }
+				if self.is_wall_lower_center ( grid ) { count += 1 }
 
 				//袋小路にマークする
-				if count == 3 { self.set_flag_dead_end( x, y ); }
+				if count == 3 { self.set_flag_dead_end( grid ); }
 			}
 		}
 	}
 
 	//通路か(true)広間か(false)判断する
-	fn judge_passageway( &self, x: usize, y: usize ) -> bool
+	fn judge_passageway( &self, grid: MapGrid ) -> bool
 	{	//通路ではない条件
-		if ! self.is_wall_upper_left   ( x, y ) // XX
-		&& ! self.is_wall_upper_center ( x, y ) // XO
-		&& ! self.is_wall_middle_left  ( x, y ) { return false }
+		if ! self.is_wall_upper_left   ( grid ) // XX
+		&& ! self.is_wall_upper_center ( grid ) // XO
+		&& ! self.is_wall_middle_left  ( grid ) { return false }
 
-		if ! self.is_wall_upper_right  ( x, y ) // XX
-		&& ! self.is_wall_upper_center ( x, y ) // OX
-		&& ! self.is_wall_middle_right ( x, y ) { return false }
+		if ! self.is_wall_upper_right  ( grid ) // XX
+		&& ! self.is_wall_upper_center ( grid ) // OX
+		&& ! self.is_wall_middle_right ( grid ) { return false }
 
-		if ! self.is_wall_middle_left  ( x, y ) // XO
-		&& ! self.is_wall_lower_left   ( x, y ) // XX
-		&& ! self.is_wall_lower_center ( x, y ) { return false }
+		if ! self.is_wall_middle_left  ( grid ) // XO
+		&& ! self.is_wall_lower_left   ( grid ) // XX
+		&& ! self.is_wall_lower_center ( grid ) { return false }
 
-		if ! self.is_wall_middle_right ( x, y ) // OX
-		&& ! self.is_wall_lower_center ( x, y ) // XX
-		&& ! self.is_wall_lower_right  ( x, y ) { return false }
+		if ! self.is_wall_middle_right ( grid ) // OX
+		&& ! self.is_wall_lower_center ( grid ) // XX
+		&& ! self.is_wall_lower_right  ( grid ) { return false }
 
 		true
 	}
@@ -51,30 +52,28 @@ impl GameMap
 	{	//全面走査して壁以外のマスを調べる
 		for x in RANGE_MAP_INNER_X
 		{	for y in RANGE_MAP_INNER_Y
-			{	if ! self.is_dead_end( x, y ) { continue }	//袋小路を見つける
+			{	let mut grid = MapGrid{ x, y };
+				if ! self.is_dead_end( grid ) { continue }	//袋小路を見つける
 
 				//袋小路から他の道との合流地点まで遡って道の長さを数える
 				let mut pedometer = 0;
-				let mut map_xy = MapGrid { x, y };
-				let mut old_xy = map_xy;	//初期値に意味なし
+				let mut back = grid;	//初期値に意味なし
 				loop
-				{	let mut next_xy = map_xy;	//初期値に意味なし
+				{	let mut next = grid;	//初期値に意味なし
 					let mut count = 0;
 					for dxdy in FOUR_SIDES
-					{//	let tmp_xy = ( map_xy.0 + dx - 1, map_xy.1 + dy - 1 );
-						let tmp_xy = map_xy + dxdy;
+					{	let work = grid + dxdy;
 
-						if self.is_wall( tmp_xy.x, tmp_xy.y ) { continue }	//壁なら無視
-						if tmp_xy == old_xy { continue }	//自分が来た方向は無視
-						next_xy = tmp_xy;	//進める方向を記録
-						count += 1;			//進める方向を数える
+						if self.is_wall( work ) || work == back { continue }	//壁 or 自分が来た方向は無視
+						next = work;	//先に進める方向を記録
+						count += 1;		//先に進める方向を数える
 					}
-					if count != 1 { break }	//count==1ならnext_xyが進行できる唯一の道
+					if count != 1 { break }	//count==1ならnextが先に進める唯一の道
 
 					//道の長さを＋１する
 					pedometer += 1;
-					old_xy = map_xy;
-					map_xy = next_xy;
+					back = grid;
+					grid = next;
 				}
 				self.coin[ x ][ y ] = pedometer;
 			}
