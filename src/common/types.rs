@@ -51,18 +51,18 @@ use std::ops;
 //MapGrid = MapGrid + DxDy
 impl ops::Add<DxDy> for MapGrid
 {	type Output = MapGrid;
-	fn add( self, rhs: DxDy ) -> MapGrid
-	{	let x = ( self.x as i32 + rhs.dx ) as usize;
-		let y = ( self.y as i32 + rhs.dy ) as usize;
+	fn add( self, dxdy: DxDy ) -> MapGrid
+	{	let x = ( self.x as i32 + dxdy.dx ) as usize;
+		let y = ( self.y as i32 + dxdy.dy ) as usize;
 		MapGrid { x, y }
 	}
 }
 //MapGrid = DxDy + MapGrid 
 impl ops::Add<MapGrid> for DxDy
 {	type Output = MapGrid;
-	fn add( self, rhs: MapGrid ) -> MapGrid
-	{	let x = ( rhs.x as i32 + self.dx ) as usize;
-		let y = ( rhs.y as i32 + self.dy ) as usize;
+	fn add( self, grid: MapGrid ) -> MapGrid
+	{	let x = ( grid.x as i32 + self.dx ) as usize;
+		let y = ( grid.y as i32 + self.dy ) as usize;
 		MapGrid { x, y }
 	}
 }
@@ -86,9 +86,9 @@ pub enum MapObj
 //MAP情報のResource
 pub struct GameMap
 {	pub rng: rand::prelude::StdRng,	//再現性がある乱数を使いたいので
-	pub map : [ [ MapObj; MAP_HEIGHT ]; MAP_WIDTH ],
-	pub bits: [ [ usize ; MAP_HEIGHT ]; MAP_WIDTH ],
-	pub coin: [ [ usize ; MAP_HEIGHT ]; MAP_WIDTH ],
+	map : [ [ MapObj; MAP_HEIGHT ]; MAP_WIDTH ],
+	bits: [ [ usize ; MAP_HEIGHT ]; MAP_WIDTH ],
+	coin: [ [ usize ; MAP_HEIGHT ]; MAP_WIDTH ],
 	pub start_xy: MapGrid,
 	pub goal_xy : MapGrid,
 }
@@ -104,6 +104,28 @@ impl Default for GameMap
 			goal_xy : MapGrid::default(),
 		}
 	}
+}
+
+impl GameMap
+{	//配列を初期化する
+	pub fn clear_map( &mut self )
+	{	self.map .iter_mut().for_each( | x | x.fill( MapObj::Wall ) );
+		self.bits.iter_mut().for_each( | x | x.fill( 0            ) );
+		self.coin.iter_mut().for_each( | x | x.fill( 0            ) );
+	}
+
+	//配列の値を返す
+	pub fn map ( &self, grid: MapGrid ) -> MapObj { self.map [ grid.x ][ grid.y ] }
+	pub fn bits( &self, grid: MapGrid ) -> usize  { self.bits[ grid.x ][ grid.y ] }
+	pub fn coin( &self, grid: MapGrid ) -> usize  { self.coin[ grid.x ][ grid.y ] }
+
+	//配列の値をセットする
+	pub fn set_mapobj( &mut self, grid: MapGrid, obj : MapObj ) { self.map [ grid.x ][ grid.y ] = obj  }
+	pub fn set_coin  ( &mut self, grid: MapGrid, coin: usize  ) { self.coin[ grid.x ][ grid.y ] = coin }
+
+	//指定されたマスのフラグを立てる
+	pub fn set_flag_passageway ( &mut self, grid: MapGrid ) { self.bits[ grid.x ][ grid.y ] |= BIT_PASSAGEWAY; }
+	pub fn set_flag_dead_end   ( &mut self, grid: MapGrid ) { self.bits[ grid.x ][ grid.y ] |= BIT_DEAD_END;   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

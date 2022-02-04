@@ -112,6 +112,10 @@ pub const RIGHT: DxDy = DxDy { dx:  1, dy:  0 };
 pub const DOWN : DxDy = DxDy { dx:  0, dy:  1 };
 pub const FOUR_SIDES: [ DxDy; 4 ] = [ UP, LEFT, RIGHT, DOWN ];
 
+//MAPのマスの状態の制御に使うbit
+pub const BIT_PASSAGEWAY: usize = 0b0010;
+pub const BIT_DEAD_END  : usize = 0b0100;
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //Spriteの深さ
