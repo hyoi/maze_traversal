@@ -105,6 +105,13 @@ pub const UI_LOWER_RIGHT: [ MessageSect; 1 ] =
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+//MAPの範囲の定数
+use std::ops::RangeInclusive;
+pub const RANGE_MAP_X      : RangeInclusive<usize> = 0..= MAP_WIDTH  - 1;	//MAP配列の添え字のレンジ
+pub const RANGE_MAP_Y      : RangeInclusive<usize> = 0..= MAP_HEIGHT - 1;	//MAP配列の添え字のレンジ
+pub const RANGE_MAP_INNER_X: RangeInclusive<usize> = 1..= MAP_WIDTH  - 2;	//掘削可能なレンジ（最外壁は掘れない）
+pub const RANGE_MAP_INNER_Y: RangeInclusive<usize> = 1..= MAP_HEIGHT - 2;	//掘削可能なレンジ（最外壁は掘れない）
+
 //MAP座標の上下左右を表す定数
 pub const UP   : DxDy = DxDy { dx:  0, dy: -1 };
 pub const LEFT : DxDy = DxDy { dx: -1, dy:  0 };
@@ -113,8 +120,9 @@ pub const DOWN : DxDy = DxDy { dx:  0, dy:  1 };
 pub const FOUR_SIDES: [ DxDy; 4 ] = [ UP, LEFT, RIGHT, DOWN ];
 
 //MAPのマスの状態の制御に使うbit
-pub const BIT_PASSAGEWAY: usize = 0b0010;
-pub const BIT_DEAD_END  : usize = 0b0100;
+pub const BIT_HALL   : usize = 0b0001;
+pub const BIT_PASSAGE: usize = 0b0010;
+pub const BIT_DEADEND: usize = 0b0100;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 

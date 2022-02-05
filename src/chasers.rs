@@ -61,7 +61,7 @@ impl Default for Chaser
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //追手のスプライトを広間に配置する
-pub fn spawn_sprite_chasers
+fn spawn_sprite_chasers
 (	mut maze: ResMut<GameMap>,
 	mut cmds: Commands,
 )
@@ -142,7 +142,7 @@ fn move_sprite_chasers
 				dbg!(1);
 				chaser.wait.reset();	//ウェイトをリセットする
 			}
-			else if maze.is_passageway( grid )
+			else if maze.is_passage( grid )
 			{	//通路モード
 				dbg!(2);
 				chaser.wait.reset();	//ウェイトをリセットする

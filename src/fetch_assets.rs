@@ -75,7 +75,7 @@ fn change_state_after_loading
 (	mut state : ResMut<State<GameState>>,
 	assets: Res<LoadedAssets>,
 	asset_svr: Res<AssetServer>,
-	o_dbg_uiplugin: Option<Res<DbgPluginUi>>,
+	o_dbg_ui: Option<Res<DbgOptResUI>>,
 )
 {	for handle in assets.preload.iter()
 	{	use bevy::asset::LoadState::*;
@@ -87,7 +87,7 @@ fn change_state_after_loading
 	}
 
 	//次のStateへ遷移する
-	if o_dbg_uiplugin.is_some() { let _ = state.overwrite_set( GameState::Start ); }
+	if o_dbg_ui.is_some() { let _ = state.overwrite_set( GameState::Start ); }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

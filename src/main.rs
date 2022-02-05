@@ -12,11 +12,11 @@ mod map;
 mod player;
 mod chasers;
 
-use fetch_assets::*;
-use ui::*;
-use map::*;
-use player::*;
-use chasers::*;
+use fetch_assets::PluginFetchAssets;
+use ui::PluginUi;
+use map::PluginMap;
+use player::PluginPlayer;
+use chasers::PluginChaser;
 
 //メイン関数
 fn main()

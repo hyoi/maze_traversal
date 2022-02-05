@@ -22,8 +22,8 @@ impl GameMap
 				|| ! RANGE_MAP_INNER_Y.contains( &next.y ) { continue }
 
 				//上下左右の座標のオブジェクトを調べる
-				match self.map( next )
-				{	MapObj::Pathway => backtrack = next,
+				match self.mapobj( next )
+				{	MapObj::Passage => backtrack = next,
 					MapObj::Wall if self.is_digable_wall( next, dxdy ) => digable_walls.push( next ),
 					_ => {}
 				}
@@ -41,7 +41,7 @@ impl GameMap
 			else
 			{	//掘れる壁が見つかったので、方向をランダムに決めて、掘る
 				grid = digable_walls[ self.rng.gen_range( 0..digable_walls.len() ) ];
-				self.set_mapobj( grid, MapObj::Pathway );
+				self.set_mapobj( grid, MapObj::Passage );
 			}
 		}
 

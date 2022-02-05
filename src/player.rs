@@ -108,18 +108,15 @@ fn move_sprite_player
 		}
 
 		//ゴールドを拾う
-		if maze.is_dead_end( grid )
-		{	if let MapObj::Coin ( Some( id ) ) = maze.map( grid )
-			{	if let Some( mut record ) = o_record { record.score += maze.coin( grid ) }
-				maze.set_coin( grid, 0 );
-				maze.set_mapobj( grid, MapObj::Pathway );
-				cmds.entity( id ).despawn();
-			}
+		if let MapObj::Coin ( Some( id ), coin ) = maze.mapobj( grid )
+		{	if let Some( mut record ) = o_record { record.score += coin }
+			maze.set_mapobj( grid, MapObj::Passage );
+			cmds.entity( id ).despawn();
 		}
 
 		//ゴールしたら、Clearへ遷移する
 		if grid == maze.goal_xy
-		{	if let MapObj::Goal ( Some( id ) ) = maze.map( grid )
+		{	if let MapObj::Goal ( Some( id ) ) = maze.mapobj( grid )
 			{	cmds.entity( id ).despawn();
 			}
 			let _ = state.overwrite_set( GameState::Clear );

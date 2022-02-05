@@ -20,7 +20,7 @@ impl GameMap
 
 			//複数候補の中からランダムに壊す壁を決め、道にする
 			let grid = digable_walls[ self.rng.gen_range( 0..digable_walls.len() ) ];
-			self.set_mapobj( grid, MapObj::Pathway );
+			self.set_mapobj( grid, MapObj::Passage );
 		}
 	}
 

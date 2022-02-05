@@ -1,13 +1,10 @@
 use super::*;
 
 //internal modules
-mod map_util;
-pub use map_util::*; //再エクスポート
-
 mod dig_and_dig_and_dig;			//迷路作成
 mod dig_and_back_and_dig;			//迷路作成
 mod find_and_destroy_digable_walls;	//迷路作成
-mod scan_map;						//構造解析
+mod map_utilities;					//構造解析
 
 //Pluginの手続き
 pub struct PluginMap;
@@ -87,7 +84,7 @@ fn generate_new_map
 	let grid = MapGrid { x, y: MAP_HEIGHT - 1 };
 	maze.start_xy = grid;
 	maze.set_mapobj( grid	  , MapObj::DeadEnd ); //入口は行き止まり扱い
-	maze.set_mapobj( grid + UP, MapObj::Pathway ); //入口直上は無条件で道
+	maze.set_mapobj( grid + UP, MapObj::Passage ); //入口直上は無条件で道
 
 	//迷路作成関数を乱数で決め、迷路を掘らせる
 	let maze_type = match SELECT_MAZE_TYPE
@@ -116,8 +113,8 @@ fn generate_new_map
 	maze.set_mapobj( grid, MapObj::Goal ( None ) );
 
 	//迷路の構造解析
-	maze.distinguish_halls_and_passages();	//広間と通路を区別し袋小路をマークする
-	maze.length_of_deadend();				//袋小路の深さを記録する
+	maze.identify_halls_and_passages();	//広間と通路を識別して袋小路に目印を付ける
+	maze.put_coins_at_deadend();		//袋小路にコインを置く
 
 	//Playへ遷移する
 	let _ = state.overwrite_set( GameState::Play );
@@ -133,8 +130,8 @@ fn spawn_sprite_map
 	{	for y in RANGE_MAP_Y
 		{	let grid = MapGrid { x, y };
 			let pixel = grid.into_pixel();
-			match maze.map( grid )
-			{	MapObj::Goal (_) =>
+			match maze.mapobj( grid )
+			{	MapObj::Goal ( _ ) =>
 				{	//	ゴールのスプライトを表示する 
 					let custom_size = Some( Vec2::new( GOAL_PIXEL, GOAL_PIXEL ) );
 					let position = Vec3::new( pixel.x, pixel.y, SPRITE_DEPTH_MAZE );
@@ -155,13 +152,7 @@ fn spawn_sprite_map
 						.insert( Transform::from_translation( Vec3::new( pixel.x, pixel.y, SPRITE_DEPTH_MAZE ) ) )
 						.insert( SpriteWall );
 				}
-				_ => {}
-			};
-
-			//袋小路のコイン、広間デバッグ用のEntityを作成
-			if maze.is_dead_end( grid )
-			{	let count = maze.coin( grid );
-				if count > 0
+				MapObj::Coin ( _, coin ) =>
 				{	//コインのスプライトを表示する
 					let custom_size = Some( Vec2::new( COIN_PIXEL, COIN_PIXEL ) );
 					let id = cmds.spawn_bundle( SpriteBundle::default() )
@@ -170,12 +161,14 @@ fn spawn_sprite_map
 						.insert( Transform::from_translation( Vec3::new( pixel.x, pixel.y, SPRITE_DEPTH_MAZE ) ) )
 						.insert( SpriteCoin )
 						.id();
-					maze.set_mapobj( grid, MapObj::Coin ( Some ( id ) ) );
+					maze.set_mapobj( grid, MapObj::Coin ( Some ( id ), coin ) );
 				}
-			}
-			else if maze.is_hall( grid )
-			{	//デバッグ用に広間のスプライトを表示する
-				let custom_size = Some( Vec2::new( DEBUG_PIXEL, DEBUG_PIXEL ) * 0.9 );
+				_ => {}
+			};
+
+			//デバッグ用に広間のスプライトを表示する
+			if maze.is_hall( grid )
+			{	let custom_size = Some( Vec2::new( DEBUG_PIXEL, DEBUG_PIXEL ) * 0.9 );
 				cmds.spawn_bundle( SpriteBundle::default() )
 					.insert( Sprite { color: Color::INDIGO, custom_size, ..Default::default() } )
 					.insert( Transform::from_translation( Vec3::new( pixel.x, pixel.y, SPRITE_DEPTH_DEBUG ) ) )

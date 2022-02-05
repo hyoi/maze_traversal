@@ -25,8 +25,10 @@ impl Default for Record
 {	fn default() -> Self { Self { stage: 0, score: 0, hp: MAX_HP, } }
 }
 
-//デバッグ用のマーカーResource
-pub struct DbgPluginUi;
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//マーカーResource
+pub struct DbgOptResUI;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -57,10 +59,26 @@ impl ops::Add<DxDy> for MapGrid
 		MapGrid { x, y }
 	}
 }
+impl ops::Add<&DxDy> for MapGrid
+{	type Output = MapGrid;
+	fn add( self, dxdy: &DxDy ) -> MapGrid
+	{	let x = ( self.x as i32 + dxdy.dx ) as usize;
+		let y = ( self.y as i32 + dxdy.dy ) as usize;
+		MapGrid { x, y }
+	}
+}
 //MapGrid = DxDy + MapGrid 
 impl ops::Add<MapGrid> for DxDy
 {	type Output = MapGrid;
 	fn add( self, grid: MapGrid ) -> MapGrid
+	{	let x = ( grid.x as i32 + self.dx ) as usize;
+		let y = ( grid.y as i32 + self.dy ) as usize;
+		MapGrid { x, y }
+	}
+}
+impl ops::Add<&MapGrid> for DxDy
+{	type Output = MapGrid;
+	fn add( self, grid: &MapGrid ) -> MapGrid
 	{	let x = ( grid.x as i32 + self.dx ) as usize;
 		let y = ( grid.y as i32 + self.dy ) as usize;
 		MapGrid { x, y }
@@ -77,10 +95,10 @@ pub struct Pixel { pub x: f32, pub y: f32 }
 #[derive(Copy,Clone,PartialEq)]
 pub enum MapObj
 {	Wall,
-	Pathway, //通常の道
-	DeadEnd, //行き止まり目印用
-	Coin ( Option<Entity> ),
-	Goal ( Option<Entity> ),
+	Passage, //通常の道
+	DeadEnd, //迷路作成関数のアルゴリズム用（袋小路の目印）
+	Coin ( Option<Entity>, usize ),	//スプライトのEntity IDとゴールドの数値
+	Goal ( Option<Entity> ),		//スプライトのEntity ID
 }
 
 //MAP情報のResource
@@ -88,7 +106,6 @@ pub struct GameMap
 {	pub rng: rand::prelude::StdRng,	//再現性がある乱数を使いたいので
 	map : [ [ MapObj; MAP_HEIGHT ]; MAP_WIDTH ],
 	bits: [ [ usize ; MAP_HEIGHT ]; MAP_WIDTH ],
-	coin: [ [ usize ; MAP_HEIGHT ]; MAP_WIDTH ],
 	pub start_xy: MapGrid,
 	pub goal_xy : MapGrid,
 }
@@ -99,7 +116,6 @@ impl Default for GameMap
 			rng: StdRng::seed_from_u64( 1234567890 ),	//開発用：再現性がある乱数を使いたい場合
 			map : [ [ MapObj::Wall; MAP_HEIGHT ]; MAP_WIDTH ],
 			bits: [ [ 0			  ; MAP_HEIGHT ]; MAP_WIDTH ],
-			coin: [ [ 0			  ; MAP_HEIGHT ]; MAP_WIDTH ],
 			start_xy: MapGrid::default(),
 			goal_xy : MapGrid::default(),
 		}
@@ -111,21 +127,38 @@ impl GameMap
 	pub fn clear_map( &mut self )
 	{	self.map .iter_mut().for_each( | x | x.fill( MapObj::Wall ) );
 		self.bits.iter_mut().for_each( | x | x.fill( 0            ) );
-		self.coin.iter_mut().for_each( | x | x.fill( 0            ) );
 	}
 
 	//配列の値を返す
-	pub fn map ( &self, grid: MapGrid ) -> MapObj { self.map [ grid.x ][ grid.y ] }
-	pub fn bits( &self, grid: MapGrid ) -> usize  { self.bits[ grid.x ][ grid.y ] }
-	pub fn coin( &self, grid: MapGrid ) -> usize  { self.coin[ grid.x ][ grid.y ] }
+	pub fn mapobj( &self, grid: MapGrid ) -> MapObj { self.map [ grid.x ][ grid.y ] }
+	pub fn bits  ( &self, grid: MapGrid ) -> usize  { self.bits[ grid.x ][ grid.y ] }
 
 	//配列の値をセットする
-	pub fn set_mapobj( &mut self, grid: MapGrid, obj : MapObj ) { self.map [ grid.x ][ grid.y ] = obj  }
-	pub fn set_coin  ( &mut self, grid: MapGrid, coin: usize  ) { self.coin[ grid.x ][ grid.y ] = coin }
+	pub fn set_mapobj( &mut self, grid: MapGrid, obj : MapObj ) { self.map[ grid.x ][ grid.y ] = obj }
 
 	//指定されたマスのフラグを立てる
-	pub fn set_flag_passageway ( &mut self, grid: MapGrid ) { self.bits[ grid.x ][ grid.y ] |= BIT_PASSAGEWAY; }
-	pub fn set_flag_dead_end   ( &mut self, grid: MapGrid ) { self.bits[ grid.x ][ grid.y ] |= BIT_DEAD_END;   }
+	pub fn set_flag_hall   ( &mut self, grid: MapGrid ) { self.bits[ grid.x ][ grid.y ] |= BIT_HALL    }
+	pub fn set_flag_passage( &mut self, grid: MapGrid ) { self.bits[ grid.x ][ grid.y ] |= BIT_PASSAGE }
+	pub fn set_flag_deadend( &mut self, grid: MapGrid ) { self.bits[ grid.x ][ grid.y ] |= BIT_DEADEND }
+
+	//指定されたマスのフラグを返す
+	pub fn is_hall   ( &self, grid: MapGrid ) -> bool { self.bits( grid ) & BIT_HALL    != 0 }
+	pub fn is_passage( &self, grid: MapGrid ) -> bool { self.bits( grid ) & BIT_PASSAGE != 0 }
+	pub fn is_deadend( &self, grid: MapGrid ) -> bool { self.bits( grid ) & BIT_DEADEND != 0 }
+
+	//壁判定: is_wall()系 -> true: 壁である、false: 壁ではない
+	pub fn is_wall( &self, grid: MapGrid ) -> bool
+	{	if ! RANGE_MAP_X.contains( &grid.x ) || ! RANGE_MAP_Y.contains( &grid.y ) { return true }
+		matches!( self.mapobj( grid ), MapObj::Wall )
+	}
+	pub fn is_wall_upper_left   ( &self, grid: MapGrid ) -> bool { self.is_wall( grid + UP   + LEFT  ) }
+	pub fn is_wall_upper_center ( &self, grid: MapGrid ) -> bool { self.is_wall( grid + UP           ) }
+	pub fn is_wall_upper_right  ( &self, grid: MapGrid ) -> bool { self.is_wall( grid + UP   + RIGHT ) }
+	pub fn is_wall_middle_left  ( &self, grid: MapGrid ) -> bool { self.is_wall( grid        + LEFT  ) }
+	pub fn is_wall_middle_right ( &self, grid: MapGrid ) -> bool { self.is_wall( grid        + RIGHT ) }
+	pub fn is_wall_lower_left   ( &self, grid: MapGrid ) -> bool { self.is_wall( grid + DOWN + LEFT  ) }
+	pub fn is_wall_lower_center ( &self, grid: MapGrid ) -> bool { self.is_wall( grid + DOWN         ) }
+	pub fn is_wall_lower_right  ( &self, grid: MapGrid ) -> bool { self.is_wall( grid + DOWN + RIGHT ) }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -133,6 +166,7 @@ impl GameMap
 //向きを表す列挙型
 #[derive(Clone,Copy,PartialEq)]
 pub enum FourSides { Up, Left, Right, Down }
+
 impl FourSides
 {	pub fn is_up   ( &self ) -> bool { matches!( self, FourSides::Up    ) }
 	pub fn is_left ( &self ) -> bool { matches!( self, FourSides::Left  ) }
