@@ -108,6 +108,7 @@ pub struct GameMap
 	bits : [ [ usize ; MAP_HEIGHT ]; MAP_WIDTH ],
 	start: MapGrid,
 	goal : MapGrid,
+	halls: usize,	//広間のマス数
 }
 impl Default for GameMap
 {	fn default() -> Self
@@ -118,6 +119,7 @@ impl Default for GameMap
 			bits : [ [ 0			  ; MAP_HEIGHT ]; MAP_WIDTH ],
 			start: MapGrid::default(),
 			goal : MapGrid::default(),
+			halls: 0,
 		}
 	}
 }
@@ -137,6 +139,9 @@ impl GameMap
 
 	pub fn goal( &self ) -> MapGrid { self.goal }
 	pub fn goal_mut( &mut self ) -> &mut MapGrid { &mut self.goal }
+
+	pub fn halls( &self ) -> usize { self.halls }
+	pub fn halls_mut( &mut self ) -> &mut usize { &mut self.halls }
 
 	//指定されたマスのフラグ操作
 	pub fn is_hall   ( &self, grid: MapGrid ) -> bool { self.bits( grid ) & BIT_HALL    != 0 }

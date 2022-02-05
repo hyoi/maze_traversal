@@ -66,7 +66,7 @@ fn spawn_sprite_chasers
 	mut cmds: Commands,
 )
 {	//追手は複数なのでループする
-	( 0..=10 ).for_each( | _ |		//取り敢えず10個固定
+	( 0..( maze.halls() / 50 ) ).for_each( | _ |
 	{	let mut grid = MapGrid::default();
 		loop
 		{	grid.x = maze.rng().gen_range( RANGE_MAP_INNER_X );

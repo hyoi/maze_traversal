@@ -11,7 +11,8 @@ impl GameMap
 				//マークする
 				if self.judge_halls( grid )
 				{	//広間
-					self.set_flag_hall( grid );					
+					self.set_flag_hall( grid );			
+					*self.halls_mut() += 1;		
 				}
 				else
 				{	//通路
@@ -26,6 +27,7 @@ impl GameMap
 				}
 			}
 		}
+dbg!(self.halls());
 	}
 
 	//広間か(true)、通路か(false)、判断する
