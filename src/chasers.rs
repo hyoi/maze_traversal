@@ -69,8 +69,8 @@ fn spawn_sprite_chasers
 	( 0..=10 ).for_each( | _ |		//取り敢えず10個固定
 	{	let mut grid = MapGrid::default();
 		loop
-		{	grid.x = maze.rng.gen_range( RANGE_MAP_INNER_X );
-			grid.y = maze.rng.gen_range( RANGE_MAP_INNER_Y );
+		{	grid.x = maze.rng().gen_range( RANGE_MAP_INNER_X );
+			grid.y = maze.rng().gen_range( RANGE_MAP_INNER_Y );
 			if maze.is_hall( grid ) { break }
 		}
 		let pixel = grid.into_pixel();

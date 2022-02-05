@@ -19,8 +19,8 @@ impl GameMap
 			if digable_walls.is_empty() { break }
 
 			//複数候補の中からランダムに壊す壁を決め、道にする
-			let grid = digable_walls[ self.rng.gen_range( 0..digable_walls.len() ) ];
-			self.set_mapobj( grid, MapObj::Passage );
+			let grid = digable_walls[ self.rng().gen_range( 0..digable_walls.len() ) ];
+			*self.mapobj_mut( grid ) = MapObj::Passage;
 		}
 	}
 
@@ -30,78 +30,78 @@ impl GameMap
 		if ! self.is_wall( grid ) { return false }
 
 		//下向き凸の削り許可
-		if   self.is_wall_upper_left   ( grid )
-		&&   self.is_wall_upper_center ( grid )
-		&&   self.is_wall_upper_right  ( grid )
-		&& ! self.is_wall_middle_left  ( grid )
-		&& ! self.is_wall_middle_right ( grid )
-		&& ! self.is_wall_lower_left   ( grid )
-		&& ! self.is_wall_lower_center ( grid )
-		&& ! self.is_wall_lower_right  ( grid ) { return true }
+		if   self.is_wall( grid + UP + LEFT )
+		&&   self.is_wall( grid + UP )
+		&&   self.is_wall( grid + UP + RIGHT )
+		&& ! self.is_wall( grid + LEFT )
+		&& ! self.is_wall( grid + RIGHT )
+		&& ! self.is_wall( grid + DOWN + LEFT )
+		&& ! self.is_wall( grid + DOWN )
+		&& ! self.is_wall( grid + DOWN + RIGHT ) { return true }
 
 		//右向き凸の削り許可
-		if   self.is_wall_upper_left   ( grid )
-		&& ! self.is_wall_upper_center ( grid )
-		&& ! self.is_wall_upper_right  ( grid )
-		&&   self.is_wall_middle_left  ( grid )
-		&& ! self.is_wall_middle_right ( grid )
-		&&   self.is_wall_lower_left   ( grid )
-		&& ! self.is_wall_lower_center ( grid )
-		&& ! self.is_wall_lower_right  ( grid ) { return true }
+		if   self.is_wall( grid + UP + LEFT )
+		&& ! self.is_wall( grid + UP )
+		&& ! self.is_wall( grid + UP + RIGHT )
+		&&   self.is_wall( grid + LEFT )
+		&& ! self.is_wall( grid + RIGHT )
+		&&   self.is_wall( grid + DOWN + LEFT )
+		&& ! self.is_wall( grid + DOWN )
+		&& ! self.is_wall( grid + DOWN + RIGHT ) { return true }
 
 		//左向き凸の削り許可
-		if ! self.is_wall_upper_left   ( grid )
-		&& ! self.is_wall_upper_center ( grid )
-		&&   self.is_wall_upper_right  ( grid )
-		&& ! self.is_wall_middle_left  ( grid )
-		&&   self.is_wall_middle_right ( grid )
-		&& ! self.is_wall_lower_left   ( grid )
-		&& ! self.is_wall_lower_center ( grid )
-		&&   self.is_wall_lower_right  ( grid ) { return true }
+		if ! self.is_wall( grid + UP + LEFT )
+		&& ! self.is_wall( grid + UP )
+		&&   self.is_wall( grid + UP + RIGHT )
+		&& ! self.is_wall( grid + LEFT )
+		&&   self.is_wall( grid + RIGHT )
+		&& ! self.is_wall( grid + DOWN + LEFT )
+		&& ! self.is_wall( grid + DOWN )
+		&&   self.is_wall( grid + DOWN + RIGHT ) { return true }
 
 		//上向き凸の削り許可
-		if ! self.is_wall_upper_left   ( grid )
-		&& ! self.is_wall_upper_center ( grid )
-		&& ! self.is_wall_upper_right  ( grid )
-		&& ! self.is_wall_middle_left  ( grid )
-		&& ! self.is_wall_middle_right ( grid )
-		&&   self.is_wall_lower_left   ( grid )
-		&&   self.is_wall_lower_center ( grid )
-		&&   self.is_wall_lower_right  ( grid ) { return true }
+		if ! self.is_wall( grid + UP + LEFT )
+		&& ! self.is_wall( grid + UP )
+		&& ! self.is_wall( grid + UP + RIGHT )
+		&& ! self.is_wall( grid + LEFT )
+		&& ! self.is_wall( grid + RIGHT )
+		&&   self.is_wall( grid + DOWN + LEFT )
+		&&   self.is_wall( grid + DOWN )
+		&&   self.is_wall( grid + DOWN + RIGHT ) { return true }
 
 		//縦の貫通路になる場合はfalse
-		if ! self.is_wall_upper_center ( grid )
-		&& ! self.is_wall_lower_center ( grid ) { return false }
+		if ! self.is_wall( grid + UP )
+		&& ! self.is_wall( grid + DOWN ) { return false }
 
 		//横の貫通路になる場合はfalse
-		if ! self.is_wall_middle_left  ( grid )
-		&& ! self.is_wall_middle_right ( grid ) { return false }
+		if ! self.is_wall( grid + LEFT )
+		&& ! self.is_wall( grid + RIGHT ) { return false }
 
 		//左上が壁でなく、上と左が壁ならfalse
-		if ! self.is_wall_upper_left   ( grid )
-		&&	 self.is_wall_upper_center ( grid )
-		&&	 self.is_wall_middle_left  ( grid ) { return false }
+		if ! self.is_wall( grid + UP + LEFT )
+		&&	 self.is_wall( grid + UP )
+		&&	 self.is_wall( grid + LEFT ) { return false }
 
 		//右上が壁でなく、上と右が壁ならfalse
-		if ! self.is_wall_upper_right  ( grid )
-		&&	 self.is_wall_upper_center ( grid )
-		&&	 self.is_wall_middle_right ( grid ) { return false }
+		if ! self.is_wall( grid + UP + RIGHT )
+		&&	 self.is_wall( grid + UP )
+		&&	 self.is_wall( grid + RIGHT ) { return false }
 
 		//左下が壁でなく、下と左が壁ならfalse
-		if ! self.is_wall_lower_left   ( grid )
-		&&	 self.is_wall_middle_left  ( grid )
-		&&	 self.is_wall_lower_center ( grid ) { return false }
+		if ! self.is_wall( grid + DOWN + LEFT )
+		&&	 self.is_wall( grid + LEFT )
+		&&	 self.is_wall( grid + DOWN ) { return false }
 
 		//右下が壁でなく、下と右が壁ならfalse
-		if ! self.is_wall_lower_right  ( grid )
-		&&	 self.is_wall_middle_right ( grid )
-		&&	 self.is_wall_lower_center ( grid ) { return false }
+		if ! self.is_wall( grid + DOWN + RIGHT )
+		&&	 self.is_wall( grid + RIGHT )
+		&&	 self.is_wall( grid + DOWN ) { return false }
 
 		//上下左右がすべて壁はfalse（掘ると飛び地になる）
-		if	 self.is_wall_upper_center ( grid )
-		&&	 self.is_wall_middle_left  ( grid )
-		&&	 self.is_wall_middle_right ( grid )
-		&&	 self.is_wall_lower_center ( grid ) { return false }
+		if	 self.is_wall( grid + UP )
+		&&	 self.is_wall( grid + LEFT )
+		&&	 self.is_wall( grid + RIGHT )
+		&&	 self.is_wall( grid + DOWN ) { return false }
 
 		//掘削できる壁
 		true

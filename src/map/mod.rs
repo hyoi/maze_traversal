@@ -47,7 +47,7 @@ impl Plugin for PluginMap
 enum SelectMazeType { Random, Type1, Type2, Type3 }
 
 const SELECT_MAZE_TYPE: SelectMazeType = SelectMazeType::Random;
-//const SELECT_MAZE_TYPE: SelectMazeType = SelectMazeType::Type3;
+//const SELECT_MAZE_TYPE: SelectMazeType = SelectMazeType::Type2;
 
 //Sprite
 #[derive(Component)]
@@ -80,15 +80,15 @@ fn generate_new_map
 	if let Some ( mut record ) = o_record { record.stage += 1 };
 
 	//入口を掘る
-	let x = maze.rng.gen_range( RANGE_MAP_INNER_X );
+	let x = maze.rng().gen_range( RANGE_MAP_INNER_X );
 	let grid = MapGrid { x, y: MAP_HEIGHT - 1 };
-	maze.start_xy = grid;
-	maze.set_mapobj( grid	  , MapObj::DeadEnd ); //入口は行き止まり扱い
-	maze.set_mapobj( grid + UP, MapObj::Passage ); //入口直上は無条件で道
+	*maze.start_mut() = grid;
+	*maze.mapobj_mut( grid	    ) = MapObj::DeadEnd; //入口は行き止まり扱い
+	*maze.mapobj_mut( grid + UP ) = MapObj::Passage; //入口直上は無条件で道
 
 	//迷路作成関数を乱数で決め、迷路を掘らせる
 	let maze_type = match SELECT_MAZE_TYPE
-	{	SelectMazeType::Random => maze.rng.gen_range( 0..3 ),
+	{	SelectMazeType::Random => maze.rng().gen_range( 0..3 ),
 		SelectMazeType::Type1  => 0,
 		SelectMazeType::Type2  => 1,
 		SelectMazeType::Type3  => 2,
@@ -107,10 +107,10 @@ fn generate_new_map
 	{	grid.x = x;
 		if ! maze.is_wall( grid ) { exit_x.push( x ) }
 	} );
-	let x = exit_x[ maze.rng.gen_range( 0..exit_x.len() ) ];
+	let x = exit_x[ maze.rng().gen_range( 0..exit_x.len() ) ];
 	grid = MapGrid { x, y: 0 };
-	maze.goal_xy = grid;
-	maze.set_mapobj( grid, MapObj::Goal ( None ) );
+	*maze.goal_mut() = grid;
+	*maze.mapobj_mut( grid ) = MapObj::Goal ( None );
 
 	//迷路の構造解析
 	maze.identify_halls_and_passages();	//広間と通路を識別して袋小路に目印を付ける
@@ -141,7 +141,7 @@ fn spawn_sprite_map
 						.insert( Transform::from_translation( position ).with_rotation( quat ) )
 						.insert( SpriteGoal )
 						.id(); 
-					maze.set_mapobj( grid, MapObj::Goal ( Some ( id ) ) );
+					*maze.mapobj_mut( grid ) = MapObj::Goal ( Some ( id ) );
 				}
 				MapObj::Wall =>
 				{	//壁のストライプを表示する
@@ -161,7 +161,7 @@ fn spawn_sprite_map
 						.insert( Transform::from_translation( Vec3::new( pixel.x, pixel.y, SPRITE_DEPTH_MAZE ) ) )
 						.insert( SpriteCoin )
 						.id();
-					maze.set_mapobj( grid, MapObj::Coin ( Some ( id ), coin ) );
+					*maze.mapobj_mut( grid ) = MapObj::Coin ( Some ( id ), coin );
 				}
 				_ => {}
 			};

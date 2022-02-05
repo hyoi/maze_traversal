@@ -103,62 +103,60 @@ pub enum MapObj
 
 //MAP情報のResource
 pub struct GameMap
-{	pub rng: rand::prelude::StdRng,	//再現性がある乱数を使いたいので
-	map : [ [ MapObj; MAP_HEIGHT ]; MAP_WIDTH ],
-	bits: [ [ usize ; MAP_HEIGHT ]; MAP_WIDTH ],
-	pub start_xy: MapGrid,
-	pub goal_xy : MapGrid,
+{	rng: rand::prelude::StdRng,	//再現性がある乱数を使いたいので
+	map  : [ [ MapObj; MAP_HEIGHT ]; MAP_WIDTH ],
+	bits : [ [ usize ; MAP_HEIGHT ]; MAP_WIDTH ],
+	start: MapGrid,
+	goal : MapGrid,
 }
 impl Default for GameMap
 {	fn default() -> Self
 	{	Self
 		{//	rng: StdRng::seed_from_u64( rand::thread_rng().gen::<u64>() ),	//本番用
 			rng: StdRng::seed_from_u64( 1234567890 ),	//開発用：再現性がある乱数を使いたい場合
-			map : [ [ MapObj::Wall; MAP_HEIGHT ]; MAP_WIDTH ],
-			bits: [ [ 0			  ; MAP_HEIGHT ]; MAP_WIDTH ],
-			start_xy: MapGrid::default(),
-			goal_xy : MapGrid::default(),
+			map  : [ [ MapObj::Wall; MAP_HEIGHT ]; MAP_WIDTH ],
+			bits : [ [ 0			  ; MAP_HEIGHT ]; MAP_WIDTH ],
+			start: MapGrid::default(),
+			goal : MapGrid::default(),
 		}
 	}
 }
 
 impl GameMap
-{	//配列を初期化する
+{	//GameMap構造体のアクセサ
+	pub fn rng( &mut self ) -> &mut rand::prelude::StdRng { &mut self.rng }
+
+	pub fn mapobj( &self, grid: MapGrid ) -> MapObj { self.map [ grid.x ][ grid.y ] }
+	pub fn mapobj_mut( &mut self, grid: MapGrid ) -> &mut MapObj { &mut self.map[ grid.x ][ grid.y ] }
+
+	pub fn bits( &self, grid: MapGrid ) -> usize { self.bits[ grid.x ][ grid.y ] }
+	fn bits_mut( &mut self, grid: MapGrid ) -> &mut usize { &mut self.bits[ grid.x ][ grid.y ] }
+
+	pub fn start( &self ) -> MapGrid { self.start }
+	pub fn start_mut( &mut self ) -> &mut MapGrid { &mut self.start }
+
+	pub fn goal( &self ) -> MapGrid { self.goal }
+	pub fn goal_mut( &mut self ) -> &mut MapGrid { &mut self.goal }
+
+	//指定されたマスのフラグ操作
+	pub fn is_hall   ( &self, grid: MapGrid ) -> bool { self.bits( grid ) & BIT_HALL    != 0 }
+	pub fn is_passage( &self, grid: MapGrid ) -> bool { self.bits( grid ) & BIT_PASSAGE != 0 }
+	pub fn is_deadend( &self, grid: MapGrid ) -> bool { self.bits( grid ) & BIT_DEADEND != 0 }
+	pub fn set_flag_hall   ( &mut self, grid: MapGrid ) { *self.bits_mut( grid ) |= BIT_HALL    }
+	pub fn set_flag_passage( &mut self, grid: MapGrid ) { *self.bits_mut( grid ) |= BIT_PASSAGE }
+	pub fn set_flag_deadend( &mut self, grid: MapGrid ) { *self.bits_mut( grid ) |= BIT_DEADEND }
+
+	//配列を初期化する
 	pub fn clear_map( &mut self )
 	{	self.map .iter_mut().for_each( | x | x.fill( MapObj::Wall ) );
 		self.bits.iter_mut().for_each( | x | x.fill( 0            ) );
 	}
 
-	//配列の値を返す
-	pub fn mapobj( &self, grid: MapGrid ) -> MapObj { self.map [ grid.x ][ grid.y ] }
-	pub fn bits  ( &self, grid: MapGrid ) -> usize  { self.bits[ grid.x ][ grid.y ] }
-
-	//配列の値をセットする
-	pub fn set_mapobj( &mut self, grid: MapGrid, obj : MapObj ) { self.map[ grid.x ][ grid.y ] = obj }
-
-	//指定されたマスのフラグを立てる
-	pub fn set_flag_hall   ( &mut self, grid: MapGrid ) { self.bits[ grid.x ][ grid.y ] |= BIT_HALL    }
-	pub fn set_flag_passage( &mut self, grid: MapGrid ) { self.bits[ grid.x ][ grid.y ] |= BIT_PASSAGE }
-	pub fn set_flag_deadend( &mut self, grid: MapGrid ) { self.bits[ grid.x ][ grid.y ] |= BIT_DEADEND }
-
-	//指定されたマスのフラグを返す
-	pub fn is_hall   ( &self, grid: MapGrid ) -> bool { self.bits( grid ) & BIT_HALL    != 0 }
-	pub fn is_passage( &self, grid: MapGrid ) -> bool { self.bits( grid ) & BIT_PASSAGE != 0 }
-	pub fn is_deadend( &self, grid: MapGrid ) -> bool { self.bits( grid ) & BIT_DEADEND != 0 }
-
-	//壁判定: is_wall()系 -> true: 壁である、false: 壁ではない
+	//壁判定 -> true: 壁である、false: 壁ではない
 	pub fn is_wall( &self, grid: MapGrid ) -> bool
 	{	if ! RANGE_MAP_X.contains( &grid.x ) || ! RANGE_MAP_Y.contains( &grid.y ) { return true }
 		matches!( self.mapobj( grid ), MapObj::Wall )
 	}
-	pub fn is_wall_upper_left   ( &self, grid: MapGrid ) -> bool { self.is_wall( grid + UP   + LEFT  ) }
-	pub fn is_wall_upper_center ( &self, grid: MapGrid ) -> bool { self.is_wall( grid + UP           ) }
-	pub fn is_wall_upper_right  ( &self, grid: MapGrid ) -> bool { self.is_wall( grid + UP   + RIGHT ) }
-	pub fn is_wall_middle_left  ( &self, grid: MapGrid ) -> bool { self.is_wall( grid        + LEFT  ) }
-	pub fn is_wall_middle_right ( &self, grid: MapGrid ) -> bool { self.is_wall( grid        + RIGHT ) }
-	pub fn is_wall_lower_left   ( &self, grid: MapGrid ) -> bool { self.is_wall( grid + DOWN + LEFT  ) }
-	pub fn is_wall_lower_center ( &self, grid: MapGrid ) -> bool { self.is_wall( grid + DOWN         ) }
-	pub fn is_wall_lower_right  ( &self, grid: MapGrid ) -> bool { self.is_wall( grid + DOWN + RIGHT ) }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

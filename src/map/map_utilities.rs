@@ -30,21 +30,21 @@ impl GameMap
 
 	//広間か(true)、通路か(false)、判断する
 	fn judge_halls( &self, grid: MapGrid ) -> bool
-	{	if ! self.is_wall_upper_left  ( grid ) // XX
-		&& ! self.is_wall_upper_center( grid ) // XO
-		&& ! self.is_wall_middle_left ( grid ) { return true }
+	{	if ! self.is_wall( grid + UP   + LEFT  ) // XX
+		&& ! self.is_wall( grid + UP           ) // XO
+		&& ! self.is_wall( grid        + LEFT  ) { return true }
 
-		if ! self.is_wall_upper_right ( grid ) // XX
-		&& ! self.is_wall_upper_center( grid ) // OX
-		&& ! self.is_wall_middle_right( grid ) { return true }
+		if ! self.is_wall( grid + UP   + RIGHT ) // XX
+		&& ! self.is_wall( grid + UP           ) // OX
+		&& ! self.is_wall( grid        + RIGHT ) { return true }
 
-		if ! self.is_wall_middle_left ( grid ) // XO
-		&& ! self.is_wall_lower_left  ( grid ) // XX
-		&& ! self.is_wall_lower_center( grid ) { return true }
+		if ! self.is_wall( grid        + LEFT  ) // XO
+		&& ! self.is_wall( grid + DOWN + LEFT  ) // XX
+		&& ! self.is_wall( grid + DOWN         ) { return true }
 
-		if ! self.is_wall_middle_right( grid ) // OX
-		&& ! self.is_wall_lower_center( grid ) // XX
-		&& ! self.is_wall_lower_right ( grid ) { return true }
+		if ! self.is_wall( grid        + RIGHT ) // OX
+		&& ! self.is_wall( grid + DOWN         ) // XX
+		&& ! self.is_wall( grid + DOWN + RIGHT ) { return true }
 
 		false
 	}
@@ -78,7 +78,7 @@ impl GameMap
 				}
 
 				//袋小路の深さに準じてコインを置く
-				self.set_mapobj( MapGrid{ x, y }, MapObj::Coin ( None, pedometer ) );
+				*self.mapobj_mut( MapGrid{ x, y } ) = MapObj::Coin ( None, pedometer );
 			}
 		}
 	}

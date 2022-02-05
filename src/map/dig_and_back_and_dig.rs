@@ -3,7 +3,7 @@ use super::*;
 impl GameMap
 {	//二型迷路：ランダムに掘り進み、行き止まりは後戻りして掘れる場所を探す。掘り尽くすまで掘りまくる
 	pub fn dig_and_back_and_dig( &mut self )
-	{	let mut grid = self.start_xy;
+	{	let mut grid = self.start();
 		grid.y -= 1; //maze.start_xyの直上(y-1)がトンネル掘りの開始座標
 
 		//トンネルを掘る
@@ -35,13 +35,13 @@ impl GameMap
 				if matches!( backtrack, MapGrid { x: 0, y: 0 } ) { break }
 
 				//現在位置に行き止まり情報を書き込み、後戻りする
-				self.set_mapobj( grid, MapObj::DeadEnd );
+				*self.mapobj_mut( grid ) = MapObj::DeadEnd;
 				grid = backtrack;
 			}
 			else
 			{	//掘れる壁が見つかったので、方向をランダムに決めて、掘る
-				grid = digable_walls[ self.rng.gen_range( 0..digable_walls.len() ) ];
-				self.set_mapobj( grid, MapObj::Passage );
+				grid = digable_walls[ self.rng().gen_range( 0..digable_walls.len() ) ];
+				*self.mapobj_mut( grid ) = MapObj::Passage;
 			}
 		}
 
@@ -52,26 +52,26 @@ impl GameMap
 	//進行方向の壁が掘れるか調べる
 	fn is_digable_wall( &self, grid: MapGrid, four_sides: DxDy ) -> bool
 	{	match four_sides
-		{	UP    if self.is_wall_upper_left   ( grid )
-				  && self.is_wall_upper_center ( grid )	// 壁壁壁
-				  && self.is_wall_upper_right  ( grid )	// 壁Ｘ壁
-				  && self.is_wall_middle_left  ( grid )
-				  && self.is_wall_middle_right ( grid ) => true,
-			LEFT  if self.is_wall_upper_left   ( grid )	// 壁壁
-				  && self.is_wall_upper_center ( grid )	// 壁Ｘ
-				  && self.is_wall_middle_left  ( grid )	// 壁壁
-				  && self.is_wall_lower_left   ( grid )
-				  && self.is_wall_lower_center ( grid ) => true,
-			RIGHT if self.is_wall_upper_center ( grid )	// 壁壁
-				  && self.is_wall_upper_right  ( grid )	// Ｘ壁
-				  && self.is_wall_middle_right ( grid )	// 壁壁
-				  && self.is_wall_lower_center ( grid )
-				  && self.is_wall_lower_right  ( grid ) => true,
-			DOWN  if self.is_wall_middle_left  ( grid )
-				  && self.is_wall_middle_right ( grid )	// 壁Ｘ壁
-				  && self.is_wall_lower_left   ( grid )	// 壁壁壁
-				  && self.is_wall_lower_center ( grid )
-				  && self.is_wall_lower_right  ( grid ) => true,
+		{	UP    if self.is_wall( grid + UP + LEFT	   )
+				  && self.is_wall( grid + UP		   ) // 壁壁壁
+				  && self.is_wall( grid + UP + RIGHT   ) // 壁Ｘ壁
+				  && self.is_wall( grid + LEFT		   )
+				  && self.is_wall( grid + RIGHT		   ) => true,
+			LEFT  if self.is_wall( grid + UP + LEFT	   ) // 壁壁
+				  && self.is_wall( grid + UP		   ) // 壁Ｘ
+				  && self.is_wall( grid + LEFT		   ) // 壁壁
+				  && self.is_wall( grid + DOWN + LEFT  )
+				  && self.is_wall( grid + DOWN		   ) => true,
+			RIGHT if self.is_wall( grid + UP		   ) // 壁壁
+				  && self.is_wall( grid + UP + RIGHT   ) // Ｘ壁
+				  && self.is_wall( grid + RIGHT		   ) // 壁壁
+				  && self.is_wall( grid + DOWN 		   )
+				  && self.is_wall( grid + DOWN + RIGHT ) => true,
+			DOWN  if self.is_wall( grid + LEFT		   )
+				  && self.is_wall( grid + RIGHT		   ) // 壁Ｘ壁
+				  && self.is_wall( grid + DOWN + LEFT  ) // 壁壁壁
+				  && self.is_wall( grid + DOWN		   )
+				  && self.is_wall( grid + DOWN + RIGHT ) => true,
 			_ => { false }
 		}
 	}

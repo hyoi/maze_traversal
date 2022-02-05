@@ -69,7 +69,7 @@ impl Default for Player
 
 //自機のスプライトを初期位置に配置する
 fn spawn_sprite_player( maze: Res<GameMap>, mut cmds: Commands )
-{	let pixel = maze.start_xy.into_pixel();
+{	let pixel = maze.start().into_pixel();
 
 	let triangle = &shapes::RegularPolygon
 	{	sides: 3,
@@ -80,7 +80,7 @@ fn spawn_sprite_player( maze: Res<GameMap>, mut cmds: Commands )
 	let transform = Transform::from_translation( Vec3::new( pixel.x, pixel.y, SPRITE_DEPTH_PLAYER ) );
 
 	cmds.spawn_bundle( GeometryBuilder::build_as( triangle, drawmode, transform ) )
-		.insert( Player { map_xy: maze.start_xy, ..Default::default() } );
+		.insert( Player { map_xy: maze.start(), ..Default::default() } );
 }
 
 //自機のスプライトを移動する
@@ -110,12 +110,12 @@ fn move_sprite_player
 		//ゴールドを拾う
 		if let MapObj::Coin ( Some( id ), coin ) = maze.mapobj( grid )
 		{	if let Some( mut record ) = o_record { record.score += coin }
-			maze.set_mapobj( grid, MapObj::Passage );
+			*maze.mapobj_mut( grid ) = MapObj::Passage;
 			cmds.entity( id ).despawn();
 		}
 
 		//ゴールしたら、Clearへ遷移する
-		if grid == maze.goal_xy
+		if grid == maze.goal()
 		{	if let MapObj::Goal ( Some( id ) ) = maze.mapobj( grid )
 			{	cmds.entity( id ).despawn();
 			}
@@ -132,22 +132,22 @@ fn move_sprite_player
 		//キー入力により自機の向きを変える(スプライトの回転はまだ)
 		if key_left
 		{	player.key_input = FourSides::Left;
-			player.stop = maze.is_wall_middle_left( grid );
+			player.stop = maze.is_wall( grid + LEFT );
 			if ! player.stop { grid.x -= 1 }
 		}
 		else if key_right
 		{	player.key_input = FourSides::Right;
-			player.stop = maze.is_wall_middle_right( grid );
+			player.stop = maze.is_wall( grid + RIGHT );
 			if ! player.stop { grid.x += 1 }
 		}
 		else if key_up
 		{	player.key_input = FourSides::Up;
-			player.stop = maze.is_wall_upper_center( grid );
+			player.stop = maze.is_wall( grid + UP );
 			if ! player.stop { grid.y -= 1 }
 		}
 		else if key_down
 		{	player.key_input = FourSides::Down;
-			player.stop = maze.is_wall_lower_center( grid );
+			player.stop = maze.is_wall( grid + DOWN );
 			if ! player.stop { grid.y += 1 }
 		}
 		else
