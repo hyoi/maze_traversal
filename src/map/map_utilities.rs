@@ -27,7 +27,6 @@ impl GameMap
 				}
 			}
 		}
-dbg!(self.halls());
 	}
 
 	//広間か(true)、通路か(false)、判断する
