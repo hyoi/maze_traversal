@@ -6,20 +6,36 @@ impl Plugin for PluginChaser
 {	fn build( &self, app: &mut App )
 	{	app
 		//------------------------------------------------------------------------------------------
-		.add_system_set										// ＜GameState::Start＞
-		(	SystemSet::on_exit( GameState::Start )			// ＜on_exit()＞
-				.with_system( spawn_sprite_chasers )		// マップ生成後に追手を配置
+		.add_system_set												// ＜GameState::Start＞
+		(	SystemSet::on_exit( GameState::Start )					// ＜on_exit()＞
+				.with_system( spawn_sprite_chasers )				// マップ生成後に追手を配置
 		)
-		//------------------------------------------------------------------------------------------
-		.add_system_set										// ＜GameState::Play＞
-		(	SystemSet::on_update( GameState::Play )			// ＜on_update()＞
-			.with_system( move_sprite_chasers )				// 追手の移動
-			.with_system( rotate_sprite_chasers )			// 追手の回転
+		//==========================================================================================
+		.add_system_set												// ＜GameState::Play＞
+		(	SystemSet::on_update( GameState::Play )					// ＜on_update()＞
+				.with_system( move_sprite_chasers )					// 追手の移動
+				.with_system( rotate_sprite_chasers )				// 追手の回転
 		)
-		//------------------------------------------------------------------------------------------
-		.add_system_set										// ＜GameState::Clear＞
-		(	SystemSet::on_exit( GameState::Clear )			// ＜on_exit()＞
-				.with_system( despawn_entity::<Chaser> )	// 追手を削除
+		//==========================================================================================
+		.add_system_set												// ＜GameState::Clear＞
+		(	SystemSet::on_exit( GameState::Clear )					// ＜on_exit()＞
+				.with_system( despawn_entity::<Chaser> )			// 追手を削除
+		)
+		//==========================================================================================
+		.add_system_set												// ＜GameState::Over＞
+		(	SystemSet::on_enter( GameState::Over )					// ＜on_enter()＞
+				.with_system( show_ui::<MessageOver> )				// GameOverメッセージを表示する
+		)
+		.add_system_set												// ＜GameState::Over＞
+		(	SystemSet::on_update( GameState::Over )					// ＜on_update()＞
+				.with_system( countdown_to_start::<MessageOver> )	// CD完了⇒GameState::Startへ
+		)
+		.add_system_set												// ＜GameState::Over＞
+		(	SystemSet::on_exit( GameState::Over )					// ＜on_exit()＞
+				.with_system( despawn_entity::<Player> )			// 自機を削除
+				.with_system( despawn_entity::<Chaser> )			// 追手を削除
+				.with_system( hide_ui::<MessageOver> )				// GAmeOverメッセージを隠す
+				.with_system( init_record )							// 初期化
 		)
 		//------------------------------------------------------------------------------------------
 		;
@@ -34,11 +50,9 @@ const CHASER_COLOR: Color = Color::RED;
 
 //移動ウェイト
 const CHASER_WAIT   : f32 = 0.5;
-//const CHASER_ACCEL: f32 = 0.4; //スピードアップの割増
 
 //スプライトの動きを滑らかにするための中割係数
 const CHASER_MOVE_COEF  : f32 = PIXEL_PER_GRID / CHASER_WAIT;
-//const CHASER_ROTATE_COEF: f32 = 90. / CHASER_WAIT;
 
 //Default
 impl Default for Chaser
@@ -92,6 +106,7 @@ fn move_sprite_chasers
 (	mut q_chasers: Query<( &mut Chaser, &mut Transform )>,
 	q_player: Query< &Player >,
 	maze: Res<GameMap>,
+	mut record: ResMut<Record>,
 	mut state: ResMut<State<GameState>>,
 	time: Res<Time>,
 )
@@ -111,10 +126,13 @@ fn move_sprite_chasers
 			position.y = pixel.y;
 			chaser.stop = true;		//一旦 停止フラグを立てる
 
-			//自機と重なったらOverへ（暫定処理）
+			//自機と重なったらHPを減らし、ゼロになったらOverへ（暫定処理）
 			if grid == player.map_xy
-			{	let _ = state.overwrite_set( GameState::Over );
-				return;
+			{	record.hp -= 10.0;
+				if record.hp <= 0.0
+				{	let _ = state.overwrite_set( GameState::Over );
+					return;
+				}
 			}
 
 			//次の移動
@@ -139,12 +157,12 @@ fn move_sprite_chasers
 
 			if flag_chase
 			{	//追跡モード
-				dbg!(1);
+//				dbg!(1);
 				chaser.wait.reset();	//ウェイトをリセットする
 			}
 			else if maze.is_passage( grid )
 			{	//通路モード
-				dbg!(2);
+//				dbg!(2);
 				chaser.wait.reset();	//ウェイトをリセットする
 			}
 			else
@@ -200,5 +218,10 @@ fn rotate_sprite_chasers
 	//回転させる
 	q.for_each_mut( | mut transform | transform.rotate( quat ) );
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//GameOverのon_exit()でRecordを初期化する
+fn init_record( mut record: ResMut<Record> ) { *record = Record::default(); }
 
 //End of code.

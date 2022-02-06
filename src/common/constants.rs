@@ -45,12 +45,20 @@ pub const MESSAGE_PAUSE: [ MessageSect; 1 ] =
 [	( "P A U S E", FONT_ORBITRON_BLACK, PIXEL_PER_GRID * 5.0, Color::SILVER ),
 ];
 
-#[derive(Component)]
+#[derive(Component,Debug)]
 pub struct MessageClear;
 pub const MESSAGE_CLEAR: [ MessageSect; 3 ] =
 [	( "C L E A R !!\n"   , FONT_ORBITRON_BLACK, PIXEL_PER_GRID * 5.0, Color::GOLD  ),
 	( "Next floor...\n\n", FONT_ORBITRON_BLACK, PIXEL_PER_GRID * 2.0, Color::WHITE ),
 	( ""                 , FONT_ORBITRON_BLACK, PIXEL_PER_GRID * 4.0, Color::WHITE ),
+];
+
+#[derive(Component,Debug)]
+pub struct MessageOver;
+pub const MESSAGE_OVER: [ MessageSect; 3 ] =
+[	( "GAME OVER\n", FONT_REGGAEONE_REGULAR, PIXEL_PER_GRID * 5.0, Color::RED ),
+	( ""           , FONT_REGGAEONE_REGULAR, PIXEL_PER_GRID * 4.0, Color::RED ),
+	( ""           , FONT_REGGAEONE_REGULAR, PIXEL_PER_GRID * 4.0, Color::RED ),
 ];
 
 #[derive(Component)]
@@ -130,7 +138,7 @@ pub const BIT_DEADEND: usize = 0b0100;
 pub const SPRITE_DEPTH_CHASER: f32 = 30.0;	//追手
 pub const SPRITE_DEPTH_PLAYER: f32 = 20.0;	//自機
 pub const SPRITE_DEPTH_MAZE  : f32 = 10.0;	//壁、コイン etc
-pub const SPRITE_DEPTH_DEBUG : f32 =  5.0;	//広間
+//pub const SPRITE_DEPTH_DEBUG : f32 =  5.0;	//広間
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 

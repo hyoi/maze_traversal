@@ -155,6 +155,7 @@ impl GameMap
 	pub fn clear_map( &mut self )
 	{	self.map .iter_mut().for_each( | x | x.fill( MapObj::Wall ) );
 		self.bits.iter_mut().for_each( | x | x.fill( 0            ) );
+		self.halls= 0;
 	}
 
 	//壁判定 -> true: 壁である、false: 壁ではない

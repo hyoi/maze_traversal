@@ -29,9 +29,11 @@ fn spawn_text_ui_message( mut cmds: Commands, asset_svr: Res<AssetServer> )
 {	//中央に表示するtext
 	let mut pause_text = text_ui( &MESSAGE_PAUSE, &asset_svr );
 	let mut clear_text = text_ui( &MESSAGE_CLEAR, &asset_svr );
+	let mut over_text  = text_ui( &MESSAGE_OVER , &asset_svr );
 	let mut event_text = text_ui( &MESSAGE_EVENT, &asset_svr );
 	pause_text.visibility.is_visible = false;
 	clear_text.visibility.is_visible = false;
+	over_text.visibility.is_visible  = false;
 	event_text.visibility.is_visible = false;
 
 	//上端・下端に表示するtext
@@ -85,6 +87,7 @@ fn spawn_text_ui_message( mut cmds: Commands, asset_svr: Res<AssetServer> )
 	cmds.spawn_bundle( center_frame ).with_children( | cmds |
 	{	cmds.spawn_bundle( pause_text ).insert( MessagePause );
 		cmds.spawn_bundle( clear_text ).insert( MessageClear );
+		cmds.spawn_bundle( over_text  ).insert( MessageOver  );
 		cmds.spawn_bundle( event_text ).insert( MessageEvent );
 
 		cmds.spawn_bundle( upper_frame ).with_children( | cmds |

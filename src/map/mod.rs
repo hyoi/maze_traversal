@@ -31,6 +31,15 @@ impl Plugin for PluginMap
 		.add_system_set											// ＜GameState::Clear＞
 		(	SystemSet::on_exit( GameState::Clear )				// ＜on_exit()＞
 				.with_system( despawn_entity::<SpriteWall> )	// マップを削除(壁)
+				.with_system( despawn_entity::<SpriteGoal> )	// マップを削除(ゴール)
+				.with_system( despawn_entity::<SpriteCoin> )	// マップを削除(コイン)
+				.with_system( despawn_entity::<DebugSprite> )	// マップを削除(デバッグ用)
+		)
+		//==========================================================================================
+		.add_system_set											// ＜GameState::Over＞
+		(	SystemSet::on_exit( GameState::Over )				// ＜on_exit()＞
+				.with_system( despawn_entity::<SpriteWall> )	// マップを削除(壁)
+				.with_system( despawn_entity::<SpriteGoal> )	// マップを削除(ゴール)
 				.with_system( despawn_entity::<SpriteCoin> )	// マップを削除(コイン)
 				.with_system( despawn_entity::<DebugSprite> )	// マップを削除(デバッグ用)
 		)
@@ -65,7 +74,7 @@ const GOAL_COLOR: Color = Color::YELLOW;
 
 #[derive(Component)]
 struct DebugSprite;
-const DEBUG_PIXEL: f32 = PIXEL_PER_GRID;
+//const DEBUG_PIXEL: f32 = PIXEL_PER_GRID;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -167,13 +176,13 @@ fn spawn_sprite_map
 			};
 
 			//デバッグ用に広間のスプライトを表示する
-			if maze.is_hall( grid )
-			{	let custom_size = Some( Vec2::new( DEBUG_PIXEL, DEBUG_PIXEL ) * 0.9 );
-				cmds.spawn_bundle( SpriteBundle::default() )
-					.insert( Sprite { color: Color::INDIGO, custom_size, ..Default::default() } )
-					.insert( Transform::from_translation( Vec3::new( pixel.x, pixel.y, SPRITE_DEPTH_DEBUG ) ) )
-					.insert( DebugSprite );
-			}
+			// if maze.is_hall( grid )
+			// {	let custom_size = Some( Vec2::new( DEBUG_PIXEL, DEBUG_PIXEL ) * 0.9 );
+			// 	cmds.spawn_bundle( SpriteBundle::default() )
+			// 		.insert( Sprite { color: Color::INDIGO, custom_size, ..Default::default() } )
+			// 		.insert( Transform::from_translation( Vec3::new( pixel.x, pixel.y, SPRITE_DEPTH_DEBUG ) ) )
+			// 		.insert( DebugSprite );
+			// }
 		}
 	}
 }

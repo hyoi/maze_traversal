@@ -9,31 +9,36 @@ impl Plugin for PluginPlayer
 {	fn build( &self, app: &mut App )
 	{	app
 		//------------------------------------------------------------------------------------------
-		.add_plugin( ShapePlugin )								// bevy_prototype_lyon
-		.init_resource::<Record>()								// スコア等のResource
+		.add_plugin( ShapePlugin )									// bevy_prototype_lyon
+		.init_resource::<Record>()									// スコア等のResource
 		//==========================================================================================
-		.add_system_set											// ＜GameState::Start＞
-		(	SystemSet::on_exit( GameState::Start )				// ＜on_exit()＞
-				.with_system( spawn_sprite_player )				// マップ生成後に自機を配置
-		)
-		//==========================================================================================
-		.add_system_set											// ＜GameState::Play＞
-		(	SystemSet::on_update( GameState::Play )				// ＜on_update()＞
-				.with_system( move_sprite_player )				// 自機の移動、ゴール⇒GameState::Clearへ
+		.add_system_set												// ＜GameState::Start＞
+		(	SystemSet::on_exit( GameState::Start )					// ＜on_exit()＞
+				.with_system( spawn_sprite_player )					// マップ生成後に自機を配置
 		)
 		//==========================================================================================
-		.add_system_set											// ＜GameState::Clear＞
-		(	SystemSet::on_enter( GameState::Clear )				// ＜on_enter()＞
-				.with_system( show_ui::<MessageClear> )			// CLEARメッセージを表示する
+		.add_system_set												// ＜GameState::Play＞
+		(	SystemSet::on_update( GameState::Play )					// ＜on_update()＞
+				.with_system( move_sprite_player )					// 自機の移動、ゴール⇒GameState::Clearへ
 		)
-		.add_system_set											// ＜GameState::Clear＞
-		(	SystemSet::on_update( GameState::Clear )			// ＜on_update()＞
-				.with_system( change_state_after_countdown )	// CD完了⇒GameState::Startへ
+		//==========================================================================================
+		.add_system_set												// ＜GameState::Clear＞
+		(	SystemSet::on_enter( GameState::Clear )					// ＜on_enter()＞
+				.with_system( show_ui::<MessageClear> )				// CLEARメッセージを表示する
 		)
-		.add_system_set											// ＜GameState::Clear＞
-		(	SystemSet::on_exit( GameState::Clear )				// ＜on_exit()＞
-				.with_system( despawn_entity::<Player> )		// 自機を削除
-				.with_system( hide_ui::<MessageClear> )			// CLEARメッセージを隠す
+		.add_system_set												// ＜GameState::Clear＞
+		(	SystemSet::on_update( GameState::Clear )				// ＜on_update()＞
+				.with_system( countdown_to_start::<MessageClear> )	// CD完了⇒GameState::Startへ
+		)
+		.add_system_set												// ＜GameState::Clear＞
+		(	SystemSet::on_exit( GameState::Clear )					// ＜on_exit()＞
+				.with_system( despawn_entity::<Player> )			// 自機を削除
+				.with_system( hide_ui::<MessageClear> )				// CLEARメッセージを隠す
+		)
+		//==========================================================================================
+		.add_system_set												// ＜GameState::Over＞
+		(	SystemSet::on_exit( GameState::Over )					// ＜on_exit()＞
+				.with_system( despawn_entity::<Player> )			// 自機を削除
 		)
 		//------------------------------------------------------------------------------------------
 		;
@@ -204,31 +209,6 @@ fn rotate_player_sprite( player: &Player, transform: &mut Mut<Transform> )
 
 	let quat = Quat::from_rotation_z( angle.to_radians() );
 	transform.rotate( quat );
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-//カウントダウンの後、Startへ遷移
-fn change_state_after_countdown
-(	mut q: Query<&mut Text, With<MessageClear>>,
-	mut state: ResMut<State<GameState>>,
-	time: Res<Time>,
-	( mut count, mut timer ): ( Local<i32>, Local<Timer> ),
-)
-{	if let Ok( mut ui ) = q.get_single_mut()
-	{	if *count <= 0									//カウンターが未初期化か？
-		{	*timer = Timer::from_seconds( 1.0, false );	//1秒タイマーセット
-			*count = 6;									//カウント数の初期化
-		}
-		else if timer.tick( time.delta() ).finished()	//1秒経過したら
-		{	timer.reset();								//タイマー再セット
-			*count -= 1;								//カウントダウン
-
-			//カウントダウンが終わったら、Startへ遷移する
-			if *count <= 0 { let _ = state.overwrite_set( GameState::Start ); }
-		}
-		ui.sections[ 2 ].value = ( *count - 1 ).max( 0 ).to_string();
-	}
 }
 
 //End of code.

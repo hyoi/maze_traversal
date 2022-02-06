@@ -21,6 +21,29 @@ pub fn hide_ui<T: Component>( mut q: Query<&mut Visibility, With<T>> )
 {	let _ = q.get_single_mut().map( | mut ui | ui.is_visible = false );
 }
 
+//カウントダウンの後、Startへ遷移
+pub fn countdown_to_start<T: Component>
+(	mut q: Query<&mut Text, With<T>>,
+	mut state: ResMut<State<GameState>>,
+	time: Res<Time>,
+	( mut count, mut timer ): ( Local<i32>, Local<Timer> ),
+)
+{	if let Ok( mut ui ) = q.get_single_mut()
+	{	if *count <= 0									//カウンターが未初期化か？
+		{	*timer = Timer::from_seconds( 1.0, false );	//1秒タイマーセット
+			*count = 6;									//カウント数の初期化
+		}
+		else if timer.tick( time.delta() ).finished()	//1秒経過したら
+		{	timer.reset();								//タイマー再セット
+			*count -= 1;								//カウントダウン
+
+			//カウントダウンが終わったら、Startへ遷移する
+			if *count <= 0 { let _ = state.overwrite_set( GameState::Start ); }
+		}
+		ui.sections[ 2 ].value = ( *count - 1 ).max( 0 ).to_string();
+	}
+}
+
 //[Alt]+[Enter]でウィンドウとフルスクリーンを切り替える
 #[cfg(not(target_arch = "wasm32"))]
 pub fn toggle_window_mode( inkey: Res<Input<KeyCode>>, mut window: ResMut<Windows> )
