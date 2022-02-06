@@ -1,35 +1,43 @@
 Note: Japanese text only.
 
 # 迷路をひたすら進むだけ: MazeTraversal
-題名通り、ただただ進むだけで～す (^_^;) 。  
+題名通り、ただひたすら進むだけです。  
 乱数で迷路を作ってみたかったのです。  
-▲を操って、出口（◆がくるくるしてるとこ）を目指してください。
-## 操作方法
-カーソルキーで上下左右に移動。（使い道はないけどEscで一時停止）。   
-Consoleの「Dark mode」のチェックを外すと迷路の全貌が見えます。  
-Consoleで迷路が隠れて邪魔な場合、マウスで移動してください。  
-Alt＋Enterでフルスクリーンとウインドウモード切替（Not WASM版）。  
+▲を操って出口（上端で虹色の◆がくるくるしてる）を目指してください。  
+赤い障害物に触るとHPがへ（ることがあ）ります。  
+‥‥当たり判定がアレなので全然減りませんが (^_^;) 。HPゼロでゲームオーバー。  
+コインは拾っても拾わなくてもOKです。気分に合わせてどうぞ。
 ## WASM版
 https://hyoi.github.io/maze_traversal/
-## Rustのコンパイル版
-[bevy_webgl2_app_template](https://github.com/mrk-its/bevy_webgl2_app_template)をお借りしたので、cargo-makeを使います。   
+## 操作方法
+`⇧` `⇩` `⇦` `⇨` キーで上下左右に移動。   
+`Esc`キーで一時停止(Pause‥‥使い道ないけど)。   
+`Alt`＋`Enter`でフルスクリーンとウインドウモード切替（デスクトップアプリの場合）。
+## コンパイル方法
+デスクトップアプリにするなら `cargo run`でOK。
 ```
-cargo make --profile release run    
+cargo run --release    
 ```
-WASM版の場合は、
+WASMの場合は、bevy 0.6 から bevy_webgl2 に頼らなくても良くなりました。
 ```
-cargo make --profile release serve
+cargo build --release --target wasm32-unknown-unknown
+wasm-bindgen --out-dir ./target --target web --no-typescript ./target/wasm32-unknown-unknown/release/maze_traversal.wasm
 ```
-※事前にRustのtargetの追加とか必要です、たぶんきっとおそらく
+※`wasm-bindgen`コマンドの各ディレクトリーは作業環境に合わせてください。   
+※WASMのコンパイルには事前にRustのtargetの追加とwasm-bindgenのインストールが必要です。たぶんきっとおそらく。  
+```
+rustup target install wasm32-unknown-unknown
+cargo install -f wasm-bindgen-cli
+```
+　[Unofficial Bevy Cheat Book - 8.4. Browser (WebAssembly)](https://bevy-cheatbook.github.io/platforms/wasm.html)をご参考に。
 ## お世話になりました
 - [bevy](https://bevyengine.org/)と[その仲間たち](https://crates.io/search?q=bevy)
-  - [bevy_webgl2_app_template](https://github.com/mrk-its/bevy_webgl2_app_template)
   - [bevy_prototype_lyon](https://github.com/Nilirad/bevy_prototype_lyon/)
-  - [bevy_egui](https://github.com/mvlabat/bevy_egui)
   - [Unofficial Bevy Cheat Book](https://bevy-cheatbook.github.io/)
 - [Google Fonts](https://fonts.google.com/)
   - [Orbitron](https://fonts.google.com/specimen/Orbitron)
   - [Reggae One](https://fonts.google.com/specimen/Reggae+One?subset=japanese)
-
 ## 宿題
-- 宝箱とかコボルトとか、配置したらRPGにできそう…
+- 障害物が追いかけてくるようにしたい。
+- 追いつかれたら、RPGっぽい戦闘イベントにしたい。
+- 当たり判定が手抜きすぎなので直す。いくら何でもヒドイ。
