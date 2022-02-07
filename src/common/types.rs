@@ -183,8 +183,8 @@ impl FourSides
 //自機のComponent
 #[derive(Component)]
 pub struct Player
-{	pub map_xy   : MapGrid,
-	pub direction: FourSides,
+{	pub grid: MapGrid,
+	pub side: FourSides,
 	pub key_input: FourSides,
 	pub wait: Timer,
 	pub stop: bool,
@@ -193,15 +193,15 @@ pub struct Player
 //追手のComponent
 #[derive(Component)]
 pub struct Chaser
-{	pub map_xy: MapGrid,
+{	pub grid: MapGrid,
 	pub pixel_xy: Pixel,
 	pub pixel_xy_old: Pixel,
-	pub direction: FourSides,
+	pub side: FourSides,
 	pub wait: Timer,
 	pub wandering: Timer,
 	pub stop: bool,
-	pub collision: bool,
-	pub speedup: f32,
+	// pub collision: bool,
+	// pub speedup: f32,
 }
 
 //End of code.

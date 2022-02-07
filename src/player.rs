@@ -61,8 +61,8 @@ const PLAYER_MOVE_COEF: f32 = PIXEL_PER_GRID / PLAYER_WAIT;
 impl Default for Player
 {	fn default() -> Self
 	{	Self
-		{	map_xy   : MapGrid::default(),
-			direction: FourSides::Up,
+		{	grid: MapGrid::default(),
+			side: FourSides::Up,
 			key_input: FourSides::Up,
 			wait: Timer::from_seconds( PLAYER_WAIT, false ),
 			stop: true,
@@ -85,7 +85,7 @@ fn spawn_sprite_player( maze: Res<GameMap>, mut cmds: Commands )
 	let transform = Transform::from_translation( Vec3::new( pixel.x, pixel.y, SPRITE_DEPTH_PLAYER ) );
 
 	cmds.spawn_bundle( GeometryBuilder::build_as( triangle, drawmode, transform ) )
-		.insert( Player { map_xy: maze.start(), ..Default::default() } );
+		.insert( Player { grid: maze.start(), ..Default::default() } );
 }
 
 //自機のスプライトを移動する
@@ -100,16 +100,16 @@ fn move_sprite_player
 
 	if player.wait.tick( time_delta ).finished()
 	{	//スプライトの表示位置をグリッドに合わせて更新する
-		let mut grid = player.map_xy;
+		let mut grid = player.grid;
 		let pixel = grid.into_pixel();
 		let position = &mut transform.translation;
 		position.x = pixel.x;
 		position.y = pixel.y;
 
 		//自機のの表示向きを更新する
-		if player.direction != player.key_input
+		if player.side != player.key_input
 		{	rotate_player_sprite( &player, &mut transform );
-			player.direction = player.key_input;
+			player.side = player.key_input;
 		}
 
 		//ゴールドを拾う
@@ -158,7 +158,7 @@ fn move_sprite_player
 		else
 		{	player.stop = true
 		}
-		player.map_xy = grid;
+		player.grid = grid;
 
 		//ウェイトをリセットする
 		player.wait.reset();
@@ -167,7 +167,7 @@ fn move_sprite_player
 	{	//スプライトを滑らかに移動させるための中割アニメーション
 		let delta = PLAYER_MOVE_COEF * time_delta.as_secs_f32();
 		let position = &mut transform.translation;
-		match player.direction
+		match player.side
 		{	FourSides::Up    => position.y += delta,
 			FourSides::Left  => position.x -= delta,
 			FourSides::Right => position.x += delta,
@@ -175,16 +175,16 @@ fn move_sprite_player
 		}
 
 		//自機のの表示向きを更新する
-		if player.direction != player.key_input
+		if player.side != player.key_input
 		{	rotate_player_sprite( &player, &mut transform );
-			player.direction = player.key_input;
+			player.side = player.key_input;
 		}
 	}
 }
 
 //現在の自機の向きとキー入力から角度の差分を求めて、自機を回転させる
 fn rotate_player_sprite( player: &Player, transform: &mut Mut<Transform> )
-{	let angle: f32 = match player.direction
+{	let angle: f32 = match player.side
 	{	FourSides::Up =>
 		{	if      player.key_input.is_left()  {  90.0 }
 			else if player.key_input.is_right() { -90.0 }

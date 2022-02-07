@@ -74,7 +74,7 @@ const GOAL_COLOR: Color = Color::YELLOW;
 
 #[derive(Component)]
 struct DebugSprite;
-//const DEBUG_PIXEL: f32 = PIXEL_PER_GRID;
+// const DEBUG_PIXEL: f32 = PIXEL_PER_GRID;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
