@@ -74,7 +74,7 @@ const GOAL_COLOR: Color = Color::YELLOW;
 
 #[derive(Component)]
 struct DebugSprite;
-const DEBUG_PIXEL: f32 = PIXEL_PER_GRID;
+// const DEBUG_PIXEL: f32 = PIXEL_PER_GRID;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -176,13 +176,13 @@ fn spawn_sprite_map
 			};
 
 			//デバッグ用に広間のスプライトを表示する
-			if maze.is_hall( grid )
-			{	let custom_size = Some( Vec2::new( DEBUG_PIXEL, DEBUG_PIXEL ) * 0.9 );
-				cmds.spawn_bundle( SpriteBundle::default() )
-					.insert( Sprite { color: Color::INDIGO, custom_size, ..Default::default() } )
-					.insert( Transform::from_translation( Vec3::new( pixel.x, pixel.y, SPRITE_DEPTH_DEBUG ) ) )
-					.insert( DebugSprite );
-			}
+			// if maze.is_hall( grid )
+			// {	let custom_size = Some( Vec2::new( DEBUG_PIXEL, DEBUG_PIXEL ) * 0.9 );
+			// 	cmds.spawn_bundle( SpriteBundle::default() )
+			// 		.insert( Sprite { color: Color::INDIGO, custom_size, ..Default::default() } )
+			// 		.insert( Transform::from_translation( Vec3::new( pixel.x, pixel.y, SPRITE_DEPTH_DEBUG ) ) )
+			// 		.insert( DebugSprite );
+			// }
 		}
 	}
 }
