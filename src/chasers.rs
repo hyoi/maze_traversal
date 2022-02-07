@@ -59,15 +59,15 @@ impl Default for Chaser
 {	fn default() -> Self
 	{	let mut rng = rand::thread_rng();
 		Self
-		{	map_xy: MapGrid::default(),
+		{	grid: MapGrid::default(),
 			pixel_xy: Pixel::default(),
 			pixel_xy_old: Pixel::default(),
-			direction: FourSides::Up,
+			side: FourSides::Up,
 			wait: Timer::from_seconds( CHASER_WAIT, false ),
 			wandering: Timer::from_seconds( rng.gen_range( 0.5..3.5 ), false ),
 			stop: true,
-			collision: false,
-			speedup: 1.0,
+			// collision: false,
+			// speedup: 1.0,
 		}
 	}
 }
@@ -97,7 +97,7 @@ fn spawn_sprite_chasers
 		cmds.spawn_bundle( SpriteBundle::default() )
 			.insert( Sprite { color: CHASER_COLOR, custom_size, ..Default::default() } )
 			.insert( Transform::from_translation( position ).with_rotation( quat ) )
-			.insert( Chaser { map_xy: grid, pixel_xy: pixel, ..Default::default() } );
+			.insert( Chaser { grid, pixel_xy: pixel, ..Default::default() } );
 	} );
 }
 
@@ -116,24 +116,25 @@ fn move_sprite_chasers
 
 	//追手は複数なのでQuery結果をループして処理する
 	for ( mut chaser, mut transform ) in q_chasers.iter_mut()
-	{	if chaser.wait.tick( time_delta ).finished()
+	{	let grid = chaser.grid;
+
+		//自機と重なったらHPを減らし、ゼロになったらOverへ（暫定処理）
+		if grid == player.grid
+		{	record.hp -= 1.0;
+			if record.hp <= 0.0
+			{	let _ = state.overwrite_set( GameState::Over );
+				return;
+			}
+		}
+
+		if chaser.wait.tick( time_delta ).finished()
 		{	//スプライトの表示位置をグリッドに合わせて更新する
-			let grid = chaser.map_xy;
 			let pixel = grid.into_pixel();
 
 			let position = &mut transform.translation;
 			position.x = pixel.x;
 			position.y = pixel.y;
 			chaser.stop = true;		//一旦 停止フラグを立てる
-
-			//自機と重なったらHPを減らし、ゼロになったらOverへ（暫定処理）
-			if grid == player.map_xy
-			{	record.hp -= 10.0;
-				if record.hp <= 0.0
-				{	let _ = state.overwrite_set( GameState::Over );
-					return;
-				}
-			}
 
 			//次の移動
 			//・追跡モード(視線が切れていない場合Playerの方へ。広間なら斜め移動あり)
@@ -142,9 +143,9 @@ fn move_sprite_chasers
 
 			//視線が通っているか？
 			let mut flag_chase = false;
-			if grid.x == player.map_xy.x || grid.y == player.map_xy.y
-			{	let px = player.map_xy.x;
-				let py = player.map_xy.y;
+			if grid.x == player.grid.x || grid.y == player.grid.y
+			{	let px = player.grid.x;
+				let py = player.grid.y;
 				let range_x = if grid.x < px { grid.x..px } else { px..grid.x };
 				let range_y = if grid.y < py { grid.y..py } else { py..grid.y };
 				let mut flag_x = false;
@@ -170,21 +171,21 @@ fn move_sprite_chasers
 				if ! chaser.wandering.tick( time_delta ).finished() { continue }
 
 				//四方でホールのマスを探す
-				let mut four_sides = Vec::new();
+				let mut next = Vec::new();
 				for dxdy in FOUR_SIDES
-				{	let next = grid + dxdy;
-					if maze.is_hall( next )
-					{	if matches!( dxdy, UP    ) { four_sides.push( ( next, FourSides::Up    ) ) }
-						if matches!( dxdy, LEFT  ) { four_sides.push( ( next, FourSides::Left  ) ) }
-						if matches!( dxdy, RIGHT ) { four_sides.push( ( next, FourSides::Right ) ) }
-						if matches!( dxdy, DOWN  ) { four_sides.push( ( next, FourSides::Down  ) ) }
+				{	let next_grid = grid + dxdy;
+					if maze.is_hall( next_grid )
+					{	if matches!( dxdy, UP    ) { next.push( ( next_grid, FourSides::Up    ) ) }
+						if matches!( dxdy, LEFT  ) { next.push( ( next_grid, FourSides::Left  ) ) }
+						if matches!( dxdy, RIGHT ) { next.push( ( next_grid, FourSides::Right ) ) }
+						if matches!( dxdy, DOWN  ) { next.push( ( next_grid, FourSides::Down  ) ) }
 					}
 				}
 
 				//ランダムに移動する
-				let x = rng.gen_range( 0..four_sides.len() );
-				chaser.map_xy    = four_sides[ x ].0;
-				chaser.direction = four_sides[ x ].1;
+				let x = rng.gen_range( 0..next.len() );
+				chaser.grid = next[ x ].0;
+				chaser.side = next[ x ].1;
 				chaser.stop = false;		//停止フラグを倒す
 				chaser.wait.reset();		//ウェイトをリセットする
 				chaser.wandering.reset();	//ウェイトをリセットする
@@ -196,7 +197,7 @@ fn move_sprite_chasers
 			//スプライトを滑らかに移動させるための中割アニメーション
 			let delta = CHASER_MOVE_COEF * time_delta.as_secs_f32();
 			let position = &mut transform.translation;
-			match chaser.direction
+			match chaser.side
 			{	FourSides::Up    => position.y += delta,
 				FourSides::Left  => position.x -= delta,
 				FourSides::Right => position.x += delta,
