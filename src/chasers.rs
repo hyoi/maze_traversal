@@ -116,10 +116,8 @@ fn move_sprite_chasers
 
 	//追手は複数なのでQuery結果をループして処理する
 	for ( mut chaser, mut transform ) in q_chasers.iter_mut()
-	{	let grid = chaser.grid;
-
-		//自機と重なったらHPを減らし、ゼロになったらOverへ（暫定処理）
-		if grid == player.grid
+	{	//自機と重なったらHPを減らし、ゼロになったらOverへ（暫定処理）
+		if chaser.grid == player.grid
 		{	record.hp -= 1.0;
 			if record.hp <= 0.0
 			{	let _ = state.overwrite_set( GameState::Over );
@@ -129,6 +127,7 @@ fn move_sprite_chasers
 
 		if chaser.wait.tick( time_delta ).finished()
 		{	//スプライトの表示位置をグリッドに合わせて更新する
+			let grid = chaser.grid;
 			let pixel = grid.into_pixel();
 
 			let position = &mut transform.translation;
