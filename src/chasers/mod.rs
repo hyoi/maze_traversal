@@ -16,12 +16,14 @@ impl Plugin for PluginChaser
 		//==========================================================================================
 		.add_system_set												// ＜GameState::Play＞
 		(	SystemSet::on_update( GameState::Play )					// ＜on_update()＞
-				.with_system( despawn_entity::<DebugSpriteSight> ).label( "DebugSpriteSight" )
+				.label( "DebugSpriteSight" )
+				.with_system( despawn_entity::<DebugSpriteSight> )
 		)
 		.add_system_set												// ＜GameState::Play＞
 		(	SystemSet::on_update( GameState::Play )					// ＜on_update()＞
-				.with_system( move_sprite_chasers ).after( "DebugSpriteSight" )	// 追手の移動
-				.with_system( rotate_sprite_chasers ).after( "DebugSpriteSight" )	// 追手の回転
+				.after( "DebugSpriteSight" )
+				.with_system( move_sprite_chasers )					// 追手の移動
+				.with_system( rotate_sprite_chasers )				// 追手の回転
 		)
 		//==========================================================================================
 		.add_system_set												// ＜GameState::Clear＞
@@ -53,7 +55,8 @@ impl Plugin for PluginChaser
 
 //Sprite
 const CHASER_PIXEL: f32 = PIXEL_PER_GRID / 2.0;
-const CHASER_COLOR: Color = Color::RED;
+const CHASER_CALM_COLOR: Color = Color::GREEN;
+const CHASER_EXCITE_COLOR: Color = Color::RED;
 
 //移動ウェイト
 const CHASER_WAIT   : f32 = 0.5;
@@ -73,6 +76,7 @@ impl Default for Chaser
 			wait: Timer::from_seconds( CHASER_WAIT, false ),
 			wandering: Timer::from_seconds( rng.gen_range( 0.5..3.5 ), false ),
 			stop: true,
+			lockon: false,
 			// collision: false,
 			// speedup: 1.0,
 		}
@@ -107,7 +111,7 @@ fn spawn_sprite_chasers
 		let custom_size = Some( Vec2::new( CHASER_PIXEL, CHASER_PIXEL ) );
 
 		cmds.spawn_bundle( SpriteBundle::default() )
-			.insert( Sprite { color: CHASER_COLOR, custom_size, ..Default::default() } )
+			.insert( Sprite { color: CHASER_CALM_COLOR, custom_size, ..Default::default() } )
 			.insert( Transform::from_translation( position ).with_rotation( quat ) )
 			.insert( Chaser { grid, pixel_xy: pixel, ..Default::default() } );
 	} );
@@ -153,7 +157,7 @@ fn move_sprite_chasers
 			//・広間モード(ワンダリングするが広間から出ない)
 
 			//視線が通っているか？
-			let flag_chase = maze.is_wall_blocking_sight( chaser.grid, player.grid, &mut cmds );
+			chaser.lockon = ! maze.is_wall_blocking_sight( chaser.grid, player.grid, &mut cmds );
 
 //			if flag_chase
 //			{	//追跡モード
@@ -208,15 +212,20 @@ fn move_sprite_chasers
 
 //追手のスプライトをアニメーションさせる
 fn rotate_sprite_chasers
-(	mut q: Query< &mut Transform, With<Chaser>>,
+(	mut q: Query<( &Chaser, &mut Transform, &mut Sprite )>,
 	time: Res<Time>,
 )
 {	let time_delta = time.delta().as_secs_f32();
 	let angle = 360.0 * time_delta;
 	let quat = Quat::from_rotation_z( angle.to_radians() );
 
-	//回転させる
-	q.for_each_mut( | mut transform | transform.rotate( quat ) );
+	q.for_each_mut
+	(	| ( chaser, mut transform, mut sprite ) |
+		{	transform.rotate( quat );	//回転させる
+			let color = if chaser.lockon { CHASER_EXCITE_COLOR } else { CHASER_CALM_COLOR };
+			sprite.color = color;	//色を変える
+		}
+	);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

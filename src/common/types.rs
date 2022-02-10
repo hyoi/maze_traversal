@@ -228,6 +228,7 @@ pub struct Chaser
 	pub wait: Timer,
 	pub wandering: Timer,
 	pub stop: bool,
+	pub lockon: bool,
 	// pub collision: bool,
 	// pub speedup: f32,
 }

@@ -176,7 +176,7 @@ fn spawn_sprite_map
 			};
 
 			//デバッグ用に広間のスプライトを表示する
-			if maze.is_hall( grid )
+			if cfg!( debug_assertions ) && maze.is_hall( grid )
 			{	let custom_size = Some( Vec2::new( DEBUG_PIXEL, DEBUG_PIXEL ) * 0.9 );
 				cmds.spawn_bundle( SpriteBundle::default() )
 					.insert( Sprite { color: Color::INDIGO, custom_size, ..Default::default() } )
