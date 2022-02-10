@@ -59,7 +59,12 @@ const CHASER_CALM_COLOR: Color = Color::GREEN;
 const CHASER_EXCITE_COLOR: Color = Color::RED;
 
 //移動ウェイト
-const CHASER_WAIT   : f32 = 0.5;
+//const CHASER_WAIT: f32 = 0.09;
+const CHASER_WAIT: f32 = 0.5;
+
+//うろうろする際のゆっくり移動ウェイト
+use std::ops::Range;
+const CHASER_WAIT_WANDERING: Range<f32> = 0.5..3.5;
 
 //スプライトの動きを滑らかにするための中割係数
 const CHASER_MOVE_COEF  : f32 = PIXEL_PER_GRID / CHASER_WAIT;
@@ -74,7 +79,7 @@ impl Default for Chaser
 			// pixel_old: Pixel::default(),
 			side: FourSides::Up,
 			wait: Timer::from_seconds( CHASER_WAIT, false ),
-			wandering: Timer::from_seconds( rng.gen_range( 0.5..3.5 ), false ),
+			wandering: Timer::from_seconds( rng.gen_range( CHASER_WAIT_WANDERING ), false ),
 			stop: true,
 			lockon: false,
 			// collision: false,
@@ -150,47 +155,90 @@ fn move_sprite_chasers
 			position.y = pixel.y;
 			chaser.stop = true;		//一旦 停止フラグを立てる
 
-			//次の移動
-			//・追跡モード(視線が切れていない場合Playerの方へ。広間なら斜め移動あり)
-			//・通路モード(道なりに進み袋小路なら折り返す。分かれ道では適当に曲がる)
-			//・広間モード(ワンダリングするが広間から出ない)
+			/* 次の移動の決め方
+			 * ・視線が通っていれば追跡フラグを立て、でなければ伏せる。
+			 * 　- ただし、現在追跡中で通路が一本道なら(非交差点)、視線が切れても追跡フラグを立てたままにする。
+			 * ・追跡フラグが立っている場合
+			 * 　- 移動速度を、自機と同じにする。
+			 * 　- 広間なら、自機に対してxとyを寄せる（斜め移動なし）
+			 * 　- 通路なら、道なりに進む。
+			 * 　　　交差点では、自機が見えていればそっちへ移動、見えていなければ追跡フラグを伏せる。
+			 * 　- 自機とすれ違ったら、自機を追う方へ方向を変える。
+			 * ・追跡フラグが伏している場合
+			 * 　- 移動速度を、ゆっくりにする。
+			 * 　- 広間なら、らうろうろする。広間からは出ない。
+			 * 　- 通路なら、道なりに進む。
+			 * 　　　他の道との交差点ではランダムに曲がる。行き止まりはバックする。広間に入るまで続ける。
+			 */
 
-			//視線が通っているか？
-			chaser.lockon = ! maze.is_wall_blocking_sight( chaser.grid, player.grid, &mut cmds );
+			//現在追跡中で通路が一本道なら、追跡フラグを立てたままにする
+			chaser.lockon = if chaser.lockon && maze.is_passage( chaser.grid ) 
+			{	//四方の壁の状態を取得する
+				let mut count = 0;
+				FOUR_SIDES.iter()
+					.for_each( | dxdy | if ! maze.is_wall( chaser.grid + dxdy ) { count += 1 } );
 
-//			if flag_chase
-//			{	//追跡モード
-//				dbg!(1);
-//				chaser.wait.reset();	//ウェイトをリセットする
-//			}
-//			else if maze.is_passage( chaser.grid )
-//			{	//通路モード
-//				dbg!(2);
-//				chaser.wait.reset();	//ウェイトをリセットする
-//			}
-//			else
-			{	//広間モード
+				if count <= 2 { true } else { false }	//一本道 else 交差点
+			}
+			else
+			{	//そうでないなら、視線が通っているかチェックした結果に従う
+				! maze.is_wall_blocking_sight( chaser.grid, player.grid, &mut cmds )				
+			};
+
+			if chaser.lockon
+			{	//現在の場所が広間なら
+				if maze.is_hall( chaser.grid )
+				{	let x1 = chaser.grid.x as i32;
+					let y1 = chaser.grid.y as i32;
+					let x2 = player.grid.x as i32;
+					let y2 = player.grid.y as i32;
+					let mut next = Vec::new();
+
+					//X方向
+					let ( dxdy, side ) = if x1 < x2 { ( RIGHT, FourSides::Right ) } else { ( LEFT, FourSides::Left ) };
+					if ! maze.is_wall( chaser.grid + dxdy ) { next.push( ( dxdy, side ) ) }
+
+					//Y方向
+					let ( dxdy, side ) = if y1 < y2 { ( DOWN, FourSides::Down ) } else { ( UP, FourSides::Up ) };
+					if ! maze.is_wall( chaser.grid + dxdy ) { next.push( ( dxdy, side ) ) }
+
+					//XもYも壁なら
+					if next.is_empty() { continue }
+
+					let x = rng.gen_range( 0..next.len() );
+					chaser.grid += next[ x ].0;
+					chaser.side = next[ x ].1;
+					chaser.stop = false;		//停止フラグを伏せる
+					chaser.wait.reset();		//ウェイトをリセットする
+					chaser.wandering.reset();	//ウェイトをリセットする
+				}
+			}
+			else
+			{	//移動速度をゆっくりにする
 				if ! chaser.wandering.tick( time_delta ).finished() { continue }
 
-				//四方でホールのマスを探す
-				let mut next = Vec::new();
-				for dxdy in FOUR_SIDES
-				{	let next_grid = chaser.grid + dxdy;
-					if maze.is_hall( next_grid )
-					{	if matches!( dxdy, UP    ) { next.push( ( next_grid, FourSides::Up    ) ) }
-						if matches!( dxdy, LEFT  ) { next.push( ( next_grid, FourSides::Left  ) ) }
-						if matches!( dxdy, RIGHT ) { next.push( ( next_grid, FourSides::Right ) ) }
-						if matches!( dxdy, DOWN  ) { next.push( ( next_grid, FourSides::Down  ) ) }
+				//現在の場所が広間なら
+				if maze.is_hall( chaser.grid )
+				{	//四方でホールのマスを探す
+					let mut next = Vec::new();
+					for dxdy in FOUR_SIDES
+					{	let next_grid = chaser.grid + dxdy;
+						if maze.is_hall( next_grid )
+						{	if matches!( dxdy, UP    ) { next.push( ( next_grid, FourSides::Up    ) ) }
+							if matches!( dxdy, LEFT  ) { next.push( ( next_grid, FourSides::Left  ) ) }
+							if matches!( dxdy, RIGHT ) { next.push( ( next_grid, FourSides::Right ) ) }
+							if matches!( dxdy, DOWN  ) { next.push( ( next_grid, FourSides::Down  ) ) }
+						}
 					}
-				}
 
-				//ランダムに移動する
-				let x = rng.gen_range( 0..next.len() );
-				chaser.grid = next[ x ].0;
-				chaser.side = next[ x ].1;
-				chaser.stop = false;		//停止フラグを倒す
-				chaser.wait.reset();		//ウェイトをリセットする
-				chaser.wandering.reset();	//ウェイトをリセットする
+					//ランダムに移動する
+					let x = rng.gen_range( 0..next.len() );
+					chaser.grid = next[ x ].0;
+					chaser.side = next[ x ].1;
+					chaser.stop = false;		//停止フラグを伏せる
+					chaser.wait.reset();		//ウェイトをリセットする
+					chaser.wandering.reset();	//ウェイトをリセットする
+				}
 			}
 		}
 		else
