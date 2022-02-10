@@ -222,8 +222,8 @@ pub struct Player
 #[derive(Component)]
 pub struct Chaser
 {	pub grid: MapGrid,
-	pub pixel_xy: Pixel,
-	pub pixel_xy_old: Pixel,
+	pub pixel: Pixel,
+	// pub pixel_old: Pixel,
 	pub side: FourSides,
 	pub wait: Timer,
 	pub wandering: Timer,

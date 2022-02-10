@@ -70,8 +70,8 @@ impl Default for Chaser
 	{	let mut rng = rand::thread_rng();
 		Self
 		{	grid: MapGrid::default(),
-			pixel_xy: Pixel::default(),
-			pixel_xy_old: Pixel::default(),
+			pixel: Pixel::default(),
+			// pixel_old: Pixel::default(),
 			side: FourSides::Up,
 			wait: Timer::from_seconds( CHASER_WAIT, false ),
 			wandering: Timer::from_seconds( rng.gen_range( 0.5..3.5 ), false ),
@@ -95,9 +95,8 @@ fn spawn_sprite_chasers
 	mut cmds: Commands,
 )
 {	//追手は複数なのでループする
-	( 0..( maze.halls() / 50 ) ).for_each( | _ |
-//	( 0..1 ).for_each( | _ |
-		{	let mut grid = MapGrid::default();
+	for _ in 0..( maze.halls() / 50 )
+	{	let mut grid = MapGrid::default();
 		loop
 		{	grid.x = maze.rng().gen_range( RANGE_MAP_INNER_X );
 			grid.y = maze.rng().gen_range( RANGE_MAP_INNER_Y );
@@ -113,8 +112,8 @@ fn spawn_sprite_chasers
 		cmds.spawn_bundle( SpriteBundle::default() )
 			.insert( Sprite { color: CHASER_CALM_COLOR, custom_size, ..Default::default() } )
 			.insert( Transform::from_translation( position ).with_rotation( quat ) )
-			.insert( Chaser { grid, pixel_xy: pixel, ..Default::default() } );
-	} );
+			.insert( Chaser { grid, pixel, ..Default::default() } );
+	};
 }
 
 //追手のスプライトを移動する
