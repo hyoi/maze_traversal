@@ -5,22 +5,45 @@ pub struct PluginUi;
 impl Plugin for PluginUi
 {	fn build( &self, app: &mut App )
 	{	app
+		//------------------------------------------------------------------------------------------
 		.insert_resource( DbgOptResUI )					// マーカーResource
 		//------------------------------------------------------------------------------------------
+		.add_system( update_ui_upper_left )				// UIの表示を更新
+		.add_system( update_ui_upper_right )			// UIの表示を更新
+		.add_system( update_ui_lower_left )				// UIの表示を更新
+		//==========================================================================================
 		.add_system_set									// ＜GameState::Init＞
 		(	SystemSet::on_exit( GameState::Init )		// ＜on_exit()＞
 				.with_system( spawn_text_ui_message )	// assetesプリロード後にUIを非表示で生成
 				.with_system( spawn_sprite_hp_gauge )	// HPゲージを作成
 		)
 		//==========================================================================================
-//		.add_startup_system( spawn_sprite_hp_gauge )	// HPゲージを作成
-		.add_system( update_ui_upper_left )				// UIの表示を更新
-		.add_system( update_ui_upper_right )			// UIの表示を更新
-		.add_system( update_ui_lower_left )				// UIの表示を更新
+		.add_system_set									// ＜GameState::Over＞
+		(	SystemSet::on_exit( GameState::Over )		// ＜on_exit()＞
+				.with_system( init_record )				// GameOver後の初期化
+		)
 		//------------------------------------------------------------------------------------------
 		;
 	}
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//NA文字列
+const NA_STR3: &str = "---";
+const NA_STR5: &str = "-----";
+const NA_STR4: &str = "--.--";
+
+//HP GAUGE
+#[derive(Component)]
+struct HpGauge;
+const GAUGE_RECTANGLE: ( f32, f32, f32, f32 ) = 
+(	PIXEL_PER_GRID *  8.9 - SCREEN_WIDTH  / 2.0,	//X軸：画面中央からやや左より
+	PIXEL_PER_GRID * -0.7 + SCREEN_HEIGHT / 2.0,	//Y軸：画面上端からやや下がった位置
+	PIXEL_PER_GRID * 15.0,							//幅
+	PIXEL_PER_GRID *  0.2,							//高さ
+);
+const SPRITE_DEPTH_GAUGE: f32 = 30.0;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -102,6 +125,14 @@ fn spawn_text_ui_message( mut cmds: Commands, asset_svr: Res<AssetServer> )
 			cmds.spawn_bundle( ui_lower_right  ).insert( UiLowerRight  );
 		} );
 	} );
+
+	//おまけ
+	let pixel = MapGrid { x: GRID_WIDTH - 4, y: GRID_HEIGHT - 2 }.into_pixel();
+	let custom_size = Some( Vec2::new( PIXEL_PER_GRID, PIXEL_PER_GRID ) );
+	cmds.spawn_bundle( SpriteBundle::default() )
+		.insert( Sprite { custom_size, ..Default::default() } )
+		.insert( asset_svr.load( IMAGE_SPRITE_KANI ) as Handle<Image> )
+		.insert( Transform::from_translation( Vec3::new( pixel.x, pixel.y, 100.0 ) ) );
 }
 
 //TextBundleを作る
@@ -133,27 +164,10 @@ fn text_ui( message: &[ MessageSect ], asset_svr: &Res<AssetServer> ) -> TextBun
 //レイアウト用に隠しフレームを作る
 fn hidden_frame( style: Style ) -> NodeBundle
 {	let visibility = Visibility { is_visible: false };
-
 	NodeBundle { style, visibility, ..Default::default() }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-
-//NA文字列
-const NA_STR3: &str = "---";
-const NA_STR5: &str = "-----";
-const NA_STR4: &str = "--.--";
-
-//HP GAUGE
-#[derive(Component)]
-struct HpGauge;
-const GAUGE_RECTANGLE: ( f32, f32, f32, f32 ) = 
-(	PIXEL_PER_GRID *  8.9 - SCREEN_WIDTH  / 2.0,	//X軸：画面中央からやや左より
-	PIXEL_PER_GRID * -0.7 + SCREEN_HEIGHT / 2.0,	//Y軸：画面上端からやや下がった位置
-	PIXEL_PER_GRID * 15.0,							//幅
-	PIXEL_PER_GRID *  0.2,							//高さ
-);
-const GAUGE_DEPTH: f32 = 30.0;
 
 //HP GAUGEのスプライトを作成する
 fn spawn_sprite_hp_gauge( mut cmds: Commands )
@@ -164,7 +178,7 @@ fn spawn_sprite_hp_gauge( mut cmds: Commands )
 		custom_size: Some( Vec2::new( w, h ) ),
 		..Default::default()
 	};
-	let transform = Transform::from_translation( Vec3::new( x, y, GAUGE_DEPTH ) );
+	let transform = Transform::from_translation( Vec3::new( x, y, SPRITE_DEPTH_GAUGE ) );
 
 	let bundle = SpriteBundle { sprite, transform, ..Default::default() };
 	cmds.spawn_bundle( bundle ).insert( HpGauge );
@@ -236,6 +250,25 @@ fn update_ui_lower_left
 			}
 		);
 		ui.sections[ 1 ].value = fps_avr;
+	}
+}
+
+//GameOverのon_exit()でゲームを初期化する
+fn init_record
+(	mut q: Query<( &mut Transform, &mut Sprite ), With<HpGauge>>,
+	mut record: ResMut<Record>,
+)
+{	//スコア等の初期化
+	*record = Record::default();
+
+	//HP GAGEのスプライトを初期化
+	if let Ok ( ( mut transform, mut sprite ) ) = q.get_single_mut()
+	{	let ( x, y, w, h ) = GAUGE_RECTANGLE;
+		transform.scale[ 0 ] = 100.0;
+		transform.translation.x = x;
+		transform.translation.y = y;
+		sprite.custom_size = Some( Vec2::new( w, h ) );
+		sprite.color = Color::GREEN;
 	}
 }
 

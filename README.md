@@ -4,9 +4,9 @@ Note: Japanese text only.
 題名通り、ただひたすら進むだけです。  
 乱数で迷路を作ってみたかったのです。  
 ▲を操って出口（上端で虹色の◆がくるくるしてる）を目指してください。  
-赤い障害物に触るとHPがへ ~~（ることがあ）~~ ります。  
-~~‥‥当たり判定がアレなので全然減りませんが (^_^;) 。~~ HPゼロでゲームオーバー。  
-コインは拾っても拾わなくてもOKです。気分に合わせてどうぞ。
+うろうろしてる障害物に見つかると（色が赤になります）追いかけてきます。  
+で、触るとHPがモリモリ減ります。HPゼロでゲームオーバー。  
+コインは拾っても拾わなくてもOK。気分に合わせてどうぞ。
 ## WASM版
 https://hyoi.github.io/maze_traversal/
 ## 操作方法
@@ -14,9 +14,10 @@ https://hyoi.github.io/maze_traversal/
 `Esc`キーで一時停止(Pause‥‥使い道ないけど)。   
 `Alt`＋`Enter`でフルスクリーンとウインドウモード切替（デスクトップアプリの場合）。
 ## コンパイル方法
-デスクトップアプリにするなら `cargo run`でOK。
+デスクトップアプリにするなら`cargo run --release`でOK。  
+`cargo run`だと、デバッグ用の表示が追加されます。
 ```
-cargo run --release    
+cargo run --release
 ```
 WASMの場合は、bevy 0.6 から bevy_webgl2 に頼らなくても良くなりました。
 ```
@@ -37,8 +38,11 @@ cargo install -f wasm-bindgen-cli
 - [Google Fonts](https://fonts.google.com/)
   - [Orbitron](https://fonts.google.com/specimen/Orbitron)
   - [Reggae One](https://fonts.google.com/specimen/Reggae+One?subset=japanese)
+- [ドット絵ダウンロードサイト DOTOWN](https://dotown.maeda-design-room.net/)
+  - Rustだから蟹 <img src="./assets/sprites/kani_DOTOWN.png" width="22" height="16" style="vertical-align: bottom;">
 ## 宿題
-- 障害物が追いかけてくるようにしたい。
+- ~~障害物が追いかけてくるようにしたい。~~ (v0.2.2)
+- 障害物の追跡アルゴリズムをもっとちゃんとしたい。
 - 追いつかれたら、RPGっぽい戦闘イベントにしたい。
-- ~~当たり判定が手抜きすぎなので直す。いくら何でもヒドイ。~~  
-(v0.2.1) ちゃんと当たってHPがもりもり減るように変更
+- ~~当たり判定が手抜きすぎなので直す。いくら何でもヒドイ。~~  (v0.2.1)
+- SEを鳴らしたい。

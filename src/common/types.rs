@@ -49,9 +49,10 @@ impl MapGrid
 pub struct DxDy { pub dx: i32, pub dy: i32 }
 
 //MapGridとDxDyを加算できるようAdd()をオーバーロードする
-use std::ops;
+use std::ops::*;
+
 //MapGrid = MapGrid + DxDy
-impl ops::Add<DxDy> for MapGrid
+impl Add<DxDy> for MapGrid
 {	type Output = MapGrid;
 	fn add( self, dxdy: DxDy ) -> MapGrid
 	{	let x = ( self.x as i32 + dxdy.dx ) as usize;
@@ -59,7 +60,7 @@ impl ops::Add<DxDy> for MapGrid
 		MapGrid { x, y }
 	}
 }
-impl ops::Add<&DxDy> for MapGrid
+impl Add<&DxDy> for MapGrid
 {	type Output = MapGrid;
 	fn add( self, dxdy: &DxDy ) -> MapGrid
 	{	let x = ( self.x as i32 + dxdy.dx ) as usize;
@@ -68,7 +69,7 @@ impl ops::Add<&DxDy> for MapGrid
 	}
 }
 //MapGrid = DxDy + MapGrid 
-impl ops::Add<MapGrid> for DxDy
+impl Add<MapGrid> for DxDy
 {	type Output = MapGrid;
 	fn add( self, grid: MapGrid ) -> MapGrid
 	{	let x = ( grid.x as i32 + self.dx ) as usize;
@@ -76,7 +77,7 @@ impl ops::Add<MapGrid> for DxDy
 		MapGrid { x, y }
 	}
 }
-impl ops::Add<&MapGrid> for DxDy
+impl Add<&MapGrid> for DxDy
 {	type Output = MapGrid;
 	fn add( self, grid: &MapGrid ) -> MapGrid
 	{	let x = ( grid.x as i32 + self.dx ) as usize;
@@ -84,10 +85,37 @@ impl ops::Add<&MapGrid> for DxDy
 		MapGrid { x, y }
 	}
 }
+//MapGrid += DxDy
+impl AddAssign<DxDy> for MapGrid
+{	fn add_assign( &mut self, dxdy: DxDy )
+	{	self.x = ( self.x as i32 + dxdy.dx ) as usize;
+		self.y = ( self.y as i32 + dxdy.dy ) as usize;
+ 	}
+}
+impl AddAssign<&DxDy> for MapGrid
+{	fn add_assign( &mut self, dxdy: &DxDy )
+	{	self.x = ( self.x as i32 + dxdy.dx ) as usize;
+		self.y = ( self.y as i32 + dxdy.dy ) as usize;
+ 	}
+}
 
 //スプライト等の画面座標
 #[derive(Default,Copy,Clone,PartialEq)]
 pub struct Pixel { pub x: f32, pub y: f32 }
+
+//Pixel += ( f32, f32 )
+impl AddAssign<(f32,f32)> for Pixel
+{	fn add_assign( &mut self, xd: (f32,f32) )
+	{	self.x = self.x + xd.0;
+		self.y = self.y + xd.1;
+ 	}
+}
+impl AddAssign<&(f32,f32)> for Pixel
+{	fn add_assign( &mut self, xy: &(f32,f32) )
+	{	self.x = self.x + xy.0;
+		self.y = self.y + xy.1;
+ 	}
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -114,7 +142,7 @@ impl Default for GameMap
 {	fn default() -> Self
 	{	Self
 		{	rng: StdRng::seed_from_u64( rand::thread_rng().gen::<u64>() ),	//本番用
-//			rng: StdRng::seed_from_u64( 1234567890 ),	//開発用：再現性がある乱数を使いたい場合
+		//	rng: StdRng::seed_from_u64( 1234567890 ),	//開発用：迷路作成で再現性がある乱数を使いたい場合
 			map  : [ [ MapObj::Wall; MAP_HEIGHT ]; MAP_WIDTH ],
 			bits : [ [ 0			  ; MAP_HEIGHT ]; MAP_WIDTH ],
 			start: MapGrid::default(),
@@ -167,25 +195,12 @@ impl GameMap
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-//向きを表す列挙型
-#[derive(Clone,Copy,PartialEq)]
-pub enum FourSides { Up, Left, Right, Down }
-
-impl FourSides
-{	pub fn is_up   ( &self ) -> bool { matches!( self, FourSides::Up    ) }
-	pub fn is_left ( &self ) -> bool { matches!( self, FourSides::Left  ) }
-	pub fn is_right( &self ) -> bool { matches!( self, FourSides::Right ) }
-	pub fn is_down ( &self ) -> bool { matches!( self, FourSides::Down  ) }
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
 //自機のComponent
 #[derive(Component)]
 pub struct Player
 {	pub grid: MapGrid,
-	pub side: FourSides,
-	pub key_input: FourSides,
+	pub side: DxDy,
+	pub key_input: DxDy,
 	pub wait: Timer,
 	pub stop: bool,
 }
@@ -194,14 +209,11 @@ pub struct Player
 #[derive(Component)]
 pub struct Chaser
 {	pub grid: MapGrid,
-	pub pixel_xy: Pixel,
-	pub pixel_xy_old: Pixel,
-	pub side: FourSides,
+	pub side: DxDy,
 	pub wait: Timer,
 	pub wandering: Timer,
 	pub stop: bool,
-	// pub collision: bool,
-	// pub speedup: f32,
+	pub lockon: bool,
 }
 
 //End of code.

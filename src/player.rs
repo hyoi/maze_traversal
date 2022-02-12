@@ -62,8 +62,8 @@ impl Default for Player
 {	fn default() -> Self
 	{	Self
 		{	grid: MapGrid::default(),
-			side: FourSides::Up,
-			key_input: FourSides::Up,
+			side: UP,
+			key_input: UP,
 			wait: Timer::from_seconds( PLAYER_WAIT, false ),
 			stop: true,
 		}
@@ -136,22 +136,22 @@ fn move_sprite_player
 
 		//キー入力により自機の向きを変える(スプライトの回転はまだ)
 		if key_left
-		{	player.key_input = FourSides::Left;
+		{	player.key_input = LEFT;
 			player.stop = maze.is_wall( grid + LEFT );
 			if ! player.stop { grid.x -= 1 }
 		}
 		else if key_right
-		{	player.key_input = FourSides::Right;
+		{	player.key_input = RIGHT;
 			player.stop = maze.is_wall( grid + RIGHT );
 			if ! player.stop { grid.x += 1 }
 		}
 		else if key_up
-		{	player.key_input = FourSides::Up;
+		{	player.key_input = UP;
 			player.stop = maze.is_wall( grid + UP );
 			if ! player.stop { grid.y -= 1 }
 		}
 		else if key_down
-		{	player.key_input = FourSides::Down;
+		{	player.key_input = DOWN;
 			player.stop = maze.is_wall( grid + DOWN );
 			if ! player.stop { grid.y += 1 }
 		}
@@ -168,10 +168,11 @@ fn move_sprite_player
 		let delta = PLAYER_MOVE_COEF * time_delta.as_secs_f32();
 		let position = &mut transform.translation;
 		match player.side
-		{	FourSides::Up    => position.y += delta,
-			FourSides::Left  => position.x -= delta,
-			FourSides::Right => position.x += delta,
-			FourSides::Down  => position.y -= delta,
+		{	UP    => position.y += delta,
+			LEFT  => position.x -= delta,
+			RIGHT => position.x += delta,
+			DOWN  => position.y -= delta,
+			_ => {},
 		}
 
 		//自機のの表示向きを更新する
@@ -185,26 +186,27 @@ fn move_sprite_player
 //現在の自機の向きとキー入力から角度の差分を求めて、自機を回転させる
 fn rotate_player_sprite( player: &Player, transform: &mut Mut<Transform> )
 {	let angle: f32 = match player.side
-	{	FourSides::Up =>
-		{	if      player.key_input.is_left()  {  90.0 }
-			else if player.key_input.is_right() { -90.0 }
+	{	UP =>
+		{	if      player.key_input == LEFT  {  90.0 }
+			else if player.key_input == RIGHT { -90.0 }
 			else    { 180.0 }
 		}
-		FourSides::Left =>
-		{	if      player.key_input.is_down() {  90.0 }
-			else if player.key_input.is_up()   { -90.0 }
+		LEFT =>
+		{	if      player.key_input == DOWN {  90.0 }
+			else if player.key_input == UP   { -90.0 }
 			else    { 180.0 }
 		}
-		FourSides::Right =>
-		{	if      player.key_input.is_up()   {  90.0 }
-			else if player.key_input.is_down() { -90.0 }
+		RIGHT =>
+		{	if      player.key_input == UP   {  90.0 }
+			else if player.key_input == DOWN { -90.0 }
 			else    { 180.0 }
 		}
-		FourSides::Down =>
-		{	if      player.key_input.is_right() {  90.0 }
-			else if player.key_input.is_left()  { -90.0 }
+		DOWN =>
+		{	if      player.key_input == RIGHT {  90.0 }
+			else if player.key_input == LEFT  { -90.0 }
 			else    { 180.0 }
 		}
+		_ => 0.0,
 	};
 
 	let quat = Quat::from_rotation_z( angle.to_radians() );
