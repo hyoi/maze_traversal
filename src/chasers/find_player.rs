@@ -1,31 +1,38 @@
 use super::*;
 
-impl GameMap
-{	//壁がグリッド間の視界を遮っているか判定する
-	pub fn is_wall_blocking_sight( & self, grid1: MapGrid, grid2: MapGrid, cmds: &mut Commands, ) -> bool
-	{	let mut x1 = grid1.x as i32;
-		let mut y1 = grid1.y as i32;
-		let mut x2 = grid2.x as i32;
-		let mut y2 = grid2.y as i32;
+impl Chaser
+{	pub fn find( & self, player: &Player, maze: &GameMap, cmds: &mut Commands, ) -> Option<DxDy>
+	//追手から自機が見えるか判定する。
+	//追手と自機の間に壁が無ければ Some ( dxdy )、あれば None を返す。
+	//ただし現在の実装には問題があって2枚の壁の隙間ごしに自機が見えることがあるので、見える＝移動可能にはならない。
+	//隙間からの目撃　追壁
+	//　　　　　　　　壁自
+	{	let mut x1 = self.grid.x as i32;
+		let mut y1 = self.grid.y as i32;
+		let mut x2 = player.grid.x as i32;
+		let mut y2 = player.grid.y as i32;
 		let side_x = ( x1 - x2 ).abs() + 1;
 		let side_y = ( y1 - y2 ).abs() + 1;
+		let mut ret_dxdy;
 
-		//長辺X方向、短辺Y方向なら
+		//長辺がX方向なら
 		if side_x >= side_y
-		{	//長辺がX方向なので x1 <= x2 を満たすようにgridをswapする
+		{	//x1 <= x2 を満たすように位置をswapする
+			ret_dxdy = RIGHT;
 			if x1 > x2
 			{	std::mem::swap( &mut x1, &mut x2 );
 				std::mem::swap( &mut y1, &mut y2 );
+				ret_dxdy = LEFT;
 			}
 
-			//pixelの増加量を求める（短辺は＋１または－１ずつ変化させる）
+			//pixelの増加量を求める（短辺は＋１または－１ずつ進める）
 			let dx = PIXEL_PER_GRID * side_x as f32 / side_y as f32;
 			let dy = PIXEL_PER_GRID * if y1 >= y2 { 1.0 } else { -1.0 };
 
 			//ループで使う変数の準備
 			let mut grid = MapGrid { x: x1 as usize, y: y1 as usize };
 			let mut pixel = grid.into_pixel();
-			let mut rem = 0.0;		//長辺方向の切り捨て誤差を蓄える変数
+			let mut pool = 0.0;		//長辺方向の切り捨て誤差を蓄える変数
 			let mut adjust = 0.0;	//長辺方向の切り捨て誤差がgrid分に達したらループに反映する変数
 
 			//外側が短辺ループで、内側が増加量ずつに分割された長辺ループ
@@ -35,8 +42,9 @@ impl GameMap
 				{	let new_px = pixel.x + PIXEL_PER_GRID * n as f32;
 					if new_px >= pixel.x + dx + adjust { break } //内側loopの脱出条件
 
+					//壁か？
 					grid.x = ( ( new_px - ( PIXEL_PER_GRID - SCREEN_WIDTH ) / 2.0 ) / PIXEL_PER_GRID ) as usize;
-					if self.is_wall( grid ) { return true }	//関数の脱出条件
+					if maze.is_wall( grid ) { return None }	//関数の脱出条件
 					n += 1;
 
 					//デバッグ用に視線のスプライトを表示する
@@ -51,31 +59,34 @@ impl GameMap
 
 				//外側loopの脱出条件
 				if grid.y as i32 == y2 { break }
-				grid.y = ( grid.y as i32 - dy.signum() as i32 ) as usize;
 
+				//各変数の調整
+				grid.y = ( grid.y as i32 - dy.signum() as i32 ) as usize;
 				pixel += ( dx + adjust, dy );
 				let work = ( pixel.x / PIXEL_PER_GRID ).floor() * PIXEL_PER_GRID;
-				rem += pixel.x - work;
+				pool += pixel.x - work;
 				pixel.x = work;			//次の開始位置
-				adjust = ( rem / PIXEL_PER_GRID ).floor() * PIXEL_PER_GRID;
-				rem -= adjust;
+				adjust = ( pool / PIXEL_PER_GRID ).floor() * PIXEL_PER_GRID;
+				pool -= adjust;
 			}
 		}
-		else //長辺Y方向、短辺X方向
-		{	//長辺がY方向なので y1 <= y2 を満たすようにgridをswapする
+		else
+		{	//長辺がY方向なので y1 <= y2 を満たすように位置をswapする
+			ret_dxdy = DOWN;
 			if y1 > y2
 			{	std::mem::swap( &mut x1, &mut x2 );
 				std::mem::swap( &mut y1, &mut y2 );
+				ret_dxdy = UP;
 			}
 
-			//pixelの増加量を求める（短辺は＋１または－１ずつ変化させる）
+			//pixelの増加量を求める（短辺は＋１または－１ずつ進める）
 			let dx = PIXEL_PER_GRID * if x1 <= x2 { 1.0 } else { -1.0 };
 			let dy = PIXEL_PER_GRID * side_y as f32 / side_x as f32;
 
 			//ループで使う変数の準備
 			let mut grid = MapGrid { x: x1 as usize, y: y1 as usize };
 			let mut pixel = grid.into_pixel();
-			let mut rem = 0.0;		//長辺方向の切り捨て誤差を蓄える変数
+			let mut pool = 0.0;		//長辺方向の切り捨て誤差を蓄える変数
 			let mut adjust = 0.0;	//長辺方向の切り捨て誤差がgrid分に達したらループに反映する変数
 
 			//外側が短辺ループで、内側が増加量ずつに分割された長辺ループ
@@ -85,8 +96,9 @@ impl GameMap
 				{	let new_py = pixel.y - PIXEL_PER_GRID * n as f32;
 					if new_py <= pixel.y - dy - adjust { break } //内側loopの脱出条件
 
-					grid.y = ( ( ( SCREEN_HEIGHT - PIXEL_PER_GRID ) / 2.0 - new_py ) / PIXEL_PER_GRID - 1.0 ) as usize;
-					if self.is_wall( grid ) { return true }	//関数の脱出条件
+					//壁か？
+					grid.y = ( ( ( SCREEN_HEIGHT - PIXEL_PER_GRID ) / 2.0 - new_py ) / PIXEL_PER_GRID ) as usize - 1;
+					if maze.is_wall( grid ) { return None }	//関数の脱出条件
 					n += 1;
 
 					//デバッグ用に視線のスプライトを表示する
@@ -101,18 +113,19 @@ impl GameMap
 
 				//外側loopの脱出条件
 				if grid.x as i32 == x2 { break }
-				grid.x = ( grid.x as i32 + dx.signum() as i32 ) as usize;
 
+				//各変数の調整
+				grid.x = ( grid.x as i32 + dx.signum() as i32 ) as usize;
 				pixel += ( dx, - ( dy + adjust ) );
 				let work = ( pixel.y / PIXEL_PER_GRID ).ceil() * PIXEL_PER_GRID;
-				rem += work - pixel.y;
+				pool += work - pixel.y;
 				pixel.y = work;			//次の開始位置
-				adjust = ( rem / PIXEL_PER_GRID ).floor() * PIXEL_PER_GRID;
-				rem -= adjust;
+				adjust = ( pool / PIXEL_PER_GRID ).floor() * PIXEL_PER_GRID;
+				pool -= adjust;
 			}
 		}
 
-		false	//壁は視線を遮っていない
+		Some ( ret_dxdy )	//壁は視線を遮っていない
 	}
 }
 

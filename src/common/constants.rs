@@ -25,13 +25,15 @@ pub const FONT_ORBITRON_BLACK	: &str = "fonts/Orbitron-Black.ttf";
 pub const FONT_REGGAEONE_REGULAR: &str = "fonts/ReggaeOne-Regular.ttf";
 pub const IMAGE_SPRITE_WALL		: &str = "sprites/wall.png";
 pub const IMAGE_SPRITE_COIN		: &str = "sprites/coin.png";
+pub const IMAGE_SPRITE_KANI		: &str = "sprites/kani_DOTOWN.png";
 
 //事前ロード対象のAsset
-pub const FETCH_ASSETS: [ &str; 4 ] =
+pub const FETCH_ASSETS: [ &str; 5 ] =
 [	FONT_ORBITRON_BLACK,
 	FONT_REGGAEONE_REGULAR,
 	IMAGE_SPRITE_WALL,
 	IMAGE_SPRITE_COIN,
+	IMAGE_SPRITE_KANI,
 ];
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -95,8 +97,8 @@ pub const UI_UPPER_RIGHT: [ MessageSect; 4 ] =
 #[derive(Component)]
 pub struct UiLowerLeft;
 pub const UI_LOWER_LEFT: [ MessageSect; 2 ] =
-[	( "FPS ", FONT_ORBITRON_BLACK, PIXEL_PER_GRID * 0.8, Color::ORANGE ),
-	( ""    , FONT_ORBITRON_BLACK, PIXEL_PER_GRID * 1.0, Color::WHITE  ),
+[	( " FPS ", FONT_ORBITRON_BLACK, PIXEL_PER_GRID * 0.8, Color::ORANGE ),
+	( ""     , FONT_ORBITRON_BLACK, PIXEL_PER_GRID * 1.0, Color::WHITE  ),
 ];
 
 #[derive(Component)]
@@ -108,7 +110,7 @@ pub const UI_LOWER_CENTER: [ MessageSect; 1 ] =
 #[derive(Component)]
 pub struct UiLowerRight;
 pub const UI_LOWER_RIGHT: [ MessageSect; 1 ] =
-[	( "powered by Rust&Bevy", FONT_ORBITRON_BLACK, PIXEL_PER_GRID * 0.7, Color::WHITE ),
+[	( "powered by Rust & Bevy ", FONT_ORBITRON_BLACK, PIXEL_PER_GRID * 0.7, Color::WHITE ),
 ];
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -121,6 +123,7 @@ pub const RANGE_MAP_INNER_X: RangeInclusive<usize> = 1..= MAP_WIDTH  - 2;	//掘�
 pub const RANGE_MAP_INNER_Y: RangeInclusive<usize> = 1..= MAP_HEIGHT - 2;	//掘削可能なレンジ（最外壁は掘れない）
 
 //MAP座標の上下左右を表す定数
+pub const NONE : DxDy = DxDy { dx:  0, dy:  0 };
 pub const UP   : DxDy = DxDy { dx:  0, dy: -1 };
 pub const LEFT : DxDy = DxDy { dx: -1, dy:  0 };
 pub const RIGHT: DxDy = DxDy { dx:  1, dy:  0 };

@@ -141,8 +141,8 @@ pub struct GameMap
 impl Default for GameMap
 {	fn default() -> Self
 	{	Self
-		{//	rng: StdRng::seed_from_u64( rand::thread_rng().gen::<u64>() ),	//本番用
-			rng: StdRng::seed_from_u64( 1234567890 ),	//開発用：再現性がある乱数を使いたい場合
+		{	rng: StdRng::seed_from_u64( rand::thread_rng().gen::<u64>() ),	//本番用
+		//	rng: StdRng::seed_from_u64( 1234567890 ),	//開発用：迷路作成で再現性がある乱数を使いたい場合
 			map  : [ [ MapObj::Wall; MAP_HEIGHT ]; MAP_WIDTH ],
 			bits : [ [ 0			  ; MAP_HEIGHT ]; MAP_WIDTH ],
 			start: MapGrid::default(),
@@ -195,25 +195,12 @@ impl GameMap
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-//向きを表す列挙型
-#[derive(Clone,Copy,PartialEq)]
-pub enum FourSides { Up, Left, Right, Down }
-
-impl FourSides
-{	pub fn is_up   ( &self ) -> bool { matches!( self, FourSides::Up    ) }
-	pub fn is_left ( &self ) -> bool { matches!( self, FourSides::Left  ) }
-	pub fn is_right( &self ) -> bool { matches!( self, FourSides::Right ) }
-	pub fn is_down ( &self ) -> bool { matches!( self, FourSides::Down  ) }
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
 //自機のComponent
 #[derive(Component)]
 pub struct Player
 {	pub grid: MapGrid,
-	pub side: FourSides,
-	pub key_input: FourSides,
+	pub side: DxDy,
+	pub key_input: DxDy,
 	pub wait: Timer,
 	pub stop: bool,
 }
@@ -222,15 +209,11 @@ pub struct Player
 #[derive(Component)]
 pub struct Chaser
 {	pub grid: MapGrid,
-	pub pixel: Pixel,
-	// pub pixel_old: Pixel,
-	pub side: FourSides,
+	pub side: DxDy,
 	pub wait: Timer,
 	pub wandering: Timer,
 	pub stop: bool,
 	pub lockon: bool,
-	// pub collision: bool,
-	// pub speedup: f32,
 }
 
 //End of code.
