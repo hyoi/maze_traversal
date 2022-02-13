@@ -1,28 +1,32 @@
 use super::*;
 
 impl Chaser
-{	pub fn find( & self, player: &Player, maze: &GameMap, cmds: &mut Commands, ) -> Option<DxDy>
+{	pub fn find( & self, player: &Player, maze: &GameMap, cmds: &mut Commands, ) -> Option<(DxDy,DxDy)>
 	//追手から自機が見えるか判定する。
-	//追手と自機の間に壁が無ければ Some ( dxdy )、あれば None を返す。
-	//ただし現在の実装には問題があって2枚の壁の隙間ごしに自機が見えることがあるので、見える＝移動可能にはならない。
-	//隙間からの目撃　追壁
-	//　　　　　　　　壁自
+	//追手と自機の間に壁が無いと Some ( dxdy1, dxdy2 )、あれば None を返す。
+	//dxdy1とdxdy2は追手が進む方向の候補。（長辺方向と短辺方向）
+	//ただし現在の実装には問題があって2枚の壁の隙間ごしに自機が目撃できるので、見える＝移動可能にはならない。
+	//隙間からの目撃とは：　追壁
+	//　　　　　　　　　　　壁自
 	{	let mut x1 = self.grid.x as i32;
 		let mut y1 = self.grid.y as i32;
 		let mut x2 = player.grid.x as i32;
 		let mut y2 = player.grid.y as i32;
 		let side_x = ( x1 - x2 ).abs() + 1;
 		let side_y = ( y1 - y2 ).abs() + 1;
-		let mut ret_dxdy;
+		let ret_dxdy1;
+		let ret_dxdy2;
 
 		//長辺がX方向なら
 		if side_x >= side_y
-		{	//x1 <= x2 を満たすように位置をswapする
-			ret_dxdy = RIGHT;
+		{	//追手の移動方向の候補（壁の有無は考慮してない）
+			ret_dxdy1 = if x1 <= x2 { RIGHT } else { LEFT };
+			ret_dxdy2 = if y1 <= y2 { DOWN } else { UP };
+
+			//x1 <= x2 を満たすように位置をswapする
 			if x1 > x2
 			{	std::mem::swap( &mut x1, &mut x2 );
 				std::mem::swap( &mut y1, &mut y2 );
-				ret_dxdy = LEFT;
 			}
 
 			//pixelの増加量を求める（短辺は＋１または－１ずつ進める）
@@ -71,12 +75,14 @@ impl Chaser
 			}
 		}
 		else
-		{	//長辺がY方向なので y1 <= y2 を満たすように位置をswapする
-			ret_dxdy = DOWN;
+		{	//追手の移動方向の候補（壁の有無は考慮してない）
+			ret_dxdy1 = if y1 <= y2 { DOWN } else { UP };
+			ret_dxdy2 = if x1 <= x2 { RIGHT } else { LEFT };
+
+			//長辺がY方向なので y1 <= y2 を満たすように位置をswapする
 			if y1 > y2
 			{	std::mem::swap( &mut x1, &mut x2 );
 				std::mem::swap( &mut y1, &mut y2 );
-				ret_dxdy = UP;
 			}
 
 			//pixelの増加量を求める（短辺は＋１または－１ずつ進める）
@@ -125,7 +131,7 @@ impl Chaser
 			}
 		}
 
-		Some ( ret_dxdy )	//壁は視線を遮っていない
+		Some ( ( ret_dxdy1, ret_dxdy2 ) )	//目視できた
 	}
 }
 

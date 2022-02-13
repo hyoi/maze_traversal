@@ -150,12 +150,24 @@ fn move_sprite_chasers
 			chaser.stop = true;		//一旦 停止フラグを立てる
 
 			//追手が自機を目視できるなら
-			if let Some ( dxdy ) = chaser.find( player, &maze, &mut cmds ) //cmdsはデバッグのスプライト表示用
+			if let Some ( ( dxdy1, dxdy2 ) ) = chaser.find( player, &maze, &mut cmds ) //cmdsはデバッグのスプライト表示用
 			{	chaser.lockon = true;
-				if ! maze.is_wall( chaser.grid + dxdy )
-				{	chaser.grid += dxdy;
-					chaser.side = dxdy;
+
+				//長辺方向が壁ではないなら
+				if ! maze.is_wall( chaser.grid + dxdy1 )
+				{	chaser.grid += dxdy1;
+					chaser.side = dxdy1;
 					chaser.stop = false;
+				}
+				else if ! maze.is_wall( chaser.grid + dxdy2 )
+				{	//短辺方向が壁ではないなら
+					chaser.grid += dxdy2;
+					chaser.side = dxdy2;
+					chaser.stop = false;
+				}
+				else
+				{	//両方向が壁なら、2枚の壁の隙間から目撃したことになる
+//					chaser.lockon = false;
 				}
 			}
 			else

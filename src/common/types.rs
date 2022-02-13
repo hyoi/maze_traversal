@@ -140,9 +140,17 @@ pub struct GameMap
 }
 impl Default for GameMap
 {	fn default() -> Self
-	{	Self
-		{	rng: StdRng::seed_from_u64( rand::thread_rng().gen::<u64>() ),	//本番用
-		//	rng: StdRng::seed_from_u64( 1234567890 ),	//開発用：迷路作成で再現性がある乱数を使いたい場合
+	{	//開発で迷路作成に再現性が必要な場合、乱数生成器のシードを固定する
+		let seed = if cfg!( debug_assertions )
+		{	1234567890
+		}
+		else
+		{	//本番用
+			rand::thread_rng().gen::<u64>()
+		};
+
+		Self
+		{	rng  : StdRng::seed_from_u64( seed ),	
 			map  : [ [ MapObj::Wall; MAP_HEIGHT ]; MAP_WIDTH ],
 			bits : [ [ 0			  ; MAP_HEIGHT ]; MAP_WIDTH ],
 			start: MapGrid::default(),
