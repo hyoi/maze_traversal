@@ -1,7 +1,7 @@
 use super::*;
 
 //アプリのTitle
-pub const APP_TITLE: &str = "maze traversal";
+pub const APP_TITLE: &str = "Maze Traversal";
 
 //マップの縦横のマス数
 pub const MAP_WIDTH : usize = 35;	//66
@@ -77,14 +77,14 @@ pub const UI_UPPER_LEFT: [ MessageSect; 2 ] =
 [	( " HP ", FONT_ORBITRON_BLACK, PIXEL_PER_GRID * 0.8, Color::ORANGE ),
 	( ""    , FONT_ORBITRON_BLACK, PIXEL_PER_GRID * 1.0, Color::WHITE  ),
 ];
-/*
+
 #[derive(Component)]
 pub struct UiUpperCenter;
-pub const UI_UPPER_CENTER: [ MessageSect; 2 ] =
-[	( APP_TITLE, FONT_REGGAEONE_REGULAR, PIXEL_PER_GRID * 1.3, Color::ORANGE ),
-	( "迷路踏破", FONT_REGGAEONE_REGULAR, PIXEL_PER_GRID * 1.6, Color::WHITE  ),
+pub const UI_UPPER_CENTER: [ MessageSect; 1 ] =
+[	( APP_TITLE, FONT_ORBITRON_BLACK, PIXEL_PER_GRID * 1.0, Color::WHITE ),
+//	( "迷路踏破", FONT_REGGAEONE_REGULAR, PIXEL_PER_GRID * 1.6, Color::WHITE  ),
 ];
-*/
+
 #[derive(Component)]
 pub struct UiUpperRight;
 pub const UI_UPPER_RIGHT: [ MessageSect; 4 ] =

@@ -38,9 +38,9 @@ const NA_STR4: &str = "--.--";
 #[derive(Component)]
 struct HpGauge;
 const GAUGE_RECTANGLE: ( f32, f32, f32, f32 ) = 
-(	PIXEL_PER_GRID *  8.9 - SCREEN_WIDTH  / 2.0,	//X軸：画面中央からやや左より
+(	PIXEL_PER_GRID *  7.4 - SCREEN_WIDTH  / 2.0,	//X軸：画面中央からやや左より
 	PIXEL_PER_GRID * -0.7 + SCREEN_HEIGHT / 2.0,	//Y軸：画面上端からやや下がった位置
-	PIXEL_PER_GRID * 15.0,							//幅
+	PIXEL_PER_GRID * 11.8,							//幅
 	PIXEL_PER_GRID *  0.2,							//高さ
 );
 const SPRITE_DEPTH_GAUGE: f32 = 30.0;
@@ -61,21 +61,21 @@ fn spawn_text_ui_message( mut cmds: Commands, asset_svr: Res<AssetServer> )
 
 	//上端・下端に表示するtext
 	let mut ui_upper_left   = text_ui( &UI_UPPER_LEFT  , &asset_svr );
-//	let mut ui_upper_center = text_ui( &UI_UPPER_CENTER, &asset_svr );
+	let mut ui_upper_center = text_ui( &UI_UPPER_CENTER, &asset_svr );
 	let mut ui_upper_right  = text_ui( &UI_UPPER_RIGHT , &asset_svr );
 	let mut ui_lower_left   = text_ui( &UI_LOWER_LEFT  , &asset_svr );
 	let mut ui_lower_center = text_ui( &UI_LOWER_CENTER, &asset_svr );
 	let mut ui_lower_right  = text_ui( &UI_LOWER_RIGHT , &asset_svr );
 
 	ui_upper_left.style.align_self   = AlignSelf::FlexStart;
-//	ui_upper_center.style.align_self = AlignSelf::Center;
+	ui_upper_center.style.align_self = AlignSelf::Center;
 	ui_upper_right.style.align_self  = AlignSelf::FlexEnd;
 	ui_lower_left.style.align_self   = AlignSelf::FlexStart;
 	ui_lower_center.style.align_self = AlignSelf::Center;
 	ui_lower_right.style.align_self  = AlignSelf::FlexEnd;
 
 	ui_upper_left.text.alignment.horizontal   = HorizontalAlign::Left;
-//	ui_upper_center.text.alignment.horizontal = HorizontalAlign::Center;
+	ui_upper_center.text.alignment.horizontal = HorizontalAlign::Center;
 	ui_upper_right.text.alignment.horizontal  = HorizontalAlign::Right;
 	ui_lower_left.text.alignment.horizontal   = HorizontalAlign::Left;
 	ui_lower_center.text.alignment.horizontal = HorizontalAlign::Center;
@@ -115,7 +115,7 @@ fn spawn_text_ui_message( mut cmds: Commands, asset_svr: Res<AssetServer> )
 
 		cmds.spawn_bundle( upper_frame ).with_children( | cmds |
 		{	cmds.spawn_bundle( ui_upper_left   ).insert( UiUpperLeft   );
-//			cmds.spawn_bundle( ui_upper_center ).insert( UiUpperCenter );
+			cmds.spawn_bundle( ui_upper_center ).insert( UiUpperCenter );
 			cmds.spawn_bundle( ui_upper_right  ).insert( UiUpperRight  );
 		} );
 
