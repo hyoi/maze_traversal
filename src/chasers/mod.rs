@@ -178,7 +178,6 @@ fn move_sprite_chasers
 						LEFT  => RIGHT,
 						RIGHT => LEFT ,
 						DOWN  => UP   ,
-						_     => NONE ,
 					};
 
 					//行き止まりなら背後へ進む
@@ -247,7 +246,6 @@ fn move_sprite_chasers
 				LEFT  => position.x -= delta,
 				RIGHT => position.x += delta,
 				DOWN  => position.y -= delta,
-				_ => {},
 			}
 		}
 	}

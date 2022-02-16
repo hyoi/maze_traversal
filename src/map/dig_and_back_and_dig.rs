@@ -51,29 +51,30 @@ impl GameMap
 
 	//進行方向の壁が掘れるか調べる
 	fn is_digable_wall( &self, grid: MapGrid, four_sides: DxDy ) -> bool
-	{	match four_sides
-		{	UP    if self.is_wall( grid + UP + LEFT	   )
-				  && self.is_wall( grid + UP		   ) // 壁壁壁
-				  && self.is_wall( grid + UP + RIGHT   ) // 壁Ｘ壁
-				  && self.is_wall( grid + LEFT		   )
-				  && self.is_wall( grid + RIGHT		   ) => true,
-			LEFT  if self.is_wall( grid + UP + LEFT	   ) // 壁壁
-				  && self.is_wall( grid + UP		   ) // 壁Ｘ
-				  && self.is_wall( grid + LEFT		   ) // 壁壁
-				  && self.is_wall( grid + DOWN + LEFT  )
-				  && self.is_wall( grid + DOWN		   ) => true,
-			RIGHT if self.is_wall( grid + UP		   ) // 壁壁
-				  && self.is_wall( grid + UP + RIGHT   ) // Ｘ壁
-				  && self.is_wall( grid + RIGHT		   ) // 壁壁
-				  && self.is_wall( grid + DOWN 		   )
-				  && self.is_wall( grid + DOWN + RIGHT ) => true,
-			DOWN  if self.is_wall( grid + LEFT		   )
-				  && self.is_wall( grid + RIGHT		   ) // 壁Ｘ壁
-				  && self.is_wall( grid + DOWN + LEFT  ) // 壁壁壁
-				  && self.is_wall( grid + DOWN		   )
-				  && self.is_wall( grid + DOWN + RIGHT ) => true,
-			_ => { false }
-		}
+	{	let mut digable = false;
+		match four_sides
+		{	UP    => if self.is_wall( grid + UP + LEFT	  )
+					 && self.is_wall( grid + UP			  ) // 壁壁壁
+					 && self.is_wall( grid + UP + RIGHT   ) // 壁Ｘ壁
+					 && self.is_wall( grid + LEFT		  )
+					 && self.is_wall( grid + RIGHT		  ) { digable = true },
+			LEFT  => if self.is_wall( grid + UP + LEFT	  ) // 壁壁
+					 && self.is_wall( grid + UP			  ) // 壁Ｘ
+					 && self.is_wall( grid + LEFT		  ) // 壁壁
+					 && self.is_wall( grid + DOWN + LEFT  )
+					 && self.is_wall( grid + DOWN		  ) { digable = true },
+			RIGHT => if self.is_wall( grid + UP			  ) // 壁壁
+					 && self.is_wall( grid + UP + RIGHT   ) // Ｘ壁
+					 && self.is_wall( grid + RIGHT		  ) // 壁壁
+					 && self.is_wall( grid + DOWN 		  )
+					 && self.is_wall( grid + DOWN + RIGHT ) { digable = true },
+			DOWN  => if self.is_wall( grid + LEFT		  )
+					 && self.is_wall( grid + RIGHT		  ) // 壁Ｘ壁
+					 && self.is_wall( grid + DOWN + LEFT  ) // 壁壁壁
+					 && self.is_wall( grid + DOWN		  )
+					 && self.is_wall( grid + DOWN + RIGHT ) { digable = true },
+		};
+		digable
 	}
 }
 

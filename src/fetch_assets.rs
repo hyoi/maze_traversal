@@ -52,7 +52,7 @@ const PRELOADING_MESSAGE_ARRAY: [ &str; 13 ] =
 #[derive(Component)]
 struct SpriteTile ( MapGrid );
 const SPRITE_PIXEL: f32   = PIXEL_PER_GRID;
-const SPRITE_COLOR: Color = Color::rgb( 0.5, 0.3, 0.2 );
+const SPRITE_COLOR: Color = Color::YELLOW;
 const SPRITE_DEPTH: f32   = 0.0;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -101,10 +101,10 @@ fn spawn_entity_now_loading( mut cmds: Commands )
 		{	if chara == ' ' { continue }	//空白文字は無視
 
 			//スプライトの初期座標と最終座標
-			let x = rng.gen_range( 0..MAP_WIDTH  );
-			let y = rng.gen_range( 0..MAP_HEIGHT );
-			let start = MapGrid { x, y }.into_pixel();
-			let goal  = MapGrid { x: goal_x, y: goal_y };
+			let rnd_x = rng.gen_range( 0..MAP_WIDTH  );
+			let rnd_y = rng.gen_range( 0..MAP_HEIGHT );
+			let start = MapGrid { x: rnd_x, y: rnd_y }.into_pixel();
+			let goal  = MapGrid { x: goal_x as i32, y: goal_y as i32 };
 
 			//スプライトを作成する
 			cmds.spawn_bundle( SpriteBundle::default() )

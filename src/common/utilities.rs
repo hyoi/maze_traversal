@@ -54,15 +54,15 @@ pub fn toggle_window_mode( inkey: Res<Input<KeyCode>>, mut window: ResMut<Window
 	if is_alt_return
 	{	use bevy::window::WindowMode::*;
 		if let Some( window ) = window.get_primary_mut()
-		{	let mode = if window.mode() == Windowed { Fullscreen } else { Windowed };
+		{	let mode = if window.mode() == Windowed { SizedFullscreen } else { Windowed };
 			window.set_mode( mode );
 		}
 	}
 }
 
 //ESCキーが入力さたら一時停止する
-pub fn handle_esc_key_for_pause
-(	mut q: Query<&mut Visibility, With<MessagePause>>,
+pub fn handle_esc_key_for_pause<T: Component>
+(	mut q: Query<&mut Visibility, With<T>>,
 	mut inkey: ResMut<Input<KeyCode>>,
 	mut state: ResMut<State<GameState>>,
 )

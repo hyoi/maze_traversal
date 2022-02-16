@@ -98,10 +98,10 @@ impl GameMap
 		&&	 self.is_wall( grid + DOWN ) { return false }
 
 		//上下左右がすべて壁はfalse（掘ると飛び地になる）
-		if	 self.is_wall( grid + UP )
-		&&	 self.is_wall( grid + LEFT )
+		if	 self.is_wall( grid + UP    )
+		&&	 self.is_wall( grid + LEFT  )
 		&&	 self.is_wall( grid + RIGHT )
-		&&	 self.is_wall( grid + DOWN ) { return false }
+		&&	 self.is_wall( grid + DOWN  ) { return false }
 
 		//掘削できる壁
 		true

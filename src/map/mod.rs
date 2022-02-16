@@ -1,10 +1,10 @@
 use super::*;
 
 //internal modules
+mod map_utilities;					//構造解析
 mod dig_and_dig_and_dig;			//迷路作成
 mod dig_and_back_and_dig;			//迷路作成
 mod find_and_destroy_digable_walls;	//迷路作成
-mod map_utilities;					//構造解析
 
 //Pluginの手続き
 pub struct PluginMap;
