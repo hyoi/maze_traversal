@@ -46,13 +46,6 @@ pub const RANGE_MAP_INNER_X: RangeInclusive<i32> = 1..= MAP_WIDTH  - 2;	//掘削
 pub const RANGE_MAP_INNER_Y: RangeInclusive<i32> = 1..= MAP_HEIGHT - 2;	//掘削可能なレンジ（最外壁は掘れない）
 
 //MAP座標の上下左右を表す定数
-// pub const NONE : DxDy = DxDy { dx:  0, dy:  0 };
-// pub const UP   : DxDy = DxDy { dx:  0, dy: -1 };
-// pub const LEFT : DxDy = DxDy { dx: -1, dy:  0 };
-// pub const RIGHT: DxDy = DxDy { dx:  1, dy:  0 };
-// pub const DOWN : DxDy = DxDy { dx:  0, dy:  1 };
-// pub const FOUR_SIDES: [ DxDy; 4 ] = [ UP, LEFT, RIGHT, DOWN ];
-
 pub const UP   : DxDy = DxDy::Up;
 pub const LEFT : DxDy = DxDy::Left;
 pub const RIGHT: DxDy = DxDy::Right;
