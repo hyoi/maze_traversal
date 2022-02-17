@@ -1,9 +1,9 @@
 [package]
 name = "maze_traversal"
-version = "0.2.0"
+version = "0.2.3"
 edition = "2021"
 
 [dependencies]
-bevy = "0.6.0"
+bevy = "0.6.1"
 bevy_prototype_lyon = "0.4.0"
-rand = "0.8.4"
+rand = "0.8.5"
