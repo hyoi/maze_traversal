@@ -34,7 +34,7 @@ impl Chaser
 			let dy = PIXEL_PER_GRID * if y1 >= y2 { 1.0 } else { -1.0 };
 
 			//ループで使う変数の準備
-			let mut grid = MapGrid { x: x1 as usize, y: y1 as usize };
+			let mut grid = MapGrid { x: x1 , y: y1 };
 			let mut pixel = grid.into_pixel();
 			let mut pool = 0.0;		//長辺方向の切り捨て誤差を蓄える変数
 			let mut adjust = 0.0;	//長辺方向の切り捨て誤差がgrid分に達したらループに反映する変数
@@ -47,7 +47,7 @@ impl Chaser
 					if new_px >= pixel.x + dx + adjust { break } //内側loopの脱出条件
 
 					//壁か？
-					grid.x = ( ( new_px - ( PIXEL_PER_GRID - SCREEN_WIDTH ) / 2.0 ) / PIXEL_PER_GRID ) as usize;
+					grid.x = ( ( new_px - ( PIXEL_PER_GRID - SCREEN_WIDTH ) / 2.0 ) / PIXEL_PER_GRID ) as i32;
 					if maze.is_wall( grid ) { return None }	//関数の脱出条件
 					n += 1;
 
@@ -65,7 +65,7 @@ impl Chaser
 				if grid.y as i32 == y2 { break }
 
 				//各変数の調整
-				grid.y = ( grid.y as i32 - dy.signum() as i32 ) as usize;
+				grid.y -= dy.signum() as i32;
 				pixel += ( dx + adjust, dy );
 				let work = ( pixel.x / PIXEL_PER_GRID ).floor() * PIXEL_PER_GRID;
 				pool += pixel.x - work;
@@ -90,7 +90,7 @@ impl Chaser
 			let dy = PIXEL_PER_GRID * side_y as f32 / side_x as f32;
 
 			//ループで使う変数の準備
-			let mut grid = MapGrid { x: x1 as usize, y: y1 as usize };
+			let mut grid = MapGrid { x: x1, y: y1 };
 			let mut pixel = grid.into_pixel();
 			let mut pool = 0.0;		//長辺方向の切り捨て誤差を蓄える変数
 			let mut adjust = 0.0;	//長辺方向の切り捨て誤差がgrid分に達したらループに反映する変数
@@ -103,7 +103,7 @@ impl Chaser
 					if new_py <= pixel.y - dy - adjust { break } //内側loopの脱出条件
 
 					//壁か？
-					grid.y = ( ( ( SCREEN_HEIGHT - PIXEL_PER_GRID ) / 2.0 - new_py ) / PIXEL_PER_GRID ) as usize - 1;
+					grid.y = ( ( ( SCREEN_HEIGHT - PIXEL_PER_GRID ) / 2.0 - new_py ) / PIXEL_PER_GRID ) as i32 - 1;
 					if maze.is_wall( grid ) { return None }	//関数の脱出条件
 					n += 1;
 
@@ -121,7 +121,7 @@ impl Chaser
 				if grid.x as i32 == x2 { break }
 
 				//各変数の調整
-				grid.x = ( grid.x as i32 + dx.signum() as i32 ) as usize;
+				grid.x += dx.signum() as i32;
 				pixel += ( dx, - ( dy + adjust ) );
 				let work = ( pixel.y / PIXEL_PER_GRID ).ceil() * PIXEL_PER_GRID;
 				pool += work - pixel.y;

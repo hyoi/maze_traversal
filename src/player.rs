@@ -172,7 +172,6 @@ fn move_sprite_player
 			LEFT  => position.x -= delta,
 			RIGHT => position.x += delta,
 			DOWN  => position.y -= delta,
-			_ => {},
 		}
 
 		//自機のの表示向きを更新する
@@ -206,7 +205,6 @@ fn rotate_player_sprite( player: &Player, transform: &mut Mut<Transform> )
 			else if player.key_input == LEFT  { -90.0 }
 			else    { 180.0 }
 		}
-		_ => 0.0,
 	};
 
 	let quat = Quat::from_rotation_z( angle.to_radians() );

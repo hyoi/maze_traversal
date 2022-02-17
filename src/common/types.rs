@@ -22,7 +22,13 @@ pub struct Record
 	pub hp	 : f32,
 }
 impl Default for Record
-{	fn default() -> Self { Self { stage: 0, score: 0, hp: MAX_HP, } }
+{	fn default() -> Self
+	{	Self
+		{	stage: 0,
+			score: 0,
+			hp   : MAX_HP,
+		}
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -30,11 +36,18 @@ impl Default for Record
 //マーカーResource
 pub struct DbgOptResUI;
 
+//テキストUIのCompornent
+#[derive(Component)]
+pub struct MessageClear;
+
+#[derive(Component)]
+pub struct MessageOver;
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //Map用の二次元配列での座標
 #[derive(Default,Copy,Clone,PartialEq,Eq)]
-pub struct MapGrid { pub x: usize, pub y: usize }
+pub struct MapGrid { pub x: i32, pub y: i32 }
 impl MapGrid
 {	//二次元配列の座標から画面座標を算出する
 	pub fn into_pixel( self ) -> Pixel
@@ -44,9 +57,9 @@ impl MapGrid
 	}
 }
 
-//方向（上下左右）の座標増分
-#[derive(Default,Copy,Clone,PartialEq,Eq)]
-pub struct DxDy { pub dx: i32, pub dy: i32 }
+//四方
+#[derive(Copy,Clone,PartialEq,Eq)]
+pub enum DxDy { Up, Left, Right, Down, }
 
 //MapGridとDxDyを加算できるようAdd()をオーバーロードする
 use std::ops::*;
@@ -54,49 +67,74 @@ use std::ops::*;
 //MapGrid = MapGrid + DxDy
 impl Add<DxDy> for MapGrid
 {	type Output = MapGrid;
-	fn add( self, dxdy: DxDy ) -> MapGrid
-	{	let x = ( self.x as i32 + dxdy.dx ) as usize;
-		let y = ( self.y as i32 + dxdy.dy ) as usize;
-		MapGrid { x, y }
+	fn add( mut self, dxdy: DxDy ) -> MapGrid
+	{	match dxdy
+		{	DxDy::Up    => { self.y -= 1; }
+			DxDy::Left  => { self.x -= 1; }
+			DxDy::Right => { self.x += 1; }
+			DxDy::Down  => { self.y += 1; }
+		}
+		self
 	}
 }
 impl Add<&DxDy> for MapGrid
 {	type Output = MapGrid;
-	fn add( self, dxdy: &DxDy ) -> MapGrid
-	{	let x = ( self.x as i32 + dxdy.dx ) as usize;
-		let y = ( self.y as i32 + dxdy.dy ) as usize;
-		MapGrid { x, y }
+	fn add( mut self, dxdy: &DxDy ) -> MapGrid
+	{	match dxdy
+		{	DxDy::Up    => { self.y -= 1; }
+			DxDy::Left  => { self.x -= 1; }
+			DxDy::Right => { self.x += 1; }
+			DxDy::Down  => { self.y += 1; }
+		}
+		self
 	}
 }
 //MapGrid = DxDy + MapGrid 
 impl Add<MapGrid> for DxDy
 {	type Output = MapGrid;
-	fn add( self, grid: MapGrid ) -> MapGrid
-	{	let x = ( grid.x as i32 + self.dx ) as usize;
-		let y = ( grid.y as i32 + self.dy ) as usize;
-		MapGrid { x, y }
+	fn add( self, mut grid: MapGrid ) -> MapGrid
+	{	match self
+		{	DxDy::Up    => { grid.y -= 1; }
+			DxDy::Left  => { grid.x -= 1; }
+			DxDy::Right => { grid.x += 1; }
+			DxDy::Down  => { grid.y += 1; }
+		}
+		grid
 	}
 }
 impl Add<&MapGrid> for DxDy
 {	type Output = MapGrid;
 	fn add( self, grid: &MapGrid ) -> MapGrid
-	{	let x = ( grid.x as i32 + self.dx ) as usize;
-		let y = ( grid.y as i32 + self.dy ) as usize;
-		MapGrid { x, y }
+	{	let mut ret = *grid;
+		match self
+		{	DxDy::Up    => { ret.y -= 1; }
+			DxDy::Left  => { ret.x -= 1; }
+			DxDy::Right => { ret.x += 1; }
+			DxDy::Down  => { ret.y += 1; }
+		}
+		ret
 	}
 }
 //MapGrid += DxDy
 impl AddAssign<DxDy> for MapGrid
 {	fn add_assign( &mut self, dxdy: DxDy )
-	{	self.x = ( self.x as i32 + dxdy.dx ) as usize;
-		self.y = ( self.y as i32 + dxdy.dy ) as usize;
- 	}
+	{	match dxdy
+		{	DxDy::Up    => { self.y -= 1; }
+			DxDy::Left  => { self.x -= 1; }
+			DxDy::Right => { self.x += 1; }
+			DxDy::Down  => { self.y += 1; }
+		}
+	}
 }
 impl AddAssign<&DxDy> for MapGrid
 {	fn add_assign( &mut self, dxdy: &DxDy )
-	{	self.x = ( self.x as i32 + dxdy.dx ) as usize;
-		self.y = ( self.y as i32 + dxdy.dy ) as usize;
- 	}
+	{	match dxdy
+		{	DxDy::Up    => { self.y -= 1; }
+			DxDy::Left  => { self.x -= 1; }
+			DxDy::Right => { self.x += 1; }
+			DxDy::Down  => { self.y += 1; }
+		}
+	}
 }
 
 //スプライト等の画面座標
@@ -132,27 +170,21 @@ pub enum MapObj
 //MAP情報のResource
 pub struct GameMap
 {	rng: rand::prelude::StdRng,	//再現性がある乱数を使いたいので
-	map  : [ [ MapObj; MAP_HEIGHT ]; MAP_WIDTH ],
-	bits : [ [ usize ; MAP_HEIGHT ]; MAP_WIDTH ],
+	map  : [ [ MapObj; MAP_HEIGHT as usize ]; MAP_WIDTH as usize ],
+	bits : [ [ usize ; MAP_HEIGHT as usize ]; MAP_WIDTH as usize ],
 	start: MapGrid,
 	goal : MapGrid,
 	halls: usize,	//広間のマス数
 }
 impl Default for GameMap
 {	fn default() -> Self
-	{	//開発で迷路作成に再現性が必要な場合、乱数生成器のシードを固定する
-		let seed = if cfg!( debug_assertions )
-		{	1234567890
-		}
-		else
-		{	//本番用
-			rand::thread_rng().gen::<u64>()
-		};
+	{	//開発で迷路作成に再現性が必要な場合、乱数シードを固定する。本番はランダムにする。
+		let seed = if cfg!( debug_assertions ) { 1234567890 } else { rand::thread_rng().gen::<u64>() };
 
 		Self
 		{	rng  : StdRng::seed_from_u64( seed ),	
-			map  : [ [ MapObj::Wall; MAP_HEIGHT ]; MAP_WIDTH ],
-			bits : [ [ 0			  ; MAP_HEIGHT ]; MAP_WIDTH ],
+			map  : [ [ MapObj::Wall; MAP_HEIGHT as usize ]; MAP_WIDTH as usize ],
+			bits : [ [ 0           ; MAP_HEIGHT as usize ]; MAP_WIDTH as usize ],
 			start: MapGrid::default(),
 			goal : MapGrid::default(),
 			halls: 0,
@@ -164,11 +196,11 @@ impl GameMap
 {	//GameMap構造体のアクセサ
 	pub fn rng( &mut self ) -> &mut rand::prelude::StdRng { &mut self.rng }
 
-	pub fn mapobj( &self, grid: MapGrid ) -> MapObj { self.map [ grid.x ][ grid.y ] }
-	pub fn mapobj_mut( &mut self, grid: MapGrid ) -> &mut MapObj { &mut self.map[ grid.x ][ grid.y ] }
+	pub fn mapobj( &self, grid: MapGrid ) -> MapObj { self.map [ grid.x as usize ][ grid.y as usize ] }
+	pub fn mapobj_mut( &mut self, grid: MapGrid ) -> &mut MapObj { &mut self.map[ grid.x as usize ][ grid.y as usize ] }
 
-	pub fn bits( &self, grid: MapGrid ) -> usize { self.bits[ grid.x ][ grid.y ] }
-	fn bits_mut( &mut self, grid: MapGrid ) -> &mut usize { &mut self.bits[ grid.x ][ grid.y ] }
+	pub fn bits( &self, grid: MapGrid ) -> usize { self.bits[ grid.x as usize ][ grid.y as usize ] }
+	fn bits_mut( &mut self, grid: MapGrid ) -> &mut usize { &mut self.bits[ grid.x as usize ][ grid.y as usize ] }
 
 	pub fn start( &self ) -> MapGrid { self.start }
 	pub fn start_mut( &mut self ) -> &mut MapGrid { &mut self.start }

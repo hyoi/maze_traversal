@@ -1,5 +1,5 @@
 //external modules
-use bevy::{ prelude::*, diagnostic::*,};
+use bevy::prelude::*;
 use rand::prelude::*;
 
 //internal modules
@@ -36,12 +36,10 @@ fn main()
 	.insert_resource( Msaa { samples: 4 } )					// アンチエイリアス
 	//----------------------------------------------------------------------------------------------
 	.add_plugins( DefaultPlugins )							// デフォルトプラグイン
-	.add_plugin( FrameTimeDiagnosticsPlugin::default() )	// fps計測のプラグイン
 	//----------------------------------------------------------------------------------------------
 	.add_state( GameState::Init )							// 状態遷移の初期値
 	//----------------------------------------------------------------------------------------------
 	.add_startup_system( spawn_camera )						// bevyのカメラ設置
-	.add_system( handle_esc_key_for_pause )					// [Esc]でpause処理
 	//----------------------------------------------------------------------------------------------
 	.add_plugin( PluginFetchAssets )
 	.add_plugin( PluginUi )
