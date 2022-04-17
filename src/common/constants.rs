@@ -4,8 +4,8 @@ use super::*;
 pub const APP_TITLE: &str = "Maze Traversal";
 
 //マップの縦横のマス数
-pub const MAP_WIDTH : i32 = 35;	//66
-pub const MAP_HEIGHT: i32 = 35;	//35
+pub const MAP_WIDTH : i32 = 30;	//66
+pub const MAP_HEIGHT: i32 = 30;	//35
 
 //画面の縦横のマス数
 pub const GRID_WIDTH : i32 = MAP_WIDTH;
