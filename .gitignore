@@ -1,4 +1,4 @@
-/backup/*
+/.vscode/*
 /.cargo/*
 /target/*
 /Cargo.lock
