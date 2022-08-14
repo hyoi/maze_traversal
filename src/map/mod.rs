@@ -146,7 +146,7 @@ fn spawn_sprite_map
 					let position = Vec3::new( pixel.x, pixel.y, SPRITE_DEPTH_MAZE );
 					let quat = Quat::from_rotation_z( 45_f32.to_radians() ); //45°傾ける
 					let id = cmds.spawn_bundle( SpriteBundle::default() )
-						.insert( Sprite { color: GOAL_COLOR, custom_size, ..Default::default() } )
+						.insert( Sprite { color: GOAL_COLOR, custom_size, ..default() } )
 						.insert( Transform::from_translation( position ).with_rotation( quat ) )
 						.insert( SpriteGoal )
 						.id(); 
@@ -156,7 +156,7 @@ fn spawn_sprite_map
 				{	//壁のストライプを表示する
 					let custom_size = Some( Vec2::new( WALL_PIXEL, WALL_PIXEL ) );
 					cmds.spawn_bundle( SpriteBundle::default() )
-						.insert( Sprite { custom_size, ..Default::default() } )
+						.insert( Sprite { custom_size, ..default() } )
 						.insert( asset_svr.load( IMAGE_SPRITE_WALL ) as Handle<Image> )
 						.insert( Transform::from_translation( Vec3::new( pixel.x, pixel.y, SPRITE_DEPTH_MAZE ) ) )
 						.insert( SpriteWall );
@@ -165,7 +165,7 @@ fn spawn_sprite_map
 				{	//コインのスプライトを表示する
 					let custom_size = Some( Vec2::new( COIN_PIXEL, COIN_PIXEL ) );
 					let id = cmds.spawn_bundle( SpriteBundle::default() )
-						.insert( Sprite { custom_size, ..Default::default() } )
+						.insert( Sprite { custom_size, ..default() } )
 						.insert( asset_svr.load( IMAGE_SPRITE_COIN ) as Handle<Image> )
 						.insert( Transform::from_translation( Vec3::new( pixel.x, pixel.y, SPRITE_DEPTH_MAZE ) ) )
 						.insert( SpriteCoin )
@@ -179,7 +179,7 @@ fn spawn_sprite_map
 			if cfg!( debug_assertions ) && maze.is_hall( grid )
 			{	let custom_size = Some( Vec2::new( DEBUG_PIXEL, DEBUG_PIXEL ) * 0.9 );
 				cmds.spawn_bundle( SpriteBundle::default() )
-					.insert( Sprite { color: Color::INDIGO, custom_size, ..Default::default() } )
+					.insert( Sprite { color: Color::INDIGO, custom_size, ..default() } )
 					.insert( Transform::from_translation( Vec3::new( pixel.x, pixel.y, SPRITE_DEPTH_DEBUG ) ) )
 					.insert( DebugSprite );
 			}

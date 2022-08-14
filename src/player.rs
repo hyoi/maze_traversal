@@ -85,7 +85,7 @@ fn spawn_sprite_player( maze: Res<GameMap>, mut cmds: Commands )
 	let transform = Transform::from_translation( Vec3::new( pixel.x, pixel.y, SPRITE_DEPTH_PLAYER ) );
 
 	cmds.spawn_bundle( GeometryBuilder::build_as( triangle, drawmode, transform ) )
-		.insert( Player { grid: maze.start(), ..Default::default() } );
+		.insert( Player { grid: maze.start(), ..default() } );
 }
 
 //自機のスプライトを移動する

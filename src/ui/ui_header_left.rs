@@ -51,11 +51,11 @@ fn spawn_sprite_hp_gauge( mut cmds: Commands )
 	let sprite = Sprite
 	{	color: Color::GREEN,
 		custom_size: Some( Vec2::new( w, h ) ),
-		..Default::default()
+		..default()
 	};
 	let transform = Transform::from_translation( Vec3::new( x, y, SPRITE_DEPTH_GAUGE ) );
 
-	let bundle = SpriteBundle { sprite, transform, ..Default::default() };
+	let bundle = SpriteBundle { sprite, transform, ..default() };
 	cmds.spawn_bundle( bundle ).insert( HpGauge );
 }
 

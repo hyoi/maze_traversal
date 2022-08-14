@@ -111,7 +111,7 @@ fn spawn_entity_now_loading( mut cmds: Commands )
 				.insert( Sprite
 				{	color: SPRITE_COLOR,
 					custom_size: Some( Vec2::new( SPRITE_PIXEL, SPRITE_PIXEL ) ),
-					..Default::default()
+					..default()
 				} )
 				.insert( Transform::from_translation( Vec3::new( start.x, start.y, SPRITE_DEPTH ) ) )
 				.insert( SpriteTile ( goal ) );
