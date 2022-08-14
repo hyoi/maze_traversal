@@ -193,8 +193,8 @@ fn text_ui( message: &[ MessageSect ], asset_svr: &Res<AssetServer> ) -> TextBun
 
 //レイアウト用に隠しフレームを作る
 fn hidden_frame( style: Style ) -> NodeBundle
-{	let visibility = Visibility { is_visible: false };
-	NodeBundle { style, visibility, ..Default::default() }
+{	let color = UiColor ( Color::NONE );
+	NodeBundle { style, color, ..default() }
 }
 
 //End of code.
