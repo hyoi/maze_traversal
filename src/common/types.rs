@@ -158,7 +158,7 @@ impl AddAssign<&(f32,f32)> for Pixel
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //MAPのマスの種類
-#[derive(Copy,Clone,PartialEq)]
+#[derive(Copy,Clone,PartialEq,Eq)]
 pub enum MapObj
 {	Wall,
 	Passage, //通常の道

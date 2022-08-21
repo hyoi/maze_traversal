@@ -55,7 +55,7 @@ impl Chaser
 					if cfg!( debug_assertions )
 					{	let custom_size = Some( Vec2::new( DEBUG_PIXEL, DEBUG_PIXEL ) * 0.2 );
 						cmds.spawn_bundle( SpriteBundle::default() )
-							.insert( Sprite { color: Color::LIME_GREEN, custom_size, ..Default::default() } )
+							.insert( Sprite { color: Color::LIME_GREEN, custom_size, ..default() } )
 							.insert( Transform::from_translation( Vec3::new( new_px, pixel.y, 15.0 ) ) )
 							.insert( DebugSpriteSight );
 					}
@@ -111,7 +111,7 @@ impl Chaser
 					if cfg!( debug_assertions )
 					{	let custom_size = Some( Vec2::new( DEBUG_PIXEL, DEBUG_PIXEL ) * 0.2 );
 						 cmds.spawn_bundle( SpriteBundle::default() )
-							.insert( Sprite { color: Color::CYAN, custom_size, ..Default::default() } )
+							.insert( Sprite { color: Color::CYAN, custom_size, ..default() } )
 							.insert( Transform::from_translation( Vec3::new( pixel.x, new_py, 15.0 ) ) )
 							.insert( DebugSpriteSight );
 					}

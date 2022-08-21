@@ -120,21 +120,21 @@ fn spawn_text_ui_message( mut cmds: Commands, asset_svr: Res<AssetServer> )
 		position_type  : PositionType::Absolute,
 		justify_content: JustifyContent::Center,
 		align_items    : AlignItems::Center,
-		..Default::default()
+		..default()
 	} );
 	let upper_frame = hidden_frame( Style
 	{	size           : Size::new( Val::Px( SCREEN_WIDTH ), Val::Px( SCREEN_HEIGHT ) ),
 		position_type  : PositionType::Absolute,
 		flex_direction : FlexDirection::Column,
 		justify_content: JustifyContent::FlexEnd, //画面の上端
-		..Default::default()
+		..default()
 	} );
 	let lower_frame = hidden_frame( Style
 	{	size           : Size::new( Val::Px( SCREEN_WIDTH ), Val::Px( SCREEN_HEIGHT ) ),
 		position_type  : PositionType::Absolute,
 		flex_direction : FlexDirection::Column,
 		justify_content: JustifyContent::FlexStart, //画面の下端
-		..Default::default()
+		..default()
 	} );
 
 	//隠しフレームの上に子要素を作成する
@@ -160,7 +160,7 @@ fn spawn_text_ui_message( mut cmds: Commands, asset_svr: Res<AssetServer> )
 	let pixel = MapGrid { x: GRID_WIDTH - 4, y: GRID_HEIGHT - 2 }.into_pixel();
 	let custom_size = Some( Vec2::new( PIXEL_PER_GRID, PIXEL_PER_GRID ) );
 	cmds.spawn_bundle( SpriteBundle::default() )
-		.insert( Sprite { custom_size, ..Default::default() } )
+		.insert( Sprite { custom_size, ..default() } )
 		.insert( asset_svr.load( IMAGE_SPRITE_KANI ) as Handle<Image> )
 		.insert( Transform::from_translation( Vec3::new( pixel.x, pixel.y, 100.0 ) ) );
 }
@@ -187,14 +187,14 @@ fn text_ui( message: &[ MessageSect ], asset_svr: &Res<AssetServer> ) -> TextBun
 	let position_type = PositionType::Absolute;
 
 	let text  = Text { sections, alignment };
-	let style = Style { position_type, ..Default::default() };
-	TextBundle { text, style, ..Default::default() }
+	let style = Style { position_type, ..default() };
+	TextBundle { text, style, ..default() }
 }
 
 //レイアウト用に隠しフレームを作る
 fn hidden_frame( style: Style ) -> NodeBundle
-{	let visibility = Visibility { is_visible: false };
-	NodeBundle { style, visibility, ..Default::default() }
+{	let color = UiColor ( Color::NONE );
+	NodeBundle { style, color, ..default() }
 }
 
 //End of code.

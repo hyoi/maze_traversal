@@ -110,9 +110,9 @@ fn spawn_sprite_chasers
 		let custom_size = Some( Vec2::new( CHASER_PIXEL, CHASER_PIXEL ) );
 
 		cmds.spawn_bundle( SpriteBundle::default() )
-			.insert( Sprite { color: CHASER_CALM_COLOR, custom_size, ..Default::default() } )
+			.insert( Sprite { color: CHASER_CALM_COLOR, custom_size, ..default() } )
 			.insert( Transform::from_translation( position ).with_rotation( quat ) )
-			.insert( Chaser { grid, ..Default::default() } );
+			.insert( Chaser { grid, ..default() } );
 	};
 }
 
