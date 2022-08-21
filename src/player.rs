@@ -1,7 +1,7 @@
 use super::*;
 
 //external modules
-use bevy_prototype_lyon::prelude::*;
+use bevy::sprite::MaterialMesh2dBundle;
 
 //Pluginの手続き
 pub struct PluginPlayer;
@@ -9,7 +9,6 @@ impl Plugin for PluginPlayer
 {	fn build( &self, app: &mut App )
 	{	app
 		//------------------------------------------------------------------------------------------
-		.add_plugin( ShapePlugin )									// bevy_prototype_lyon
 		.init_resource::<Record>()									// スコア等のResource
 		//==========================================================================================
 		.add_system_set												// ＜GameState::Start＞
@@ -73,19 +72,19 @@ impl Default for Player
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //自機のスプライトを初期位置に配置する
-fn spawn_sprite_player( maze: Res<GameMap>, mut cmds: Commands )
-{	let pixel = maze.start().into_pixel();
-
-	let triangle = &shapes::RegularPolygon
-	{	sides: 3,
-		feature: shapes::RegularPolygonFeature::Radius( PLAYER_PIXEL ),
-		..shapes::RegularPolygon::default()
-	};
-	let drawmode = DrawMode::Fill( FillMode { options: FillOptions::default(), color: PLAYER_COLOR } );
+fn spawn_sprite_player
+(	maze: Res<GameMap>,
+	mut cmds: Commands,
+	mut meshes: ResMut<Assets<Mesh>>,
+	mut materials: ResMut<Assets<ColorMaterial>>,
+)
+{	let pixel     = maze.start().into_pixel();
 	let transform = Transform::from_translation( Vec3::new( pixel.x, pixel.y, SPRITE_DEPTH_PLAYER ) );
+	let mesh	  = meshes.add( shape::RegularPolygon::new( PLAYER_PIXEL, 3 ).into() ).into();
+	let material  = materials.add( ColorMaterial::from( PLAYER_COLOR ) );
 
-	cmds.spawn_bundle( GeometryBuilder::build_as( triangle, drawmode, transform ) )
-		.insert( Player { grid: maze.start(), ..default() } );
+	let sprite = MaterialMesh2dBundle { transform, mesh, material, ..default() };
+	cmds.spawn_bundle( sprite ).insert( Player { grid: maze.start(), ..default() } );
 }
 
 //自機のスプライトを移動する
