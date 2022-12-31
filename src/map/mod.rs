@@ -145,7 +145,7 @@ fn spawn_sprite_map
 					let custom_size = Some( Vec2::new( GOAL_PIXEL, GOAL_PIXEL ) );
 					let position = Vec3::new( pixel.x, pixel.y, SPRITE_DEPTH_MAZE );
 					let quat = Quat::from_rotation_z( 45_f32.to_radians() ); //45°傾ける
-					let id = cmds.spawn_bundle( SpriteBundle::default() )
+					let id = cmds.spawn( SpriteBundle::default() )
 						.insert( Sprite { color: GOAL_COLOR, custom_size, ..default() } )
 						.insert( Transform::from_translation( position ).with_rotation( quat ) )
 						.insert( SpriteGoal )
@@ -155,7 +155,7 @@ fn spawn_sprite_map
 				MapObj::Wall =>
 				{	//壁のストライプを表示する
 					let custom_size = Some( Vec2::new( WALL_PIXEL, WALL_PIXEL ) );
-					cmds.spawn_bundle( SpriteBundle::default() )
+					cmds.spawn( SpriteBundle::default() )
 						.insert( Sprite { custom_size, ..default() } )
 						.insert( asset_svr.load( IMAGE_SPRITE_WALL ) as Handle<Image> )
 						.insert( Transform::from_translation( Vec3::new( pixel.x, pixel.y, SPRITE_DEPTH_MAZE ) ) )
@@ -164,7 +164,7 @@ fn spawn_sprite_map
 				MapObj::Coin ( _, coin ) =>
 				{	//コインのスプライトを表示する
 					let custom_size = Some( Vec2::new( COIN_PIXEL, COIN_PIXEL ) );
-					let id = cmds.spawn_bundle( SpriteBundle::default() )
+					let id = cmds.spawn( SpriteBundle::default() )
 						.insert( Sprite { custom_size, ..default() } )
 						.insert( asset_svr.load( IMAGE_SPRITE_COIN ) as Handle<Image> )
 						.insert( Transform::from_translation( Vec3::new( pixel.x, pixel.y, SPRITE_DEPTH_MAZE ) ) )
@@ -178,7 +178,7 @@ fn spawn_sprite_map
 			//デバッグ用に広間のスプライトを表示する
 			if cfg!( debug_assertions ) && maze.is_hall( grid )
 			{	let custom_size = Some( Vec2::new( DEBUG_PIXEL, DEBUG_PIXEL ) * 0.9 );
-				cmds.spawn_bundle( SpriteBundle::default() )
+				cmds.spawn( SpriteBundle::default() )
 					.insert( Sprite { color: Color::INDIGO, custom_size, ..default() } )
 					.insert( Transform::from_translation( Vec3::new( pixel.x, pixel.y, SPRITE_DEPTH_DEBUG ) ) )
 					.insert( DebugSprite );
@@ -200,7 +200,7 @@ fn rotate_sprite_goal
 	transform.rotate( quat );
 
 	//色を変える
-	let hue = ( ( time.seconds_since_startup() * 500. ) as usize % 360 ) as f32;
+	let hue = ( ( time.elapsed_seconds_f64() * 500. ) as usize % 360 ) as f32;
 	let ( saturation, lightness, alpha ) = ( 1., 0.5, 1. );
 	sprite.color = Color::Hsla{ hue, saturation, lightness, alpha };
 }

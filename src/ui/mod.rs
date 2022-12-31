@@ -138,28 +138,28 @@ fn spawn_text_ui_message( mut cmds: Commands, asset_svr: Res<AssetServer> )
 	} );
 
 	//隠しフレームの上に子要素を作成する
-	cmds.spawn_bundle( center_frame ).with_children( | cmds |
-	{	cmds.spawn_bundle( pause_text ).insert( MessagePause );
-		cmds.spawn_bundle( clear_text ).insert( MessageClear );
-		cmds.spawn_bundle( over_text  ).insert( MessageOver  );
+	cmds.spawn( center_frame ).with_children( | cmds |
+	{	cmds.spawn( pause_text ).insert( MessagePause );
+		cmds.spawn( clear_text ).insert( MessageClear );
+		cmds.spawn( over_text  ).insert( MessageOver  );
 
-		cmds.spawn_bundle( upper_frame ).with_children( | cmds |
-		{	cmds.spawn_bundle( ui_upper_left   ).insert( UiHeaderLeft   );
-			cmds.spawn_bundle( ui_upper_center ).insert( UiHeaderCenter );
-			cmds.spawn_bundle( ui_upper_right  ).insert( UiHeaderRight  );
+		cmds.spawn( upper_frame ).with_children( | cmds |
+		{	cmds.spawn( ui_upper_left   ).insert( UiHeaderLeft   );
+			cmds.spawn( ui_upper_center ).insert( UiHeaderCenter );
+			cmds.spawn( ui_upper_right  ).insert( UiHeaderRight  );
 		} );
 
-		cmds.spawn_bundle( lower_frame ).with_children( | cmds |
-		{	cmds.spawn_bundle( ui_lower_left   ).insert( UiFooterLeft   );
-			cmds.spawn_bundle( ui_lower_center ).insert( UiFooterCenter );
-			cmds.spawn_bundle( ui_lower_right  ).insert( UiFooterRight  );
+		cmds.spawn( lower_frame ).with_children( | cmds |
+		{	cmds.spawn( ui_lower_left   ).insert( UiFooterLeft   );
+			cmds.spawn( ui_lower_center ).insert( UiFooterCenter );
+			cmds.spawn( ui_lower_right  ).insert( UiFooterRight  );
 		} );
 	} );
 
 	//おまけ
 	let pixel = MapGrid { x: GRID_WIDTH - 4, y: GRID_HEIGHT - 2 }.into_pixel();
 	let custom_size = Some( Vec2::new( PIXEL_PER_GRID, PIXEL_PER_GRID ) );
-	cmds.spawn_bundle( SpriteBundle::default() )
+	cmds.spawn( SpriteBundle::default() )
 		.insert( Sprite { custom_size, ..default() } )
 		.insert( asset_svr.load( IMAGE_SPRITE_KANI ) as Handle<Image> )
 		.insert( Transform::from_translation( Vec3::new( pixel.x, pixel.y, 100.0 ) ) );
@@ -191,10 +191,10 @@ fn text_ui( message: &[ MessageSect ], asset_svr: &Res<AssetServer> ) -> TextBun
 	TextBundle { text, style, ..default() }
 }
 
-//レイアウト用に隠しフレームを作る
+//text UIのレイアウト用に隠しフレームを作る
 fn hidden_frame( style: Style ) -> NodeBundle
-{	let color = UiColor ( Color::NONE );
-	NodeBundle { style, color, ..default() }
+{   let background_color = BackgroundColor ( Color::NONE );
+    NodeBundle { style, background_color, ..default() }
 }
 
 //End of code.

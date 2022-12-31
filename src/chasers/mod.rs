@@ -75,8 +75,8 @@ impl Default for Chaser
 		Self
 		{	grid: MapGrid::default(),
 			side: UP,
-			wait: Timer::from_seconds( CHASER_WAIT, false ),
-			wandering: Timer::from_seconds( rng.gen_range( CHASER_WAIT_WANDERING ), false ),
+			wait: Timer::from_seconds( CHASER_WAIT, TimerMode::Once ),
+			wandering: Timer::from_seconds( rng.gen_range( CHASER_WAIT_WANDERING ), TimerMode::Once ),
 			stop: true,
 			lockon: false,
 		}
@@ -109,7 +109,7 @@ fn spawn_sprite_chasers
 		let quat = Quat::from_rotation_z( 45_f32.to_radians() ); //45°傾ける
 		let custom_size = Some( Vec2::new( CHASER_PIXEL, CHASER_PIXEL ) );
 
-		cmds.spawn_bundle( SpriteBundle::default() )
+		cmds.spawn( SpriteBundle::default() )
 			.insert( Sprite { color: CHASER_CALM_COLOR, custom_size, ..default() } )
 			.insert( Transform::from_translation( position ).with_rotation( quat ) )
 			.insert( Chaser { grid, ..default() } );

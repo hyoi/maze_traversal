@@ -56,7 +56,7 @@ fn spawn_sprite_hp_gauge( mut cmds: Commands )
 	let transform = Transform::from_translation( Vec3::new( x, y, SPRITE_DEPTH_GAUGE ) );
 
 	let bundle = SpriteBundle { sprite, transform, ..default() };
-	cmds.spawn_bundle( bundle ).insert( HpGauge );
+	cmds.spawn( bundle ).insert( HpGauge );
 }
 
 //HP GAGEを更新する(上端左)
