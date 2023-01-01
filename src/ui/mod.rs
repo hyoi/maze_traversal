@@ -69,13 +69,13 @@ const UI_HEADER_CENTER: [ MessageSect; 1 ] =
 #[derive(Component)]
 struct UiFooterCenter;
 const UI_FOOTER_CENTER: [ MessageSect; 1 ] =
-[	( "2021 - 2022 hyoi", FONT_ORBITRON_BLACK, PIXEL_PER_GRID * 0.7, Color::WHITE ),
+[	( "hyoi 2021 - 2022", FONT_ORBITRON_BLACK, PIXEL_PER_GRID * 0.7, Color::TEAL ),
 ];
 
 #[derive(Component)]
 struct UiFooterRight;
 const UI_FOOTER_RIGHT: [ MessageSect; 1 ] =
-[	( "powered by Rust & Bevy ", FONT_ORBITRON_BLACK, PIXEL_PER_GRID * 0.7, Color::WHITE ),
+[	( "powered by Rust & Bevy ", FONT_ORBITRON_BLACK, PIXEL_PER_GRID * 0.7, Color::TEAL ),
 ];
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
