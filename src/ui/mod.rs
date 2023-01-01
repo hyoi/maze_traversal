@@ -126,14 +126,14 @@ fn spawn_text_ui_message( mut cmds: Commands, asset_svr: Res<AssetServer> )
 	{	size           : Size::new( Val::Px( SCREEN_WIDTH ), Val::Px( SCREEN_HEIGHT ) ),
 		position_type  : PositionType::Absolute,
 		flex_direction : FlexDirection::Column,
-		justify_content: JustifyContent::FlexEnd, //画面の上端
+		justify_content: JustifyContent::FlexStart, //画面の上端
 		..default()
 	} );
 	let lower_frame = hidden_frame( Style
 	{	size           : Size::new( Val::Px( SCREEN_WIDTH ), Val::Px( SCREEN_HEIGHT ) ),
 		position_type  : PositionType::Absolute,
 		flex_direction : FlexDirection::Column,
-		justify_content: JustifyContent::FlexStart, //画面の下端
+		justify_content: JustifyContent::FlexEnd, //画面の下端
 		..default()
 	} );
 
