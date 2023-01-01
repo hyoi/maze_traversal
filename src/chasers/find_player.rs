@@ -8,10 +8,10 @@ impl Chaser
 	//ただし現在の実装には問題があって2枚の壁の隙間ごしに自機が目撃できるので、見える＝移動可能にはならない。
 	//隙間からの目撃とは：　追壁
 	//　　　　　　　　　　　壁自
-	{	let mut x1 = self.grid.x as i32;
-		let mut y1 = self.grid.y as i32;
-		let mut x2 = player.grid.x as i32;
-		let mut y2 = player.grid.y as i32;
+	{	let mut x1 = self.grid.x;
+		let mut y1 = self.grid.y;
+		let mut x2 = player.grid.x;
+		let mut y2 = player.grid.y;
 		let side_x = ( x1 - x2 ).abs() + 1;
 		let side_y = ( y1 - y2 ).abs() + 1;
 		let ret_dxdy1;
@@ -62,7 +62,7 @@ impl Chaser
 				}
 
 				//外側loopの脱出条件
-				if grid.y as i32 == y2 { break }
+				if grid.y == y2 { break }
 
 				//各変数の調整
 				grid.y -= dy.signum() as i32;
@@ -118,7 +118,7 @@ impl Chaser
 				}
 
 				//外側loopの脱出条件
-				if grid.x as i32 == x2 { break }
+				if grid.x == x2 { break }
 
 				//各変数の調整
 				grid.x += dx.signum() as i32;
