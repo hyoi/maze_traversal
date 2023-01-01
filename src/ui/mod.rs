@@ -69,13 +69,13 @@ const UI_HEADER_CENTER: [ MessageSect; 1 ] =
 #[derive(Component)]
 struct UiFooterCenter;
 const UI_FOOTER_CENTER: [ MessageSect; 1 ] =
-[	( "2021 - 2022 hyoi", FONT_ORBITRON_BLACK, PIXEL_PER_GRID * 0.7, Color::WHITE ),
+[	( "hyoi 2021 - 2022", FONT_ORBITRON_BLACK, PIXEL_PER_GRID * 0.7, Color::TEAL ),
 ];
 
 #[derive(Component)]
 struct UiFooterRight;
 const UI_FOOTER_RIGHT: [ MessageSect; 1 ] =
-[	( "powered by Rust & Bevy ", FONT_ORBITRON_BLACK, PIXEL_PER_GRID * 0.7, Color::WHITE ),
+[	( "powered by Rust & Bevy ", FONT_ORBITRON_BLACK, PIXEL_PER_GRID * 0.7, Color::TEAL ),
 ];
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -126,40 +126,40 @@ fn spawn_text_ui_message( mut cmds: Commands, asset_svr: Res<AssetServer> )
 	{	size           : Size::new( Val::Px( SCREEN_WIDTH ), Val::Px( SCREEN_HEIGHT ) ),
 		position_type  : PositionType::Absolute,
 		flex_direction : FlexDirection::Column,
-		justify_content: JustifyContent::FlexEnd, //画面の上端
+		justify_content: JustifyContent::FlexStart, //画面の上端
 		..default()
 	} );
 	let lower_frame = hidden_frame( Style
 	{	size           : Size::new( Val::Px( SCREEN_WIDTH ), Val::Px( SCREEN_HEIGHT ) ),
 		position_type  : PositionType::Absolute,
 		flex_direction : FlexDirection::Column,
-		justify_content: JustifyContent::FlexStart, //画面の下端
+		justify_content: JustifyContent::FlexEnd, //画面の下端
 		..default()
 	} );
 
 	//隠しフレームの上に子要素を作成する
-	cmds.spawn_bundle( center_frame ).with_children( | cmds |
-	{	cmds.spawn_bundle( pause_text ).insert( MessagePause );
-		cmds.spawn_bundle( clear_text ).insert( MessageClear );
-		cmds.spawn_bundle( over_text  ).insert( MessageOver  );
+	cmds.spawn( center_frame ).with_children( | cmds |
+	{	cmds.spawn( pause_text ).insert( MessagePause );
+		cmds.spawn( clear_text ).insert( MessageClear );
+		cmds.spawn( over_text  ).insert( MessageOver  );
 
-		cmds.spawn_bundle( upper_frame ).with_children( | cmds |
-		{	cmds.spawn_bundle( ui_upper_left   ).insert( UiHeaderLeft   );
-			cmds.spawn_bundle( ui_upper_center ).insert( UiHeaderCenter );
-			cmds.spawn_bundle( ui_upper_right  ).insert( UiHeaderRight  );
+		cmds.spawn( upper_frame ).with_children( | cmds |
+		{	cmds.spawn( ui_upper_left   ).insert( UiHeaderLeft   );
+			cmds.spawn( ui_upper_center ).insert( UiHeaderCenter );
+			cmds.spawn( ui_upper_right  ).insert( UiHeaderRight  );
 		} );
 
-		cmds.spawn_bundle( lower_frame ).with_children( | cmds |
-		{	cmds.spawn_bundle( ui_lower_left   ).insert( UiFooterLeft   );
-			cmds.spawn_bundle( ui_lower_center ).insert( UiFooterCenter );
-			cmds.spawn_bundle( ui_lower_right  ).insert( UiFooterRight  );
+		cmds.spawn( lower_frame ).with_children( | cmds |
+		{	cmds.spawn( ui_lower_left   ).insert( UiFooterLeft   );
+			cmds.spawn( ui_lower_center ).insert( UiFooterCenter );
+			cmds.spawn( ui_lower_right  ).insert( UiFooterRight  );
 		} );
 	} );
 
 	//おまけ
 	let pixel = MapGrid { x: GRID_WIDTH - 4, y: GRID_HEIGHT - 2 }.into_pixel();
 	let custom_size = Some( Vec2::new( PIXEL_PER_GRID, PIXEL_PER_GRID ) );
-	cmds.spawn_bundle( SpriteBundle::default() )
+	cmds.spawn( SpriteBundle::default() )
 		.insert( Sprite { custom_size, ..default() } )
 		.insert( asset_svr.load( IMAGE_SPRITE_KANI ) as Handle<Image> )
 		.insert( Transform::from_translation( Vec3::new( pixel.x, pixel.y, 100.0 ) ) );
@@ -191,10 +191,10 @@ fn text_ui( message: &[ MessageSect ], asset_svr: &Res<AssetServer> ) -> TextBun
 	TextBundle { text, style, ..default() }
 }
 
-//レイアウト用に隠しフレームを作る
+//text UIのレイアウト用に隠しフレームを作る
 fn hidden_frame( style: Style ) -> NodeBundle
-{	let color = UiColor ( Color::NONE );
-	NodeBundle { style, color, ..default() }
+{   let background_color = BackgroundColor ( Color::NONE );
+    NodeBundle { style, background_color, ..default() }
 }
 
 //End of code.

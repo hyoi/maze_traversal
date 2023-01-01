@@ -20,22 +20,21 @@ use chasers::PluginChaser;
 
 //メイン関数
 fn main()
-{	let main_window = WindowDescriptor
+{	let window = WindowDescriptor
 	{	title    : APP_TITLE.to_string(),
 		width    : SCREEN_WIDTH,
 		height   : SCREEN_HEIGHT,
 		resizable: false,
 		..default()
 	};
+	let main_window = WindowPlugin { window, ..default() };
 
 	let mut app = App::new();
 	app
 	//----------------------------------------------------------------------------------------------
-	.insert_resource( main_window )							// メインウィンドウ
 	.insert_resource( ClearColor( SCREEN_BGCOLOR ) )		// 背景色
 	.insert_resource( Msaa { samples: 4 } )					// アンチエイリアス
-	//----------------------------------------------------------------------------------------------
-	.add_plugins( DefaultPlugins )							// デフォルトプラグイン
+	.add_plugins( DefaultPlugins.set( main_window ) )		// デフォルトプラグイン、メインウィンドウ
 	//----------------------------------------------------------------------------------------------
 	.add_state( GameState::Init )							// 状態遷移の初期値
 	//----------------------------------------------------------------------------------------------

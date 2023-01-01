@@ -16,6 +16,7 @@ pub enum GameState
 }
 
 //スコア等のResource
+#[derive(Resource)]
 pub struct Record
 {	pub stage: usize,
 	pub score: usize,
@@ -34,6 +35,7 @@ impl Default for Record
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //マーカーResource
+#[derive(Resource)]
 pub struct DbgOptResUI;
 
 //テキストUIのCompornent
@@ -168,6 +170,7 @@ pub enum MapObj
 }
 
 //MAP情報のResource
+#[derive(Resource)]
 pub struct GameMap
 {	rng: rand::prelude::StdRng,	//再現性がある乱数を使いたいので
 	map  : [ [ MapObj; MAP_HEIGHT as usize ]; MAP_WIDTH as usize ],

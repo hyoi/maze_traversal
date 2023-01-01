@@ -2,7 +2,7 @@ use super::*;
 
 //bevyのカメラの設置
 pub fn spawn_camera( mut cmds: Commands )
-{	cmds.spawn_bundle( Camera2dBundle::default() );
+{	cmds.spawn( Camera2dBundle::default() );
 }
 
 // ComponentでQueryしたEnityを再帰的に削除する
@@ -29,7 +29,7 @@ pub fn countdown_to_start<T: Component>
 )
 {	if let Ok( mut ui ) = q.get_single_mut()
 	{	if *count <= 0									//カウンターが未初期化か？
-		{	*timer = Timer::from_seconds( 1.0, false );	//1秒タイマーセット
+		{	*timer = Timer::from_seconds( 1.0, TimerMode::Once );	//1秒タイマーセット
 			*count = 6;									//カウント数の初期化
 		}
 		else if timer.tick( time.delta() ).finished()	//1秒経過したら

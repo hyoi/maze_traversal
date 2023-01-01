@@ -22,8 +22,8 @@ impl Plugin for PluginUiFooterLeft
 #[derive(Component)]
 pub struct UiFooterLeft;
 pub const UI_FOOTER_LEFT: [ MessageSect; 2 ] =
-[	( " FPS ", FONT_ORBITRON_BLACK, PIXEL_PER_GRID * 0.8, Color::ORANGE ),
-	( ""     , FONT_ORBITRON_BLACK, PIXEL_PER_GRID * 1.0, Color::WHITE  ),
+[	( " FPS ", FONT_ORBITRON_BLACK, PIXEL_PER_GRID * 0.8, Color::TEAL   ),
+	( ""     , FONT_ORBITRON_BLACK, PIXEL_PER_GRID * 1.0, Color::SILVER ),
 ];
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

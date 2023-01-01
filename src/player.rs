@@ -63,7 +63,7 @@ impl Default for Player
 		{	grid: MapGrid::default(),
 			side: UP,
 			key_input: UP,
-			wait: Timer::from_seconds( PLAYER_WAIT, false ),
+			wait: Timer::from_seconds( PLAYER_WAIT, TimerMode::Once ),
 			stop: true,
 		}
 	}
@@ -84,7 +84,7 @@ fn spawn_sprite_player
 	let material  = materials.add( ColorMaterial::from( PLAYER_COLOR ) );
 
 	let sprite = MaterialMesh2dBundle { transform, mesh, material, ..default() };
-	cmds.spawn_bundle( sprite ).insert( Player { grid: maze.start(), ..default() } );
+	cmds.spawn( sprite ).insert( Player { grid: maze.start(), ..default() } );
 }
 
 //自機のスプライトを移動する

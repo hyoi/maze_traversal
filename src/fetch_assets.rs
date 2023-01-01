@@ -28,6 +28,7 @@ impl Plugin for PluginFetchAssets
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //ロードしたAssetのハンドルの保存先
+#[derive(Resource)]
 struct LoadedAssets { preload: Vec<HandleUntyped> }
 
 //ローディングメッセージ
@@ -107,7 +108,7 @@ fn spawn_entity_now_loading( mut cmds: Commands )
 			let goal  = MapGrid { x: goal_x as i32, y: goal_y as i32 };
 
 			//スプライトを作成する
-			cmds.spawn_bundle( SpriteBundle::default() )
+			cmds.spawn( SpriteBundle::default() )
 				.insert( Sprite
 				{	color: SPRITE_COLOR,
 					custom_size: Some( Vec2::new( SPRITE_PIXEL, SPRITE_PIXEL ) ),
