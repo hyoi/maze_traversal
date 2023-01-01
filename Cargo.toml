@@ -5,8 +5,10 @@ edition = "2021"
 
 [dependencies]
 bevy = "0.9"
+bevy-inspector-egui = "0.15"
 bevy-web-resizer = "4.0"
 rand = "0.8"
+smooth-bevy-cameras = "0.6"
 
 # WASMの場合にどれか指定する必要がある？？
 #

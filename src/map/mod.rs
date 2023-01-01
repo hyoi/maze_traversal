@@ -20,29 +20,30 @@ impl Plugin for PluginMap
 		)
 		.add_system_set											// ＜GameState::Start＞
 		(	SystemSet::on_exit( GameState::Start )				// ＜on_exit()＞
-				.with_system( spawn_sprite_map )				// 新マップのスプライト表示
-		)
+				.with_system( spawn_map )						// 新マップの表示
+				// .with_system( spawn_sprite_map )				// 新マップのスプライト表示
+			)
 		//==========================================================================================
 		.add_system_set											// ＜GameState::Play＞
 		(	SystemSet::on_update( GameState::Play )				// ＜on_update()＞
-				.with_system( rotate_sprite_goal )				// ゴールスプライトのアニメーション
+				// .with_system( rotate_sprite_goal )				// ゴールスプライトのアニメーション
 		)
 		//==========================================================================================
-		.add_system_set											// ＜GameState::Clear＞
-		(	SystemSet::on_exit( GameState::Clear )				// ＜on_exit()＞
-				.with_system( despawn_entity::<SpriteWall> )	// マップを削除(壁)
-				.with_system( despawn_entity::<SpriteGoal> )	// マップを削除(ゴール)
-				.with_system( despawn_entity::<SpriteCoin> )	// マップを削除(コイン)
-				.with_system( despawn_entity::<DebugSprite> )	// マップを削除(デバッグ用)
-		)
+		// .add_system_set											// ＜GameState::Clear＞
+		// (	SystemSet::on_exit( GameState::Clear )				// ＜on_exit()＞
+		// 		.with_system( despawn_entity::<SpriteWall> )	// マップを削除(壁)
+		// 		.with_system( despawn_entity::<SpriteGoal> )	// マップを削除(ゴール)
+		// 		.with_system( despawn_entity::<SpriteCoin> )	// マップを削除(コイン)
+		// 		.with_system( despawn_entity::<DebugSprite> )	// マップを削除(デバッグ用)
+		// )
 		//==========================================================================================
-		.add_system_set											// ＜GameState::Over＞
-		(	SystemSet::on_exit( GameState::Over )				// ＜on_exit()＞
-				.with_system( despawn_entity::<SpriteWall> )	// マップを削除(壁)
-				.with_system( despawn_entity::<SpriteGoal> )	// マップを削除(ゴール)
-				.with_system( despawn_entity::<SpriteCoin> )	// マップを削除(コイン)
-				.with_system( despawn_entity::<DebugSprite> )	// マップを削除(デバッグ用)
-		)
+		// .add_system_set											// ＜GameState::Over＞
+		// (	SystemSet::on_exit( GameState::Over )				// ＜on_exit()＞
+		// 		.with_system( despawn_entity::<SpriteWall> )	// マップを削除(壁)
+		// 		.with_system( despawn_entity::<SpriteGoal> )	// マップを削除(ゴール)
+		// 		.with_system( despawn_entity::<SpriteCoin> )	// マップを削除(コイン)
+		// 		.with_system( despawn_entity::<DebugSprite> )	// マップを削除(デバッグ用)
+		// )
 		//------------------------------------------------------------------------------------------
 		;
 	}
@@ -130,6 +131,75 @@ fn generate_new_map
 }
 
 //迷路のスプライトをspawnして必要ならEntity IDを記録する
+fn spawn_map
+(	mut maze: ResMut<GameMap>,
+	mut cmds: Commands,
+	asset_svr: Res<AssetServer>,
+	mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+)
+{	for x in RANGE_MAP_X
+	{	for y in RANGE_MAP_Y
+		{	let grid = MapGrid { x, y };
+			let pixel = grid.into_pixel();
+			match maze.mapobj( grid )
+			{	MapObj::Goal ( _ ) =>
+				{	//	ゴールのスプライトを表示する
+					// let custom_size = Some( Vec2::new( GOAL_PIXEL, GOAL_PIXEL ) );
+					// let position = Vec3::new( pixel.x, pixel.y, SPRITE_DEPTH_MAZE );
+					// let quat = Quat::from_rotation_z( 45_f32.to_radians() ); //45°傾ける
+					// let id = cmds.spawn( SpriteBundle::default() )
+					// 	.insert( Sprite { color: GOAL_COLOR, custom_size, ..default() } )
+					// 	.insert( Transform::from_translation( position ).with_rotation( quat ) )
+					// 	.insert( SpriteGoal )
+					// 	.id(); 
+					// *maze.mapobj_mut( grid ) = MapObj::Goal ( Some ( id ) );
+				}
+				MapObj::Wall =>
+				{	//壁のストライプを表示する
+					// let custom_size = Some( Vec2::new( WALL_PIXEL, WALL_PIXEL ) );
+					// cmds.spawn( SpriteBundle::default() )
+					// 	.insert( Sprite { custom_size, ..default() } )
+					// 	.insert( asset_svr.load( IMAGE_SPRITE_WALL ) as Handle<Image> )
+					// 	.insert( Transform::from_translation( Vec3::new( pixel.x, pixel.y, SPRITE_DEPTH_MAZE ) ) )
+					// 	.insert( SpriteWall );
+					
+					let cube = PbrBundle
+					{   mesh: meshes.add( shape::Cube::default().into() ),
+						material: materials.add( Color::GREEN.into() ),
+						transform: Transform::from_xyz( x as f32 - MAP_WH_SIZE / 2.0 + 0.5, 0.5, y as f32 - MAP_WH_SIZE / 2.0 + 0.5 ),
+						..default()
+					};
+					
+					cmds.spawn( cube );
+				}
+				MapObj::Coin ( _, coin ) =>
+				{	//コインのスプライトを表示する
+					// let custom_size = Some( Vec2::new( COIN_PIXEL, COIN_PIXEL ) );
+					// let id = cmds.spawn( SpriteBundle::default() )
+					// 	.insert( Sprite { custom_size, ..default() } )
+					// 	.insert( asset_svr.load( IMAGE_SPRITE_COIN ) as Handle<Image> )
+					// 	.insert( Transform::from_translation( Vec3::new( pixel.x, pixel.y, SPRITE_DEPTH_MAZE ) ) )
+					// 	.insert( SpriteCoin )
+					// 	.id();
+					// *maze.mapobj_mut( grid ) = MapObj::Coin ( Some ( id ), coin );
+				}
+				_ => {}
+			};
+
+			// //デバッグ用に広間のスプライトを表示する
+			// if cfg!( debug_assertions ) && maze.is_hall( grid )
+			// {	let custom_size = Some( Vec2::new( DEBUG_PIXEL, DEBUG_PIXEL ) * 0.9 );
+			// 	cmds.spawn( SpriteBundle::default() )
+			// 		.insert( Sprite { color: Color::INDIGO, custom_size, ..default() } )
+			// 		.insert( Transform::from_translation( Vec3::new( pixel.x, pixel.y, SPRITE_DEPTH_DEBUG ) ) )
+			// 		.insert( DebugSprite );
+			// }
+		}
+	}
+}
+/*
+//迷路のスプライトをspawnして必要ならEntity IDを記録する
 fn spawn_sprite_map
 (	mut maze: ResMut<GameMap>,
 	mut cmds: Commands,
@@ -186,7 +256,7 @@ fn spawn_sprite_map
 		}
 	}
 }
-
+*/
 //ゴールのスプライトをアニメーションさせる
 fn rotate_sprite_goal
 (	mut q: Query<( &mut Transform, &mut Sprite ), With<SpriteGoal>>,

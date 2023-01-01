@@ -4,15 +4,17 @@ use super::*;
 pub const APP_TITLE: &str = "Maze Traversal";
 
 //マップの縦横のマス数
-pub const MAP_WIDTH : i32 = 30;	//66
-pub const MAP_HEIGHT: i32 = 30;	//35
+pub const MAP_WIDTH : i32 = 20;	//66
+pub const MAP_HEIGHT: i32 = MAP_WIDTH;	//35
+
+pub const MAP_WH_SIZE: f32 = MAP_WIDTH as f32;
 
 //画面の縦横のマス数
 pub const GRID_WIDTH : i32 = MAP_WIDTH;
 pub const GRID_HEIGHT: i32 = MAP_HEIGHT + 2;	//マップの高さ＋ヘッダ＋フッタ
 
 //表示倍率、ウィンドウの縦横pixel数と背景色
-pub const SCREEN_SCALING: usize = 3;
+pub const SCREEN_SCALING: usize = 7;
 pub const PIXEL_PER_GRID: f32   = ( 8 * SCREEN_SCALING ) as f32;
 pub const SCREEN_WIDTH  : f32   = PIXEL_PER_GRID * GRID_WIDTH  as f32;
 pub const SCREEN_HEIGHT : f32   = PIXEL_PER_GRID * GRID_HEIGHT as f32;

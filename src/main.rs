@@ -6,17 +6,20 @@ use rand::prelude::*;
 mod common;
 use common::*;
 
+mod debug;
+use debug::*;
+
 mod fetch_assets;
 mod ui;
 mod map;
-mod player;
-mod chasers;
+// mod player;
+// mod chasers;
 
 use fetch_assets::PluginFetchAssets;
 use ui::PluginUi;
 use map::PluginMap;
-use player::PluginPlayer;
-use chasers::PluginChaser;
+// use player::PluginPlayer;
+// use chasers::PluginChaser;
 
 //メイン関数
 fn main()
@@ -35,6 +38,7 @@ fn main()
 	.insert_resource( ClearColor( SCREEN_BGCOLOR ) )		// 背景色
 	.insert_resource( Msaa { samples: 4 } )					// アンチエイリアス
 	.add_plugins( DefaultPlugins.set( main_window ) )		// デフォルトプラグイン、メインウィンドウ
+    .add_plugin( MyDebug )
 	//----------------------------------------------------------------------------------------------
 	.add_state( GameState::Init )							// 状態遷移の初期値
 	//----------------------------------------------------------------------------------------------
@@ -43,8 +47,8 @@ fn main()
 	.add_plugin( PluginFetchAssets )
 	.add_plugin( PluginUi )
 	.add_plugin( PluginMap )
-	.add_plugin( PluginPlayer )
-	.add_plugin( PluginChaser )
+	// .add_plugin( PluginPlayer )
+	// .add_plugin( PluginChaser )
 	//----------------------------------------------------------------------------------------------
 	;
 

@@ -1,8 +1,31 @@
 use super::*;
 
 //bevyのカメラの設置
-pub fn spawn_camera( mut cmds: Commands )
+pub fn spawn_camera
+(	mut cmds: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+)
 {	cmds.spawn( Camera2dBundle::default() );
+
+	let light = PointLightBundle
+    {   point_light: PointLight
+        {   intensity: 1500.0,
+            shadows_enabled: true,
+            ..default()
+        },
+        transform: Transform::from_xyz( 4.0, 8.0, 4.0 ),
+        ..default()
+    };
+
+    let plane = PbrBundle
+    {   mesh: meshes.add( Mesh::from( shape::Plane { size: MAP_WH_SIZE } ) ),
+        material: materials.add( Color::DARK_GREEN.into() ),
+        ..default()
+    }; 
+
+    cmds.spawn( light );
+    cmds.spawn( plane );
 }
 
 // ComponentでQueryしたEnityを再帰的に削除する
