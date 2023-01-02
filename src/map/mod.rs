@@ -60,22 +60,22 @@ const SELECT_MAZE_TYPE: SelectMazeType = SelectMazeType::Random;
 //const SELECT_MAZE_TYPE: SelectMazeType = SelectMazeType::Type2;
 
 //Sprite
-#[derive(Component)]
-struct SpriteWall;
-const WALL_PIXEL: f32 = PIXEL_PER_GRID;
+// #[derive(Component)]
+// struct SpriteWall;
+// const WALL_PIXEL: f32 = PIXEL_PER_GRID;
 
-#[derive(Component)]
-struct SpriteCoin;
-const COIN_PIXEL: f32 = PIXEL_PER_GRID * 0.8;
+// #[derive(Component)]
+// struct SpriteCoin;
+// const COIN_PIXEL: f32 = PIXEL_PER_GRID * 0.8;
 
-#[derive(Component)]
-struct SpriteGoal;
-const GOAL_PIXEL: f32 = PIXEL_PER_GRID / 2.0;
-const GOAL_COLOR: Color = Color::YELLOW;
+// #[derive(Component)]
+// struct SpriteGoal;
+// const GOAL_PIXEL: f32 = PIXEL_PER_GRID / 2.0;
+// const GOAL_COLOR: Color = Color::YELLOW;
 
-#[derive(Component)]
-struct DebugSprite;
-const DEBUG_PIXEL: f32 = PIXEL_PER_GRID;
+// #[derive(Component)]
+// struct DebugSprite;
+// const DEBUG_PIXEL: f32 = PIXEL_PER_GRID;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -132,16 +132,17 @@ fn generate_new_map
 
 //迷路のスプライトをspawnして必要ならEntity IDを記録する
 fn spawn_map
-(	mut maze: ResMut<GameMap>,
+(//	mut maze: ResMut<GameMap>,
+	maze: ResMut<GameMap>,
 	mut cmds: Commands,
-	asset_svr: Res<AssetServer>,
+//	asset_svr: Res<AssetServer>,
 	mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 )
 {	for x in RANGE_MAP_X
 	{	for y in RANGE_MAP_Y
 		{	let grid = MapGrid { x, y };
-			let pixel = grid.into_pixel();
+			// let pixel = grid.into_pixel();
 			match maze.mapobj( grid )
 			{	MapObj::Goal ( _ ) =>
 				{	//	ゴールのスプライトを表示する
@@ -173,17 +174,17 @@ fn spawn_map
 					
 					cmds.spawn( cube );
 				}
-				MapObj::Coin ( _, coin ) =>
-				{	//コインのスプライトを表示する
-					// let custom_size = Some( Vec2::new( COIN_PIXEL, COIN_PIXEL ) );
-					// let id = cmds.spawn( SpriteBundle::default() )
-					// 	.insert( Sprite { custom_size, ..default() } )
-					// 	.insert( asset_svr.load( IMAGE_SPRITE_COIN ) as Handle<Image> )
-					// 	.insert( Transform::from_translation( Vec3::new( pixel.x, pixel.y, SPRITE_DEPTH_MAZE ) ) )
-					// 	.insert( SpriteCoin )
-					// 	.id();
-					// *maze.mapobj_mut( grid ) = MapObj::Coin ( Some ( id ), coin );
-				}
+				// MapObj::Coin ( _, coin ) =>
+				// {	//コインのスプライトを表示する
+				// 	let custom_size = Some( Vec2::new( COIN_PIXEL, COIN_PIXEL ) );
+				// 	let id = cmds.spawn( SpriteBundle::default() )
+				// 		.insert( Sprite { custom_size, ..default() } )
+				// 		.insert( asset_svr.load( IMAGE_SPRITE_COIN ) as Handle<Image> )
+				// 		.insert( Transform::from_translation( Vec3::new( pixel.x, pixel.y, SPRITE_DEPTH_MAZE ) ) )
+				// 		.insert( SpriteCoin )
+				// 		.id();
+				// 	*maze.mapobj_mut( grid ) = MapObj::Coin ( Some ( id ), coin );
+				// }
 				_ => {}
 			};
 
@@ -256,7 +257,7 @@ fn spawn_sprite_map
 		}
 	}
 }
-*/
+
 //ゴールのスプライトをアニメーションさせる
 fn rotate_sprite_goal
 (	mut q: Query<( &mut Transform, &mut Sprite ), With<SpriteGoal>>,
@@ -274,5 +275,5 @@ fn rotate_sprite_goal
 	let ( saturation, lightness, alpha ) = ( 1., 0.5, 1. );
 	sprite.color = Color::Hsla{ hue, saturation, lightness, alpha };
 }
-
+*/
 //End of code.

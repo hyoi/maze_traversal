@@ -3,8 +3,8 @@ use bevy::prelude::*;
 use rand::prelude::*;
 
 //internal modules
-mod common;
-use common::*;
+mod public;
+use public::*;
 
 mod debug;
 use debug::*;

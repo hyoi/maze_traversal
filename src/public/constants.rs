@@ -62,10 +62,10 @@ pub const BIT_DEADEND: usize = 0b0100;
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //Spriteの深さ
-pub const SPRITE_DEPTH_CHASER: f32 = 30.0;	//追手
-pub const SPRITE_DEPTH_PLAYER: f32 = 20.0;	//自機
-pub const SPRITE_DEPTH_MAZE  : f32 = 10.0;	//壁、コイン etc
-pub const SPRITE_DEPTH_DEBUG : f32 =  5.0;	//広間
+// pub const SPRITE_DEPTH_CHASER: f32 = 30.0;	//追手
+// pub const SPRITE_DEPTH_PLAYER: f32 = 20.0;	//自機
+// pub const SPRITE_DEPTH_MAZE  : f32 = 10.0;	//壁、コイン etc
+// pub const SPRITE_DEPTH_DEBUG : f32 =  5.0;	//広間
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 

@@ -208,15 +208,15 @@ impl GameMap
 	pub fn start( &self ) -> MapGrid { self.start }
 	pub fn start_mut( &mut self ) -> &mut MapGrid { &mut self.start }
 
-	pub fn goal( &self ) -> MapGrid { self.goal }
+//	pub fn goal( &self ) -> MapGrid { self.goal }
 	pub fn goal_mut( &mut self ) -> &mut MapGrid { &mut self.goal }
 
-	pub fn halls( &self ) -> usize { self.halls }
+//	pub fn halls( &self ) -> usize { self.halls }
 	pub fn halls_mut( &mut self ) -> &mut usize { &mut self.halls }
 
 	//指定されたマスのフラグ操作
-	pub fn is_hall   ( &self, grid: MapGrid ) -> bool { self.bits( grid ) & BIT_HALL    != 0 }
-	pub fn is_passage( &self, grid: MapGrid ) -> bool { self.bits( grid ) & BIT_PASSAGE != 0 }
+//	pub fn is_hall   ( &self, grid: MapGrid ) -> bool { self.bits( grid ) & BIT_HALL    != 0 }
+//	pub fn is_passage( &self, grid: MapGrid ) -> bool { self.bits( grid ) & BIT_PASSAGE != 0 }
 	pub fn is_deadend( &self, grid: MapGrid ) -> bool { self.bits( grid ) & BIT_DEADEND != 0 }
 	pub fn set_flag_hall   ( &mut self, grid: MapGrid ) { *self.bits_mut( grid ) |= BIT_HALL    }
 	pub fn set_flag_passage( &mut self, grid: MapGrid ) { *self.bits_mut( grid ) |= BIT_PASSAGE }
