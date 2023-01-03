@@ -62,20 +62,20 @@ const SELECT_MAZE_TYPE: SelectMazeType = SelectMazeType::Random;
 //Sprite
 // #[derive(Component)]
 // struct SpriteWall;
-// const WALL_PIXEL: f32 = PIXEL_PER_GRID;
+// const WALL_PIXEL: f32 = PIXELS_PER_GRID;
 
 // #[derive(Component)]
 // struct SpriteCoin;
-// const COIN_PIXEL: f32 = PIXEL_PER_GRID * 0.8;
+// const COIN_PIXEL: f32 = PIXELS_PER_GRID * 0.8;
 
 // #[derive(Component)]
 // struct SpriteGoal;
-// const GOAL_PIXEL: f32 = PIXEL_PER_GRID / 2.0;
+// const GOAL_PIXEL: f32 = PIXELS_PER_GRID / 2.0;
 // const GOAL_COLOR: Color = Color::YELLOW;
 
 // #[derive(Component)]
 // struct DebugSprite;
-// const DEBUG_PIXEL: f32 = PIXEL_PER_GRID;
+// const DEBUG_PIXEL: f32 = PIXELS_PER_GRID;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -91,7 +91,7 @@ fn generate_new_map
 
 	//入口を掘る
 	let x = maze.rng().gen_range( RANGE_MAP_INNER_X );
-	let grid = MapGrid { x, y: MAP_HEIGHT - 1 };
+	let grid = MapGrid { x, y: MAP_GRIDS_HEIGHT - 1 };
 	*maze.start_mut() = grid;
 	*maze.mapobj_mut( grid	    ) = MapObj::DeadEnd; //入口は行き止まり扱い
 	*maze.mapobj_mut( grid + UP ) = MapObj::Passage; //入口直上は無条件で道
@@ -168,7 +168,7 @@ fn spawn_map
 					let cube = PbrBundle
 					{   mesh: meshes.add( shape::Cube::default().into() ),
 						material: materials.add( Color::GREEN.into() ),
-						transform: Transform::from_xyz( x as f32 - MAP_WH_SIZE / 2.0 + 0.5, 0.5, y as f32 - MAP_WH_SIZE / 2.0 + 0.5 ),
+						transform: Transform::from_xyz( x as f32 - MAP_GRIDS_WIDTH as f32 / 2.0 + 0.5, 0.5, y as f32 - MAP_GRIDS_HEIGHT as f32 / 2.0 + 0.5 ),
 						..default()
 					};
 					

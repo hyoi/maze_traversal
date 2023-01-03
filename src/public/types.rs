@@ -53,8 +53,8 @@ pub struct MapGrid { pub x: i32, pub y: i32 }
 impl MapGrid
 {	//二次元配列の座標から画面座標を算出する
 	pub fn into_pixel( self ) -> Pixel
-	{	let x = ( PIXEL_PER_GRID - SCREEN_WIDTH  ) / 2.0 + PIXEL_PER_GRID * self.x as f32;
-		let y = ( SCREEN_HEIGHT - PIXEL_PER_GRID ) / 2.0 - PIXEL_PER_GRID * self.y as f32 - PIXEL_PER_GRID;
+	{	let x = ( PIXELS_PER_GRID - WINDOW_PIXELS_WIDTH  ) / 2.0 + PIXELS_PER_GRID * self.x as f32;
+		let y = ( WINDOW_PIXELS_HEIGHT - PIXELS_PER_GRID ) / 2.0 - PIXELS_PER_GRID * self.y as f32 - PIXELS_PER_GRID;
 		Pixel { x, y }
 	}
 }
@@ -173,8 +173,8 @@ pub enum MapObj
 #[derive(Resource)]
 pub struct GameMap
 {	rng: rand::prelude::StdRng,	//再現性がある乱数を使いたいので
-	map  : [ [ MapObj; MAP_HEIGHT as usize ]; MAP_WIDTH as usize ],
-	bits : [ [ usize ; MAP_HEIGHT as usize ]; MAP_WIDTH as usize ],
+	map  : [ [ MapObj; MAP_GRIDS_HEIGHT as usize ]; MAP_GRIDS_WIDTH as usize ],
+	bits : [ [ usize ; MAP_GRIDS_HEIGHT as usize ]; MAP_GRIDS_WIDTH as usize ],
 	start: MapGrid,
 	goal : MapGrid,
 	halls: usize,	//広間のマス数
@@ -186,8 +186,8 @@ impl Default for GameMap
 
 		Self
 		{	rng  : StdRng::seed_from_u64( seed ),	
-			map  : [ [ MapObj::Wall; MAP_HEIGHT as usize ]; MAP_WIDTH as usize ],
-			bits : [ [ 0           ; MAP_HEIGHT as usize ]; MAP_WIDTH as usize ],
+			map  : [ [ MapObj::Wall; MAP_GRIDS_HEIGHT as usize ]; MAP_GRIDS_WIDTH as usize ],
+			bits : [ [ 0           ; MAP_GRIDS_HEIGHT as usize ]; MAP_GRIDS_WIDTH as usize ],
 			start: MapGrid::default(),
 			goal : MapGrid::default(),
 			halls: 0,

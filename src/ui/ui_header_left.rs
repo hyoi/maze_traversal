@@ -27,18 +27,18 @@ impl Plugin for PluginUiHeaderLeft
 #[derive(Component)]
 pub struct UiHeaderLeft;
 pub const UI_HEADER_LEFT: [ MessageSect; 2 ] =
-[	( " HP ", FONT_ORBITRON_BLACK, PIXEL_PER_GRID * 0.8, Color::ORANGE ),
-	( ""    , FONT_ORBITRON_BLACK, PIXEL_PER_GRID * 1.0, Color::WHITE  ),
+[	( " HP ", FONT_ORBITRON_BLACK, PIXELS_PER_GRID * 0.8, Color::ORANGE ),
+	( ""    , FONT_ORBITRON_BLACK, PIXELS_PER_GRID * 1.0, Color::WHITE  ),
 ];
 
 //HP GAUGE
 #[derive(Component)]
 struct HpGauge;
 const GAUGE_RECTANGLE: ( f32, f32, f32, f32 ) = 
-(	PIXEL_PER_GRID *  7.4 - SCREEN_WIDTH  / 2.0,	//X軸：画面中央からやや左より
-	PIXEL_PER_GRID * -0.7 + SCREEN_HEIGHT / 2.0,	//Y軸：画面上端からやや下がった位置
-	PIXEL_PER_GRID * 11.8,							//幅
-	PIXEL_PER_GRID *  0.2,							//高さ
+(	PIXELS_PER_GRID *  7.4 - WINDOW_PIXELS_WIDTH  / 2.0,	//X軸：画面中央からやや左より
+	PIXELS_PER_GRID * -0.7 + WINDOW_PIXELS_HEIGHT / 2.0,	//Y軸：画面上端からやや下がった位置
+	PIXELS_PER_GRID * 11.8,							//幅
+	PIXELS_PER_GRID *  0.2,							//高さ
 );
 const SPRITE_DEPTH_GAUGE: f32 = 30.0;
 

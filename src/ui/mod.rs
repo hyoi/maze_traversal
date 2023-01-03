@@ -45,37 +45,37 @@ type MessageSect<'a> = ( &'a str, &'a str, f32, Color );
 #[derive(Component)]
 struct MessagePause;
 const MESSAGE_PAUSE: [ MessageSect; 1 ] =
-[	( "P A U S E", FONT_ORBITRON_BLACK, PIXEL_PER_GRID * 5.0, Color::SILVER ),
+[	( "P A U S E", FONT_ORBITRON_BLACK, PIXELS_PER_GRID * 5.0, Color::SILVER ),
 ];
 
 const MESSAGE_CLEAR: [ MessageSect; 3 ] =
-[	( "C L E A R !!\n"   , FONT_ORBITRON_BLACK, PIXEL_PER_GRID * 5.0, Color::GOLD  ),
-	( "Next floor...\n\n", FONT_ORBITRON_BLACK, PIXEL_PER_GRID * 2.0, Color::WHITE ),
-	( ""                 , FONT_ORBITRON_BLACK, PIXEL_PER_GRID * 4.0, Color::WHITE ),
+[	( "C L E A R !!\n"   , FONT_ORBITRON_BLACK, PIXELS_PER_GRID * 5.0, Color::GOLD  ),
+	( "Next floor...\n\n", FONT_ORBITRON_BLACK, PIXELS_PER_GRID * 2.0, Color::WHITE ),
+	( ""                 , FONT_ORBITRON_BLACK, PIXELS_PER_GRID * 4.0, Color::WHITE ),
 ];
 
 const MESSAGE_OVER: [ MessageSect; 3 ] =
-[	( "GAME OVER\n", FONT_REGGAEONE_REGULAR, PIXEL_PER_GRID * 5.0, Color::RED ),
-	( ""           , FONT_REGGAEONE_REGULAR, PIXEL_PER_GRID * 4.0, Color::RED ),
-	( ""           , FONT_REGGAEONE_REGULAR, PIXEL_PER_GRID * 4.0, Color::RED ),
+[	( "GAME OVER\n", FONT_REGGAEONE_REGULAR, PIXELS_PER_GRID * 5.0, Color::RED ),
+	( ""           , FONT_REGGAEONE_REGULAR, PIXELS_PER_GRID * 4.0, Color::RED ),
+	( ""           , FONT_REGGAEONE_REGULAR, PIXELS_PER_GRID * 4.0, Color::RED ),
 ];
 
 #[derive(Component)]
 struct UiHeaderCenter;
 const UI_HEADER_CENTER: [ MessageSect; 1 ] =
-[	( APP_TITLE, FONT_ORBITRON_BLACK, PIXEL_PER_GRID * 1.0, Color::WHITE ),
+[	( APP_TITLE, FONT_ORBITRON_BLACK, PIXELS_PER_GRID * 1.0, Color::WHITE ),
 ];
 
 #[derive(Component)]
 struct UiFooterCenter;
 const UI_FOOTER_CENTER: [ MessageSect; 1 ] =
-[	( "hyoi 2021 - 2022", FONT_ORBITRON_BLACK, PIXEL_PER_GRID * 0.7, Color::TEAL ),
+[	( "hyoi 2021 - 2022", FONT_ORBITRON_BLACK, PIXELS_PER_GRID * 0.7, Color::TEAL ),
 ];
 
 #[derive(Component)]
 struct UiFooterRight;
 const UI_FOOTER_RIGHT: [ MessageSect; 1 ] =
-[	( "powered by Rust & Bevy ", FONT_ORBITRON_BLACK, PIXEL_PER_GRID * 0.7, Color::TEAL ),
+[	( "powered by Rust & Bevy ", FONT_ORBITRON_BLACK, PIXELS_PER_GRID * 0.7, Color::TEAL ),
 ];
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -123,14 +123,14 @@ fn spawn_text_ui_message( mut cmds: Commands, asset_svr: Res<AssetServer> )
 		..default()
 	} );
 	let upper_frame = hidden_frame( Style
-	{	size           : Size::new( Val::Px( SCREEN_WIDTH ), Val::Px( SCREEN_HEIGHT ) ),
+	{	size           : Size::new( Val::Px( WINDOW_PIXELS_WIDTH ), Val::Px( WINDOW_PIXELS_HEIGHT ) ),
 		position_type  : PositionType::Absolute,
 		flex_direction : FlexDirection::Column,
 		justify_content: JustifyContent::FlexStart, //画面の上端
 		..default()
 	} );
 	let lower_frame = hidden_frame( Style
-	{	size           : Size::new( Val::Px( SCREEN_WIDTH ), Val::Px( SCREEN_HEIGHT ) ),
+	{	size           : Size::new( Val::Px( WINDOW_PIXELS_WIDTH ), Val::Px( WINDOW_PIXELS_HEIGHT ) ),
 		position_type  : PositionType::Absolute,
 		flex_direction : FlexDirection::Column,
 		justify_content: JustifyContent::FlexEnd, //画面の下端
@@ -157,8 +157,8 @@ fn spawn_text_ui_message( mut cmds: Commands, asset_svr: Res<AssetServer> )
 	} );
 
 	//おまけ
-	let pixel = MapGrid { x: GRID_WIDTH - 4, y: GRID_HEIGHT - 2 }.into_pixel();
-	let custom_size = Some( Vec2::new( PIXEL_PER_GRID, PIXEL_PER_GRID ) );
+	let pixel = MapGrid { x: WINDOW_GRIDS_WIDTH - 4, y: WINDOW_GRIDS_HEIGHT - 2 }.into_pixel();
+	let custom_size = Some( Vec2::new( PIXELS_PER_GRID, PIXELS_PER_GRID ) );
 	cmds.spawn( SpriteBundle::default() )
 		.insert( Sprite { custom_size, ..default() } )
 		.insert( asset_svr.load( IMAGE_SPRITE_KANI ) as Handle<Image> )

@@ -52,7 +52,7 @@ const PRELOADING_MESSAGE_ARRAY: [ &str; 13 ] =
 //スプライト
 #[derive(Component)]
 struct SpriteTile ( MapGrid );
-const SPRITE_PIXEL: f32   = PIXEL_PER_GRID;
+const SPRITE_PIXEL: f32   = PIXELS_PER_GRID;
 const SPRITE_COLOR: Color = Color::YELLOW;
 const SPRITE_DEPTH: f32   = 0.0;
 
@@ -102,8 +102,8 @@ fn spawn_entity_now_loading( mut cmds: Commands )
 		{	if chara == ' ' { continue }	//空白文字は無視
 
 			//スプライトの初期座標と最終座標
-			let rnd_x = rng.gen_range( 0..MAP_WIDTH  );
-			let rnd_y = rng.gen_range( 0..MAP_HEIGHT );
+			let rnd_x = rng.gen_range( 0..MAP_GRIDS_WIDTH  );
+			let rnd_y = rng.gen_range( 0..MAP_GRIDS_HEIGHT );
 			let start = MapGrid { x: rnd_x, y: rnd_y }.into_pixel();
 			let goal  = MapGrid { x: goal_x as i32, y: goal_y as i32 };
 
@@ -127,9 +127,9 @@ fn move_entity_now_loading
 )
 {	let time_delta = time.delta().as_secs_f32() * 5.0;
 
-	let half_screen_w = SCREEN_WIDTH / 2.0;
+	let half_screen_w = WINDOW_PIXELS_WIDTH / 2.0;
 	let mess_width = PRELOADING_MESSAGE_ARRAY[ 0 ].len() as f32 * SPRITE_PIXEL;
-	let scale = SCREEN_WIDTH / mess_width;
+	let scale = WINDOW_PIXELS_WIDTH / mess_width;
 
 	q.for_each_mut
 	(	| ( mut transform, goal_xy ) |

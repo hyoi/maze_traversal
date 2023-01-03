@@ -47,14 +47,14 @@ impl Plugin for PluginPlayer
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //Sprite
-const PLAYER_PIXEL: f32   = PIXEL_PER_GRID / 2.5;
+const PLAYER_PIXEL: f32   = PIXELS_PER_GRID / 2.5;
 const PLAYER_COLOR: Color = Color::YELLOW;
 
 //移動ウェイト
 const PLAYER_WAIT: f32 = 0.09;
 
 //スプライトの動きを滑らかにするための中割係数
-const PLAYER_MOVE_COEF: f32 = PIXEL_PER_GRID / PLAYER_WAIT;
+const PLAYER_MOVE_COEF: f32 = PIXELS_PER_GRID / PLAYER_WAIT;
 
 //Default
 impl Default for Player

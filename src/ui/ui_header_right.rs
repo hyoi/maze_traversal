@@ -17,10 +17,10 @@ impl Plugin for PluginUiHeaderRight
 #[derive(Component)]
 pub struct UiHeaderRight;
 pub const UI_HEADER_RIGHT: [ MessageSect; 4 ] =
-[	( ""        , FONT_ORBITRON_BLACK, PIXEL_PER_GRID * 1.0, Color::WHITE  ),
-	( " GOLD / ", FONT_ORBITRON_BLACK, PIXEL_PER_GRID * 0.8, Color::ORANGE ),
-	( ""        , FONT_ORBITRON_BLACK, PIXEL_PER_GRID * 1.0, Color::WHITE  ),
-	( " FLOOR " , FONT_ORBITRON_BLACK, PIXEL_PER_GRID * 0.8, Color::ORANGE ),
+[	( ""        , FONT_ORBITRON_BLACK, PIXELS_PER_GRID * 1.0, Color::WHITE  ),
+	( " GOLD / ", FONT_ORBITRON_BLACK, PIXELS_PER_GRID * 0.8, Color::ORANGE ),
+	( ""        , FONT_ORBITRON_BLACK, PIXELS_PER_GRID * 1.0, Color::WHITE  ),
+	( " FLOOR " , FONT_ORBITRON_BLACK, PIXELS_PER_GRID * 0.8, Color::ORANGE ),
 ];
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -53,7 +53,7 @@ impl Plugin for PluginChaser
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //Sprite
-const CHASER_PIXEL: f32 = PIXEL_PER_GRID / 2.0;
+const CHASER_PIXEL: f32 = PIXELS_PER_GRID / 2.0;
 const CHASER_CALM_COLOR: Color = Color::GREEN;
 const CHASER_EXCITE_COLOR: Color = Color::RED;
 
@@ -66,7 +66,7 @@ use std::ops::Range;
 const CHASER_WAIT_WANDERING: Range<f32> = 0.5..3.5;
 
 //スプライトの動きを滑らかにするための中割係数
-const CHASER_MOVE_COEF  : f32 = PIXEL_PER_GRID / CHASER_WAIT;
+const CHASER_MOVE_COEF  : f32 = PIXELS_PER_GRID / CHASER_WAIT;
 
 //Default
 impl Default for Chaser
@@ -85,7 +85,7 @@ impl Default for Chaser
 
 #[derive(Component)]
 struct DebugSpriteSight;
-const DEBUG_PIXEL: f32 = PIXEL_PER_GRID;
+const DEBUG_PIXEL: f32 = PIXELS_PER_GRID;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 

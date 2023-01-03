@@ -19,7 +19,7 @@ pub fn spawn_camera
     };
 
     let plane = PbrBundle
-    {   mesh: meshes.add( Mesh::from( shape::Plane { size: MAP_WH_SIZE } ) ),
+    {   mesh: meshes.add( Mesh::from( shape::Plane { size: MAP_GRIDS_SHARP_PLANE as f32 } ) ),
         material: materials.add( Color::DARK_GREEN.into() ),
         ..default()
     }; 
