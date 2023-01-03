@@ -6,7 +6,10 @@ pub fn spawn_camera
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 )
-{	cmds.spawn( Camera2dBundle::default() );
+{	cmds
+	.spawn( Camera2dBundle::default() )
+    .insert( Camera { priority: 0, ..default() } )
+	;
 
 	let light = PointLightBundle
     {   point_light: PointLight
