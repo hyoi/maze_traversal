@@ -37,14 +37,14 @@ pub fn despawn_entity<T: Component>( q: Query<Entity, With<T>>, mut cmds: Comman
 }
 
 // UI Textを表示する
-pub fn show_ui<T: Component>( mut q: Query<&mut Visibility, With<T>> )
-{	let _ = q.get_single_mut().map( | mut ui | ui.is_visible = true );
-}
+// pub fn show_ui<T: Component>( mut q: Query<&mut Visibility, With<T>> )
+// {	let _ = q.get_single_mut().map( | mut ui | ui.is_visible = true );
+// }
 
 // UI Textを隠す
-pub fn hide_ui<T: Component>( mut q: Query<&mut Visibility, With<T>> )
-{	let _ = q.get_single_mut().map( | mut ui | ui.is_visible = false );
-}
+// pub fn hide_ui<T: Component>( mut q: Query<&mut Visibility, With<T>> )
+// {	let _ = q.get_single_mut().map( | mut ui | ui.is_visible = false );
+// }
 
 //カウントダウンの後、Startへ遷移
 // pub fn countdown_to_start<T: Component>
@@ -70,37 +70,37 @@ pub fn hide_ui<T: Component>( mut q: Query<&mut Visibility, With<T>> )
 // }
 
 //[Alt]+[Enter]でウィンドウとフルスクリーンを切り替える
-#[cfg(not(target_arch = "wasm32"))]
-pub fn toggle_window_mode( inkey: Res<Input<KeyCode>>, mut window: ResMut<Windows> )
-{	use KeyCode::*;
-	let is_alt = inkey.pressed( LAlt ) || inkey.pressed( RAlt );
-	let is_alt_return = is_alt && inkey.just_pressed( Return );
+// #[cfg(not(target_arch = "wasm32"))]
+// pub fn toggle_window_mode( inkey: Res<Input<KeyCode>>, mut window: ResMut<Windows> )
+// {	use KeyCode::*;
+// 	let is_alt = inkey.pressed( LAlt ) || inkey.pressed( RAlt );
+// 	let is_alt_return = is_alt && inkey.just_pressed( Return );
 
-	if is_alt_return
-	{	use bevy::window::WindowMode::*;
-		if let Some( window ) = window.get_primary_mut()
-		{	let mode = if window.mode() == Windowed { SizedFullscreen } else { Windowed };
-			window.set_mode( mode );
-		}
-	}
-}
+// 	if is_alt_return
+// 	{	use bevy::window::WindowMode::*;
+// 		if let Some( window ) = window.get_primary_mut()
+// 		{	let mode = if window.mode() == Windowed { SizedFullscreen } else { Windowed };
+// 			window.set_mode( mode );
+// 		}
+// 	}
+// }
 
 //ESCキーが入力さたら一時停止する
-pub fn handle_esc_key_for_pause<T: Component>
-(	mut q: Query<&mut Visibility, With<T>>,
-	mut inkey: ResMut<Input<KeyCode>>,
-	mut state: ResMut<State<GameState>>,
-)
-{	if q.get_single_mut().is_err() { return }
-	if ! inkey.just_pressed( KeyCode::Escape ) { return }
+// pub fn handle_esc_key_for_pause<T: Component>
+// (	mut q: Query<&mut Visibility, With<T>>,
+// 	mut inkey: ResMut<Input<KeyCode>>,
+// 	mut state: ResMut<State<GameState>>,
+// )
+// {	if q.get_single_mut().is_err() { return }
+// 	if ! inkey.just_pressed( KeyCode::Escape ) { return }
 
-	match state.current()
-	{	GameState::Pause => { hide_ui( q ); state.pop().unwrap() },
-		_                => { show_ui( q ); state.push( GameState::Pause ).unwrap() },
-	};
+// 	match state.current()
+// 	{	GameState::Pause => { hide_ui( q ); state.pop().unwrap() },
+// 		_                => { show_ui( q ); state.push( GameState::Pause ).unwrap() },
+// 	};
 
-	//https://bevy-cheatbook.github.io/programming/states.html#with-input
-	inkey.reset( KeyCode::Escape );
-}
+// 	//https://bevy-cheatbook.github.io/programming/states.html#with-input
+// 	inkey.reset( KeyCode::Escape );
+// }
 
 //End of code.
