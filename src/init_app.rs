@@ -17,7 +17,7 @@ impl Plugin for InitApp
             width    : WINDOW_PIXELS_WIDTH,
             height   : WINDOW_PIXELS_HEIGHT,
             resizable: false,
-            // fit_canvas_to_parent: true, //FIX v0.6.1: Android Chromeで発生する不具合を回避
+            fit_canvas_to_parent: true,
             ..default()
         };
         app
