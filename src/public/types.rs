@@ -1,19 +1,39 @@
 use super::*;
 
-//ゲームの状態遷移
-#[allow(dead_code)]
-#[derive(Clone,Copy,Debug,Eq,PartialEq,Hash)]
+//submodules
+mod grid_pixel_dxdy;
+
+//re-export
+pub use grid_pixel_dxdy::*;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//ゲームの状態
+#[allow( dead_code )]
+#[derive( Clone, Copy, Eq, PartialEq, Hash, Debug )]
 pub enum GameState
-{	Init,
-	Start,
-	Play,
-	Clear,
-	Over,
-	Pause,
-	DemoStart,
-	DemoPlay,
-	DemoLoop,
+{   InitApp,
+    TitleDemo, DemoLoop,
+    GameStart, StageStart, MainLoop, StageClear, GameOver,
+    Pause, Debug,
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// //ゲームの状態遷移
+// #[allow(dead_code)]
+// #[derive(Clone,Copy,Debug,Eq,PartialEq,Hash)]
+// pub enum GameState
+// {	Init,
+// 	Start,
+// 	Play,
+// 	Clear,
+// 	Over,
+// 	Pause,
+// 	DemoStart,
+// 	DemoPlay,
+// 	DemoLoop,
+// }
 
 //スコア等のResource
 #[derive(Resource)]
@@ -53,15 +73,15 @@ pub struct MapGrid { pub x: i32, pub y: i32 }
 impl MapGrid
 {	//二次元配列の座標から画面座標を算出する
 	pub fn into_pixel( self ) -> Pixel
-	{	let x = ( PIXELS_PER_GRID - WINDOW_PIXELS_WIDTH  ) / 2.0 + PIXELS_PER_GRID * self.x as f32;
-		let y = ( WINDOW_PIXELS_HEIGHT - PIXELS_PER_GRID ) / 2.0 - PIXELS_PER_GRID * self.y as f32 - PIXELS_PER_GRID;
+	{	let x = ( PIXELS_PER_GRID - SCREEN_PIXELS_WIDTH  ) / 2.0 + PIXELS_PER_GRID * self.x as f32;
+		let y = ( SCREEN_PIXELS_HEIGHT - PIXELS_PER_GRID ) / 2.0 - PIXELS_PER_GRID * self.y as f32 - PIXELS_PER_GRID;
 		Pixel { x, y }
 	}
 }
 
-//四方
-#[derive(Copy,Clone,PartialEq,Eq)]
-pub enum DxDy { Up, Left, Right, Down, }
+// //四方
+// #[derive(Copy,Clone,PartialEq,Eq)]
+// pub enum DxDy { Up, Left, Right, Down, }
 
 //MapGridとDxDyを加算できるようAdd()をオーバーロードする
 use std::ops::*;

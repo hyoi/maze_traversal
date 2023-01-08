@@ -13,19 +13,20 @@ impl Plugin for PluginMap
 	{	app
 		//------------------------------------------------------------------------------------------
 		.init_resource::<GameMap>()								// MAP情報のResource
+		.insert_resource( MarkAfterFetchAssets ( GameState::StageStart ) ) //Assetsロード後のState変更先
 		//==========================================================================================
 		.add_system_set											// ＜GameState::Start＞
-		(	SystemSet::on_enter( GameState::Start )				// ＜on_enter()＞
+		(	SystemSet::on_enter( GameState::StageStart )				// ＜on_enter()＞
 				.with_system( generate_new_map )				// 新マップ作成⇒GameState::Playへ
 		)
 		.add_system_set											// ＜GameState::Start＞
-		(	SystemSet::on_exit( GameState::Start )				// ＜on_exit()＞
+		(	SystemSet::on_exit( GameState::StageStart )				// ＜on_exit()＞
 				.with_system( spawn_map )						// 新マップの表示
 				// .with_system( spawn_sprite_map )				// 新マップのスプライト表示
 			)
 		//==========================================================================================
 		.add_system_set											// ＜GameState::Play＞
-		(	SystemSet::on_update( GameState::Play )				// ＜on_update()＞
+		(	SystemSet::on_update( GameState::MainLoop )				// ＜on_update()＞
 				// .with_system( rotate_sprite_goal )				// ゴールスプライトのアニメーション
 		)
 		//==========================================================================================
@@ -127,7 +128,7 @@ fn generate_new_map
 	maze.put_coins_at_deadend();		//袋小路にコインを置く
 
 	//Playへ遷移する
-	let _ = state.overwrite_set( GameState::Play );
+	let _ = state.overwrite_set( GameState::MainLoop );
 }
 
 //迷路のスプライトをspawnして必要ならEntity IDを記録する

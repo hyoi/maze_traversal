@@ -1,5 +1,13 @@
 //external modules
 use bevy::prelude::*;
+use smooth_bevy_cameras::
+{   controllers::orbit::
+    {   OrbitCameraBundle,
+        OrbitCameraController,
+        OrbitCameraPlugin
+    },
+    LookTransformPlugin,
+};
 use rand::prelude::*;
 
 //internal modules
@@ -9,45 +17,22 @@ use public::*;
 mod init_app;
 use init_app::*;
 
-mod debug;
-use debug::*;
-
-mod fetch_assets;
-mod ui;
 mod map;
 // mod player;
 // mod chasers;
 
-use fetch_assets::PluginFetchAssets;
-use ui::PluginUi;
 use map::PluginMap;
 // use player::PluginPlayer;
 // use chasers::PluginChaser;
 
 //メイン関数
 fn main()
-{   let mut app = App::new();
-    app
-    //----------------------------------------------------------------------------------------------
+{   App::new()
     .add_plugin( InitApp )
-    .add_plugin( MyDebug )
-    //----------------------------------------------------------------------------------------------
-    .add_state( GameState::Init )							// 状態遷移の初期値
-    //----------------------------------------------------------------------------------------------
-    .add_startup_system( spawn_camera )						// bevyのカメラ設置
-    //----------------------------------------------------------------------------------------------
-    .add_plugin( PluginFetchAssets )
-    .add_plugin( PluginUi )
     .add_plugin( PluginMap )
     // .add_plugin( PluginPlayer )
     // .add_plugin( PluginChaser )
-    //----------------------------------------------------------------------------------------------
-    ;
-
-    #[cfg(not(target_arch = "wasm32"))]						// WASMで不要なキー操作
-    app.add_system( toggle_window_mode );					// [Alt]+[Enter]でフルスクリーン
-
-    app.run();												// アプリの実行
+    .run(); // アプリの実行
 }
 
 //End of code.
