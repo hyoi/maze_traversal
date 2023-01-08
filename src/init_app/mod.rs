@@ -57,13 +57,15 @@ pub fn spawn_camera
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 )
-{	cmds
+{   use bevy::core_pipeline::clear_color::ClearColorConfig;
+	cmds
 	.spawn( Camera2dBundle::default() )
-    .insert( Camera { priority: 0, ..default() } )
+    .insert( Camera { priority: 1, ..default() } )
+    .insert( Camera2d { clear_color: ClearColorConfig::None } ) //透過
 	;
     cmds
     .spawn( Camera3dBundle::default() )
-    .insert( Camera { priority: 1, ..default() } )
+    .insert( Camera { priority: 0, ..default() } )
     .insert
     (   OrbitCameraBundle::new
         (   OrbitCameraController::default(),

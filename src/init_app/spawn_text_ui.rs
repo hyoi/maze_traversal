@@ -69,6 +69,10 @@ const FOOTER_RIGHT_TEXT: [ MessageSect; 1 ] =
 [   ( "Powered by RUST & BEVY ", ASSETS_FONT_ORBITRON_BLACK, PIXELS_PER_GRID * 0.6, Color::TEAL ),
 ];
 
+//おまけ
+pub const DEPTH_SPRITE_KANI  : f32 = 150.0; //スプライト重なり順
+pub const MAGNIFY_SPRITE_KANI: f32 = 0.9;   //スプライト拡縮率
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //text UIを配置する
@@ -198,14 +202,14 @@ fn spawn_text_ui
     );
 
     //おまけ
-    // let pixel = Grid::new( SCREEN_GRIDS_WIDTH - 4, SCREEN_GRIDS_HEIGHT - 1 ).into_pixel_screen();
-    // let custom_size = Some ( Pixel::new( PIXELS_PER_GRID, PIXELS_PER_GRID ) * MAGNIFY_SPRITE_KANI );
-    // cmds
-    // .spawn( SpriteBundle::default() )
-    // .insert( Sprite { custom_size, ..default() } )
-    // .insert( asset_svr.load( ASSETS_SPRITE_KANI_DOTOWN ) as Handle<Image> )
-    // .insert( Transform::from_translation( pixel.extend( DEPTH_SPRITE_KANI_DOTOWN ) ) )
-    // ;
+    let pixel = ScreenGrid::new( SCREEN_GRIDS_WIDTH - 4, SCREEN_GRIDS_HEIGHT - 1 ).into_pixel();
+    let custom_size = Some ( ScreenPixel::new( PIXELS_PER_GRID, PIXELS_PER_GRID ) * MAGNIFY_SPRITE_KANI );
+    cmds
+    .spawn( SpriteBundle::default() )
+    .insert( Sprite { custom_size, ..default() } )
+    .insert( asset_svr.load( ASSETS_SPRITE_KANI_DOTOWN ) as Handle<Image> )
+    .insert( Transform::from_translation( pixel.extend( DEPTH_SPRITE_KANI ) ) )
+    ;
 }
 
 //text UIのレイアウト用に隠しフレームを作る

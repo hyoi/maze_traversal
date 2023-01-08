@@ -32,12 +32,14 @@ pub const SCREEN_GRIDS_RANGE_Y: Range<i32> = 0..SCREEN_GRIDS_HEIGHT; //ウィン
 pub const ASSETS_FONT_ORBITRON_BLACK      : &str = "fonts/Orbitron-Black.ttf";       //フォント
 pub const ASSETS_FONT_REGGAEONE_REGULAR   : &str = "fonts/ReggaeOne-Regular.ttf";    //フォント
 pub const ASSETS_FONT_PRESSSTART2P_REGULAR: &str = "fonts/PressStart2P-Regular.ttf"; //フォント
+pub const ASSETS_SPRITE_KANI_DOTOWN       : &str = "sprites/kani_DOTOWN.png";        //スプライト
 
 //事前ロード対象のAsset
-pub const FETCH_ASSETS: [ &str; 3 ] =
+pub const FETCH_ASSETS: [ &str; 4 ] =
 [   ASSETS_FONT_ORBITRON_BLACK,
     ASSETS_FONT_REGGAEONE_REGULAR,
     ASSETS_FONT_PRESSSTART2P_REGULAR,
+    ASSETS_SPRITE_KANI_DOTOWN,
 ];
 
 // //Assets（フォント、画像...etc）
