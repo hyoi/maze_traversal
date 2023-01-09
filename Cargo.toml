@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 bevy = "0.9"
-bevy-inspector-egui = "0.15"
+bevy-inspector-egui = "0.16"
 smooth-bevy-cameras = "0.6"
 rand = "0.8"
 

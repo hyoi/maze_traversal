@@ -28,11 +28,17 @@ impl Plugin for InitApp
         .add_plugins( DefaultPlugins.set( main_window ) )
         .add_plugin( LookTransformPlugin )          //オービットカメラ(1)
         .add_plugin( OrbitCameraPlugin::default() ) //オービットカメラ(2)
+        .add_plugin( WorldInspectorPlugin )
         ;
 
         //ResourceとEventを登録
         app
         .add_state( GameState::InitApp ) //Stateの初期化
+        ;
+
+        //ステージ共通のSystem
+        app
+        .add_system( toggle_window_mode ) //[Alt]+[Enter]でフルスクリーン
         ;
 
         //GameState::InitApp
@@ -41,8 +47,9 @@ impl Plugin for InitApp
         .add_plugin( FetchAssets ) //Fonts、Sprites等のプリロード
         .add_plugin( SpawnTextUi ) //Text UIのspawn
         .add_system_set
-        (   SystemSet::on_exit( GameState::InitApp )    //<EXIT>
-            .with_system( spawn_camera )                //カメラのspawn
+        (   SystemSet::on_exit( GameState::InitApp ) //<EXIT>
+            .with_system( spawn_camera )             //カメラのspawn
+            .with_system( spawn_game_frame )         //ゲームの枠の表示
         )
         ;
         //------------------------------------------------------------------------------------------
@@ -92,6 +99,58 @@ pub fn spawn_camera
 
     cmds.spawn( light );
     cmds.spawn( plane );
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//ゲームの枠を表示する
+fn spawn_game_frame
+(   mut cmds : Commands,
+    asset_svr: Res<AssetServer>,
+)
+{   let custom_size = Some ( ScreenPixel::new( PIXELS_PER_GRID, PIXELS_PER_GRID ) );
+
+    for ( y, line ) in DESIGN_GAME_FRAME.iter().enumerate()
+    {   for ( x, char ) in line.chars().enumerate()
+        {   if char == '#'
+            {   let pixel_xy = ScreenGrid::new( x as i32, y as i32 ).into_pixel();
+                cmds
+                .spawn( SpriteBundle::default() )
+                .insert( Sprite { custom_size, ..default() } )
+                .insert( Transform::from_translation( pixel_xy.extend( DEPTH_SPRITE_GAME_FRAME ) ) )
+                .insert( asset_svr.load( ASSETS_SPRITE_BRICK_WALL ) as Handle<Image> )
+                ;
+            }
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//ウィンドウとフルスクリーンを切り替える
+#[cfg( not( target_arch = "wasm32" ) )]
+pub fn toggle_window_mode
+(   inkey: Res<Input<KeyCode>>,
+    inbtn: Res<Input<GamepadButton>>,
+    mut window: ResMut<Windows>,
+)
+{   //パッドのボタンの状態
+    let btn_fullscreen = GamepadButton::new( GAMEPAD, _BUTTON_FULLSCREEN );
+    let is_btn_fullscreen = inbtn.just_pressed( btn_fullscreen );
+
+    //Alt＋Enterキーの状態
+    let is_key_fullscreen =
+    ( inkey.pressed( _KEY_ALT_RIGHT ) || inkey.pressed( _KEY_ALT_LEFT ) )
+    && inkey.just_pressed( _KEY_FULLSCREEN );
+
+    //入力がないなら関数脱出
+    if ! is_key_fullscreen && ! is_btn_fullscreen { return }
+
+    use bevy::window::WindowMode::*;
+    if let Some( window ) = window.get_primary_mut()
+    {   let mode = if window.mode() == Windowed { SizedFullscreen } else { Windowed };
+        window.set_mode( mode );
+    }
 }
 
 //End of code.

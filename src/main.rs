@@ -1,13 +1,14 @@
 //external modules
 use bevy::prelude::*;
 use smooth_bevy_cameras::
-{   controllers::orbit::
+{   controllers::orbit:: //3Dオービットカメラ
     {   OrbitCameraBundle,
         OrbitCameraController,
         OrbitCameraPlugin
     },
     LookTransformPlugin,
 };
+use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use rand::prelude::*;
 
 //internal modules

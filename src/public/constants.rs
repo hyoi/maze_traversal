@@ -10,7 +10,7 @@ pub const MAP_GRIDS_WIDTH      : i32 = MAP_GRIDS_SHARP_PLANE; //マップ横幅
 pub const MAP_GRIDS_HEIGHT     : i32 = MAP_GRIDS_SHARP_PLANE; //マップ縦幅
 
 //ウィンドウ画面のマス数
-pub const SCREEN_GRIDS_WIDTH : i32 = 33; //21,27,33,43 //ウィンドウ横幅
+pub const SCREEN_GRIDS_WIDTH : i32 = 35; //21,27,33,43 //ウィンドウ横幅
 pub const SCREEN_GRIDS_HEIGHT: i32 = 21; //16,20,25,32 //ウインドウ縦幅
 
 //ウィンドウ画面のサイズと背景色
@@ -27,20 +27,51 @@ use std::ops::Range;
 pub const SCREEN_GRIDS_RANGE_X: Range<i32> = 0..SCREEN_GRIDS_WIDTH;  //ウィンドウ横幅
 pub const SCREEN_GRIDS_RANGE_Y: Range<i32> = 0..SCREEN_GRIDS_HEIGHT; //ウィンドウ縦幅
 
+//画面デザイン(枠)
+pub const DESIGN_GAME_FRAME: [ &str; SCREEN_GRIDS_HEIGHT as usize ] =
+//   0123456789 123456789 123456789 1234
+[   "###################################", //0----
+    "#                       ###########", //1
+    "#                       ###########", //2
+    "#                       ###########", //3
+    "#                       ###########", //4
+    "#                       ###########", //5
+    "#                       ###########", //6
+    "#                       ###########", //7
+    "#                       ###########", //8
+    "#                       ###########", //9
+    "#                       ###########", //10---
+    "#                       ###########", //11
+    "#                       ###########", //12
+    "#                       ###########", //13
+    "#                       ###########", //14
+    "#                       ###########", //15
+    "#                       ###########", //16
+    "#                       ###########", //17
+    "#                       ###########", //18
+    "#                       ###########", //19
+//    "#                       ###########", //20---
+    "###################################", //21
+]; //0123456789 123456789 123456789 1234
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 pub const ASSETS_FONT_ORBITRON_BLACK      : &str = "fonts/Orbitron-Black.ttf";       //フォント
 pub const ASSETS_FONT_REGGAEONE_REGULAR   : &str = "fonts/ReggaeOne-Regular.ttf";    //フォント
 pub const ASSETS_FONT_PRESSSTART2P_REGULAR: &str = "fonts/PressStart2P-Regular.ttf"; //フォント
 pub const ASSETS_SPRITE_KANI_DOTOWN       : &str = "sprites/kani_DOTOWN.png";        //スプライト
+pub const ASSETS_SPRITE_BRICK_WALL        : &str = "sprites/brick_wall.png";         //スプライト
 
 //事前ロード対象のAsset
-pub const FETCH_ASSETS: [ &str; 4 ] =
+pub const FETCH_ASSETS: [ &str; 5 ] =
 [   ASSETS_FONT_ORBITRON_BLACK,
     ASSETS_FONT_REGGAEONE_REGULAR,
     ASSETS_FONT_PRESSSTART2P_REGULAR,
     ASSETS_SPRITE_KANI_DOTOWN,
+    ASSETS_SPRITE_BRICK_WALL,
 ];
+
+pub const  DEPTH_SPRITE_GAME_FRAME : f32 = 100.0; //スプライト重なり順
 
 // //Assets（フォント、画像...etc）
 // pub const FONT_ORBITRON_BLACK	: &str = "fonts/Orbitron-Black.ttf";
@@ -57,6 +88,17 @@ pub const FETCH_ASSETS: [ &str; 4 ] =
 //     IMAGE_SPRITE_COIN,
 //     IMAGE_SPRITE_KANI,
 // ];
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//ゲームパッドのID
+pub const GAMEPAD: Gamepad = Gamepad { id: 0 }; //Todo: pad 0番決め打ちでいいいのか？
+
+//FULLSCREENのキーとパッドボタン
+pub const _KEY_ALT_RIGHT: KeyCode = KeyCode::RAlt;
+pub const _KEY_ALT_LEFT : KeyCode = KeyCode::LAlt;
+pub const _KEY_FULLSCREEN: KeyCode = KeyCode::Return;
+pub const _BUTTON_FULLSCREEN: GamepadButtonType = GamepadButtonType::West; //PS4の□ボタン
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
