@@ -1,5 +1,9 @@
 use super::*;
 
+//external modules
+#[cfg( debug_assertions )]
+use bevy_inspector_egui::quick::WorldInspectorPlugin;
+
 //submodules
 mod fetch_assets;
 mod spawn_text_ui;
@@ -17,7 +21,7 @@ impl Plugin for InitApp
             width    : SCREEN_PIXELS_WIDTH,
             height   : SCREEN_PIXELS_HEIGHT,
             resizable: false,
-            fit_canvas_to_parent: true,
+//          fit_canvas_to_parent: true, //ブラウザ表示で3Dが全画面になるのに対し2Dはそのまま拡大されず具合が悪い。2Dカメラの問題か？
             ..default()
         };
         let main_window = WindowPlugin { window, ..default() };
@@ -28,8 +32,10 @@ impl Plugin for InitApp
         .add_plugins( DefaultPlugins.set( main_window ) )
         .add_plugin( LookTransformPlugin )          //オービットカメラ(1)
         .add_plugin( OrbitCameraPlugin::default() ) //オービットカメラ(2)
-        .add_plugin( WorldInspectorPlugin )
         ;
+
+        #[cfg( debug_assertions )]
+        app.add_plugin( WorldInspectorPlugin );
 
         //ResourceとEventを登録
         app
@@ -37,9 +43,8 @@ impl Plugin for InitApp
         ;
 
         //ステージ共通のSystem
-        app
-        .add_system( toggle_window_mode ) //[Alt]+[Enter]でフルスクリーン
-        ;
+        #[cfg( not( target_arch = "wasm32" ) )]
+        app.add_system( toggle_window_mode ); //[Alt]+[Enter]でフルスクリーン
 
         //GameState::InitApp
         //------------------------------------------------------------------------------------------
@@ -112,14 +117,24 @@ fn spawn_game_frame
 
     for ( y, line ) in DESIGN_GAME_FRAME.iter().enumerate()
     {   for ( x, char ) in line.chars().enumerate()
-        {   if char == '#'
-            {   let pixel_xy = ScreenGrid::new( x as i32, y as i32 ).into_pixel();
-                cmds
-                .spawn( SpriteBundle::default() )
-                .insert( Sprite { custom_size, ..default() } )
-                .insert( Transform::from_translation( pixel_xy.extend( DEPTH_SPRITE_GAME_FRAME ) ) )
-                .insert( asset_svr.load( ASSETS_SPRITE_BRICK_WALL ) as Handle<Image> )
-                ;
+        {   let pixel_xy = ScreenGrid::new( x as i32, y as i32 ).into_pixel();
+            match char
+            {   '#' =>
+                {   cmds
+                    .spawn( SpriteBundle::default() )
+                    .insert( Sprite { custom_size, ..default() } )
+                    .insert( Transform::from_translation( pixel_xy.extend( DEPTH_SPRITE_GAME_FRAME ) ) )
+                    .insert( asset_svr.load( ASSETS_SPRITE_BRICK_WALL ) as Handle<Image> )
+                    ;
+                }
+                '=' =>
+                {   cmds
+                    .spawn( SpriteBundle::default() )
+                    .insert( Sprite { custom_size, color: Color::BLACK, ..default() } )
+                    .insert( Transform::from_translation( pixel_xy.extend( DEPTH_SPRITE_GAME_FRAME ) ) )
+                    ;
+                }
+                _ => ()
             }
         }
     }

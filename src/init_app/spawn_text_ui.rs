@@ -1,5 +1,8 @@
 use super::*;
 
+//external modules
+use bevy::diagnostic::*;
+
 //プラグインの設定
 pub struct SpawnTextUi;
 impl Plugin for SpawnTextUi
@@ -8,9 +11,11 @@ impl Plugin for SpawnTextUi
         //------------------------------------------------------------------------------------------
         app
         .add_system_set
-        (   SystemSet::on_exit( GameState::InitApp )        //<EXIT>
-            .with_system( spawn_text_ui )                   //text UIのspawn
+        (   SystemSet::on_exit( GameState::InitApp ) //<EXIT>
+            .with_system( spawn_text_ui )            //text UIのspawn
         )
+        .add_plugin( FrameTimeDiagnosticsPlugin ) //FPSプラグイン
+        .add_system( update_ui_footer_left )      //UI表示更新(FPS)
         ;
         //------------------------------------------------------------------------------------------
     }
@@ -44,17 +49,17 @@ const NA5  : &str = "#####";
 
 //ヘッダーに表示するtext UI
 const HEADER_LEFT_TEXT: [ MessageSect; 2 ] =
-[   ( " STAGE ", ASSETS_FONT_ORBITRON_BLACK      , PIXELS_PER_GRID * 0.7, Color::GOLD  ),
-    ( NA2      , ASSETS_FONT_PRESSSTART2P_REGULAR, PIXELS_PER_GRID * 0.7, Color::WHITE ),
+[   ( " STAGE ", ASSETS_FONT_ORBITRON_BLACK, PIXELS_PER_GRID * 0.8, Color::GOLD  ),
+    ( NA2      , ASSETS_FONT_ORBITRON_BLACK, PIXELS_PER_GRID * 1.0, Color::WHITE ),
 ];
-const HEADER_CENTER_TEXT: [ MessageSect; 3 ] =
-[   ( " SCORE ", ASSETS_FONT_ORBITRON_BLACK      , PIXELS_PER_GRID * 0.7, Color::GOLD   ),
-    ( NA5      , ASSETS_FONT_PRESSSTART2P_REGULAR, PIXELS_PER_GRID * 0.7, Color::WHITE  ),
-    ( ""       , ASSETS_FONT_PRESSSTART2P_REGULAR, PIXELS_PER_GRID * 0.5, Color::SILVER ),  //placeholder for debug
+const HEADER_CENTER_TEXT: [ MessageSect; 2 ] =
+[   ( "SCORE ", ASSETS_FONT_ORBITRON_BLACK, PIXELS_PER_GRID * 0.8, Color::GOLD   ),
+    ( NA5     , ASSETS_FONT_ORBITRON_BLACK, PIXELS_PER_GRID * 1.0, Color::WHITE  ),
 ];
-const HEADER_RIGHT_TEXT: [ MessageSect; 2 ] =
-[   ( " Hi-SCORE ", ASSETS_FONT_ORBITRON_BLACK      , PIXELS_PER_GRID * 0.7, Color::GOLD  ),
-    ( NA5         , ASSETS_FONT_PRESSSTART2P_REGULAR, PIXELS_PER_GRID * 0.7, Color::WHITE ),
+const HEADER_RIGHT_TEXT: [ MessageSect; 3 ] =
+[   ( "Hi-SCORE ", ASSETS_FONT_ORBITRON_BLACK, PIXELS_PER_GRID * 0.8, Color::GOLD  ),
+    ( NA5        , ASSETS_FONT_ORBITRON_BLACK, PIXELS_PER_GRID * 1.0, Color::WHITE ),
+    ( " "        , ASSETS_FONT_ORBITRON_BLACK, PIXELS_PER_GRID * 0.8, Color::WHITE ),
 ];
 
 //フッターに表示するtext UI
@@ -245,6 +250,22 @@ fn text_ui
     let text  = Text { sections, alignment };
     let style = Style { position_type, ..default() };
     TextBundle { text, style, ..default() }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//UIの表示を更新する(FPS)
+fn update_ui_footer_left
+(   mut q: Query<&mut Text, With<FooterLeft>>,
+    diag: Res<Diagnostics>,
+)
+{   if let Ok( mut ui ) = q.get_single_mut()
+    {   let fps_avr = diag.get( FrameTimeDiagnosticsPlugin::FPS ).map_or
+        (   NA2_2.to_string(),
+            | fps | fps.average().map_or( NA2_2.to_string(), | avg | format!( "{:02.02}", avg ) )
+        );
+        ui.sections[ 1 ].value = fps_avr;
+    }
 }
 
 //End of code.

@@ -8,7 +8,6 @@ use smooth_bevy_cameras::
     },
     LookTransformPlugin,
 };
-use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use rand::prelude::*;
 
 //internal modules
