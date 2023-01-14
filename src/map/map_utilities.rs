@@ -5,7 +5,7 @@ impl GameMap
 	pub fn identify_halls_and_passages( &mut self )
 	{	for x in RANGE_MAP_X
 		{	for y in RANGE_MAP_Y
-			{	let grid = MapGrid{ x, y };
+			{	let grid = MapGrid::new( x, y );
 				if self.is_wall( grid ) { continue }
 
 				//マークする
@@ -54,7 +54,7 @@ impl GameMap
 	pub fn put_coins_at_deadend( &mut self )
 	{	for x in RANGE_MAP_INNER_X
 		{	for y in RANGE_MAP_INNER_Y
-			{	let mut grid = MapGrid{ x, y };
+			{	let mut grid = MapGrid::new( x, y );
 				if ! self.is_deadend( grid ) { continue }
 
 				//袋小路を起点に他の道との合流地点まで遡って道の長さを数える
@@ -79,7 +79,7 @@ impl GameMap
 				}
 
 				//袋小路の深さに準じてコインを置く
-				*self.mapobj_mut( MapGrid{ x, y } ) = MapObj::Coin ( None, pedometer );
+				*self.mapobj_mut( MapGrid::new( x, y ) ) = MapObj::Coin ( None, pedometer );
 			}
 		}
 	}

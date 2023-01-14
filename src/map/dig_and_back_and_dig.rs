@@ -4,22 +4,22 @@ impl GameMap
 {	//二型迷路：ランダムに掘り進み、行き止まりは後戻りして掘れる場所を探す。掘り尽くすまで掘りまくる
 	pub fn dig_and_back_and_dig( &mut self )
 	{	let mut grid = self.start();
-		grid.y -= 1; //maze.start_xyの直上(y-1)がトンネル掘りの開始座標
+		*grid.y_mut() -= 1; //maze.start_xyの直上(y-1)がトンネル掘りの開始座標
 
 		//トンネルを掘る
 		let mut digable_walls = Vec::new();
 		let mut backtrack;
 		loop
 		{	digable_walls.clear();
-			backtrack = MapGrid { x: 0, y: 0 };
+			backtrack = MapGrid::default();
 
 			//上下左右にある掘削候補と戻り路を記録する
 			for dxdy in FOUR_SIDES
 			{	let next = grid + dxdy;
 
 				//外壁は掘れない
-				if ! RANGE_MAP_INNER_X.contains( &next.x )
-				|| ! RANGE_MAP_INNER_Y.contains( &next.y ) { continue }
+				if ! RANGE_MAP_INNER_X.contains( next.x() )
+				|| ! RANGE_MAP_INNER_Y.contains( next.y() ) { continue }
 
 				//上下左右の座標のオブジェクトを調べる
 				match self.mapobj( next )
@@ -32,7 +32,7 @@ impl GameMap
 			//掘れる壁が見つからないか？
 			if digable_walls.is_empty()
 			{	//戻り路も見つからないなら迷路完成
-				if matches!( backtrack, MapGrid { x: 0, y: 0 } ) { break }
+				if backtrack == MapGrid::default() { break }
 
 				//現在位置に行き止まり情報を書き込み、後戻りする
 				*self.mapobj_mut( grid ) = MapObj::DeadEnd;

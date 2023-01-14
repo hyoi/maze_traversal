@@ -68,8 +68,15 @@ pub struct MessageOver;
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //Map用の二次元配列での座標
-#[derive(Default,Copy,Clone,PartialEq,Eq)]
-pub struct MapGrid { pub x: i32, pub y: i32 }
+#[derive( Clone, Copy, Eq, PartialEq, Default, Debug )]
+pub struct MapGrid ( IVec2 );
+impl MapGrid
+{   pub fn new( x: i32, y: i32 ) -> Self { MapGrid ( IVec2::new( x, y ) ) }
+	pub fn x_mut( &mut self ) -> &mut i32 { &mut self.0.x }
+	pub fn y_mut( &mut self ) -> &mut i32 { &mut self.0.y }
+	pub fn x    ( &    self ) -> &    i32 { &    self.0.x }
+	pub fn y    ( &    self ) -> &    i32 { &    self.0.y }
+}
 
 //MapGridとDxDyを加算できるようAdd()をオーバーロードする
 use std::ops::*;
@@ -79,10 +86,10 @@ impl Add<DxDy> for MapGrid
 {	type Output = MapGrid;
 	fn add( mut self, dxdy: DxDy ) -> MapGrid
 	{	match dxdy
-		{	DxDy::Up    => { self.y -= 1; }
-			DxDy::Left  => { self.x -= 1; }
-			DxDy::Right => { self.x += 1; }
-			DxDy::Down  => { self.y += 1; }
+		{	DxDy::Up    => { self.0.y -= 1; }
+			DxDy::Left  => { self.0.x -= 1; }
+			DxDy::Right => { self.0.x += 1; }
+			DxDy::Down  => { self.0.y += 1; }
 		}
 		self
 	}
@@ -91,10 +98,10 @@ impl Add<&DxDy> for MapGrid
 {	type Output = MapGrid;
 	fn add( mut self, dxdy: &DxDy ) -> MapGrid
 	{	match dxdy
-		{	DxDy::Up    => { self.y -= 1; }
-			DxDy::Left  => { self.x -= 1; }
-			DxDy::Right => { self.x += 1; }
-			DxDy::Down  => { self.y += 1; }
+		{	DxDy::Up    => { self.0.y -= 1; }
+			DxDy::Left  => { self.0.x -= 1; }
+			DxDy::Right => { self.0.x += 1; }
+			DxDy::Down  => { self.0.y += 1; }
 		}
 		self
 	}
@@ -104,10 +111,10 @@ impl Add<MapGrid> for DxDy
 {	type Output = MapGrid;
 	fn add( self, mut grid: MapGrid ) -> MapGrid
 	{	match self
-		{	DxDy::Up    => { grid.y -= 1; }
-			DxDy::Left  => { grid.x -= 1; }
-			DxDy::Right => { grid.x += 1; }
-			DxDy::Down  => { grid.y += 1; }
+		{	DxDy::Up    => { grid.0.y -= 1; }
+			DxDy::Left  => { grid.0.x -= 1; }
+			DxDy::Right => { grid.0.x += 1; }
+			DxDy::Down  => { grid.0.y += 1; }
 		}
 		grid
 	}
@@ -117,10 +124,10 @@ impl Add<&MapGrid> for DxDy
 	fn add( self, grid: &MapGrid ) -> MapGrid
 	{	let mut ret = *grid;
 		match self
-		{	DxDy::Up    => { ret.y -= 1; }
-			DxDy::Left  => { ret.x -= 1; }
-			DxDy::Right => { ret.x += 1; }
-			DxDy::Down  => { ret.y += 1; }
+		{	DxDy::Up    => { ret.0.y -= 1; }
+			DxDy::Left  => { ret.0.x -= 1; }
+			DxDy::Right => { ret.0.x += 1; }
+			DxDy::Down  => { ret.0.y += 1; }
 		}
 		ret
 	}
@@ -129,20 +136,20 @@ impl Add<&MapGrid> for DxDy
 impl AddAssign<DxDy> for MapGrid
 {	fn add_assign( &mut self, dxdy: DxDy )
 	{	match dxdy
-		{	DxDy::Up    => { self.y -= 1; }
-			DxDy::Left  => { self.x -= 1; }
-			DxDy::Right => { self.x += 1; }
-			DxDy::Down  => { self.y += 1; }
+		{	DxDy::Up    => { self.0.y -= 1; }
+			DxDy::Left  => { self.0.x -= 1; }
+			DxDy::Right => { self.0.x += 1; }
+			DxDy::Down  => { self.0.y += 1; }
 		}
 	}
 }
 impl AddAssign<&DxDy> for MapGrid
 {	fn add_assign( &mut self, dxdy: &DxDy )
 	{	match dxdy
-		{	DxDy::Up    => { self.y -= 1; }
-			DxDy::Left  => { self.x -= 1; }
-			DxDy::Right => { self.x += 1; }
-			DxDy::Down  => { self.y += 1; }
+		{	DxDy::Up    => { self.0.y -= 1; }
+			DxDy::Left  => { self.0.x -= 1; }
+			DxDy::Right => { self.0.x += 1; }
+			DxDy::Down  => { self.0.y += 1; }
 		}
 	}
 }
@@ -207,11 +214,11 @@ impl GameMap
 {	//GameMap構造体のアクセサ
 	pub fn rng( &mut self ) -> &mut rand::prelude::StdRng { &mut self.rng }
 
-	pub fn mapobj( &self, grid: MapGrid ) -> MapObj { self.map [ grid.x as usize ][ grid.y as usize ] }
-	pub fn mapobj_mut( &mut self, grid: MapGrid ) -> &mut MapObj { &mut self.map[ grid.x as usize ][ grid.y as usize ] }
+	pub fn mapobj( &self, grid: MapGrid ) -> MapObj { self.map [ *grid.x() as usize ][ *grid.y() as usize ] }
+	pub fn mapobj_mut( &mut self, grid: MapGrid ) -> &mut MapObj { &mut self.map[ *grid.x() as usize ][ *grid.y() as usize ] }
 
-	pub fn bits( &self, grid: MapGrid ) -> usize { self.bits[ grid.x as usize ][ grid.y as usize ] }
-	fn bits_mut( &mut self, grid: MapGrid ) -> &mut usize { &mut self.bits[ grid.x as usize ][ grid.y as usize ] }
+	pub fn bits( &self, grid: MapGrid ) -> usize { self.bits[ *grid.x() as usize ][ *grid.y() as usize ] }
+	fn bits_mut( &mut self, grid: MapGrid ) -> &mut usize { &mut self.bits[ *grid.x() as usize ][ *grid.y() as usize ] }
 
 	pub fn start( &self ) -> MapGrid { self.start }
 	pub fn start_mut( &mut self ) -> &mut MapGrid { &mut self.start }
@@ -239,7 +246,7 @@ impl GameMap
 
 	//壁判定 -> true: 壁である、false: 壁ではない
 	pub fn is_wall( &self, grid: MapGrid ) -> bool
-	{	if ! RANGE_MAP_X.contains( &grid.x ) || ! RANGE_MAP_Y.contains( &grid.y ) { return true }
+	{	if ! RANGE_MAP_X.contains( grid.x() ) || ! RANGE_MAP_Y.contains( grid.y() ) { return true }
 		matches!( self.mapobj( grid ), MapObj::Wall )
 	}
 }

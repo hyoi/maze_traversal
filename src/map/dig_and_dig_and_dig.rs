@@ -4,18 +4,18 @@ impl GameMap
 {	//一型迷路：ランダムに掘り進み、壊すと貫通する壁は、確率で破壊する
 	pub fn dig_and_dig_and_dig( &mut self )
 	{	let mut grid = self.start();
-		grid.y -= 1; //maze.start_xyの直上(y-1)がトンネル掘りの開始座標
+		*grid.y_mut() -= 1; //maze.start_xyの直上(y-1)がトンネル掘りの開始座標
 
 		loop
 		{	//ランダムに上下左右へ進む方向を決める
 			let next = grid + FOUR_SIDES[ self.rng().gen_range( 0..FOUR_SIDES.len() ) ];
 
 			//上端に達したら迷路完成
-			if next.y == 0 { break }
+			if *next.y() == 0 { break }
 
 			//掘れるなら一歩進む
-			if RANGE_MAP_INNER_X.contains( &next.x )
-			&& RANGE_MAP_INNER_Y.contains( &next.y ) && self.dig_or_not( next )
+			if RANGE_MAP_INNER_X.contains( next.x() )
+			&& RANGE_MAP_INNER_Y.contains( next.y() ) && self.dig_or_not( next )
 			{	*self.mapobj_mut( next ) = MapObj::Passage;	//道を掘る
 				grid = next;
 			}

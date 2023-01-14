@@ -92,7 +92,7 @@ fn generate_new_map
 
 	//入口を掘る
 	let x = maze.rng().gen_range( RANGE_MAP_INNER_X );
-	let grid = MapGrid { x, y: MAP_GRIDS_HEIGHT - 1 };
+	let grid = MapGrid::new( x, MAP_GRIDS_HEIGHT - 1 );
 	*maze.start_mut() = grid;
 	*maze.mapobj_mut( grid	    ) = MapObj::DeadEnd; //入口は行き止まり扱い
 	*maze.mapobj_mut( grid + UP ) = MapObj::Passage; //入口直上は無条件で道
@@ -113,13 +113,13 @@ fn generate_new_map
 
 	//出口を掘れる場所を探し、乱数で決める
 	let mut exit_x = Vec::new();
-	let mut grid = MapGrid{ x: 0, y: 1 };
+	let mut grid = MapGrid::new( 0, 1 );
 	RANGE_MAP_INNER_X.for_each( | x |
-	{	grid.x = x;
+	{	*grid.x_mut() = x;
 		if ! maze.is_wall( grid ) { exit_x.push( x ) }
 	} );
 	let x = exit_x[ maze.rng().gen_range( 0..exit_x.len() ) ];
-	grid = MapGrid { x, y: 0 };
+	grid = MapGrid::new( x, 0 );
 	*maze.goal_mut() = grid;
 	*maze.mapobj_mut( grid ) = MapObj::Goal ( None );
 
@@ -142,7 +142,7 @@ fn spawn_map
 )
 {	for x in RANGE_MAP_X
 	{	for y in RANGE_MAP_Y
-		{	let grid = MapGrid { x, y };
+		{	let grid = MapGrid::new( x, y );
 			// let pixel = grid.into_pixel();
 			match maze.mapobj( grid )
 			{	MapObj::Goal ( _ ) =>

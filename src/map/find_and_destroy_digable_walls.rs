@@ -10,7 +10,7 @@ impl GameMap
 			//マップを全面走査して拡張条件を満たす壁を記録する
 			for x in RANGE_MAP_INNER_X
 			{	for y in RANGE_MAP_INNER_Y
-				{	let grid = MapGrid { x, y };
+				{	let grid = MapGrid::new( x, y );
 					if self.is_maze_expandable( grid ) { digable_walls.push( grid ) }
 				}
 			}
