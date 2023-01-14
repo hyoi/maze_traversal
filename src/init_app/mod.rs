@@ -80,9 +80,14 @@ pub fn spawn_camera
     .insert( Camera { priority: 0, ..default() } )
     .insert
     (   OrbitCameraBundle::new
-        (   OrbitCameraController::default(),
-            Vec3::new( -10.0, 30.0, 20.0 ),
-            Vec3::new( 0.0, 0.0, 0.0 ),
+        (   OrbitCameraController
+            {   mouse_rotate_sensitivity    : Vec2::splat( 0.5 ),
+                mouse_translate_sensitivity : Vec2::splat( 4.0 ),
+                mouse_wheel_zoom_sensitivity: 0.1,
+                ..default()
+            },
+            Vec3::new( 0.0, 4.0, 30.0 ), //視点の位置
+            Vec3::ZERO,                  //視線の先
         )
     );
 
@@ -98,7 +103,7 @@ pub fn spawn_camera
 
     let plane = PbrBundle
     {   mesh: meshes.add( Mesh::from( shape::Plane { size: MAP_GRIDS_SHARP_PLANE as f32 } ) ),
-        material: materials.add( Color::DARK_GREEN.into() ),
+        material: materials.add( Color::MAROON.into() ),
         ..default()
     }; 
 
