@@ -70,18 +70,6 @@ pub struct MessageOver;
 //Map用の二次元配列での座標
 #[derive(Default,Copy,Clone,PartialEq,Eq)]
 pub struct MapGrid { pub x: i32, pub y: i32 }
-impl MapGrid
-{	//二次元配列の座標から画面座標を算出する
-	pub fn into_pixel( self ) -> Pixel
-	{	let x = ( PIXELS_PER_GRID - SCREEN_PIXELS_WIDTH  ) / 2.0 + PIXELS_PER_GRID * self.x as f32;
-		let y = ( SCREEN_PIXELS_HEIGHT - PIXELS_PER_GRID ) / 2.0 - PIXELS_PER_GRID * self.y as f32 - PIXELS_PER_GRID;
-		Pixel { x, y }
-	}
-}
-
-// //四方
-// #[derive(Copy,Clone,PartialEq,Eq)]
-// pub enum DxDy { Up, Left, Right, Down, }
 
 //MapGridとDxDyを加算できるようAdd()をオーバーロードする
 use std::ops::*;

@@ -1,23 +1,21 @@
 use super::*;
 
-//glamの型に別名を付ける
-//　※bevyがre-exportしているので use glam::{ IVec2, Vec2 }; は不要
-pub type ScreenGrid  = IVec2; //画面のGrid座標
-pub type ScreenPixel =  Vec2; //画面のPixel座標
+//画面のGrid座標
+#[derive( Clone, Copy, Eq, PartialEq, Debug, Default )]
+pub struct ScreenGrid ( IVec2 );
+impl ScreenGrid
+{   pub fn new( x: i32, y: i32 ) -> Self { ScreenGrid ( IVec2::new( x, y ) ) }
 
-//ScreenGridは外部crateの型(の別名)だから直接 impl ScreenGrid {…} できない。(オーファンルール)
-//なのでトレイトを仲介してメソッドを追加する。
-pub trait IntoScreenPixel
-{   fn into_pixel( self ) -> ScreenPixel;
-}
-impl IntoScreenPixel for ScreenGrid
-{   //ScreenGrid座標からScreenPixel座標を算出する
-    fn into_pixel( self ) -> ScreenPixel
-    {   let x = ( PIXELS_PER_GRID - SCREEN_PIXELS_WIDTH  ) / 2.0 + PIXELS_PER_GRID * self.x as f32;
-        let y = ( SCREEN_PIXELS_HEIGHT - PIXELS_PER_GRID ) / 2.0 - PIXELS_PER_GRID * self.y as f32;
+    //ScreenGridからScreenPixelを算出する
+    pub fn into_pixel( self ) -> ScreenPixel
+    {   let x = ( PIXELS_PER_GRID - SCREEN_PIXELS_WIDTH  ) / 2.0 + PIXELS_PER_GRID * self.0.x as f32;
+        let y = ( SCREEN_PIXELS_HEIGHT - PIXELS_PER_GRID ) / 2.0 - PIXELS_PER_GRID * self.0.y as f32;
         ScreenPixel::new( x, y )
     }
 }
+
+//画面のPixel座標
+pub type ScreenPixel = Vec2;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -35,10 +33,10 @@ impl Add<DxDy> for ScreenGrid
 {   type Output = ScreenGrid;
     fn add( mut self, dxdy: DxDy ) -> ScreenGrid
     {   match dxdy
-        {   DxDy::Up    => { self.y -= 1; }
-            DxDy::Down  => { self.y += 1; }
-            DxDy::Right => { self.x += 1; }
-            DxDy::Left  => { self.x -= 1; }
+        {   DxDy::Up    => { self.0.y -= 1; }
+            DxDy::Down  => { self.0.y += 1; }
+            DxDy::Right => { self.0.x += 1; }
+            DxDy::Left  => { self.0.x -= 1; }
         }
         self
     }
@@ -49,10 +47,10 @@ impl Add<&DxDy> for ScreenGrid
 {   type Output = ScreenGrid;
     fn add( mut self, dxdy: &DxDy ) -> ScreenGrid
     {   match dxdy
-        {   DxDy::Up    => { self.y -= 1; }
-            DxDy::Down  => { self.y += 1; }
-            DxDy::Right => { self.x += 1; }
-            DxDy::Left  => { self.x -= 1; }
+        {   DxDy::Up    => { self.0.y -= 1; }
+            DxDy::Down  => { self.0.y += 1; }
+            DxDy::Right => { self.0.x += 1; }
+            DxDy::Left  => { self.0.x -= 1; }
         }
         self
     }
@@ -62,10 +60,10 @@ impl Add<&DxDy> for ScreenGrid
 impl AddAssign<DxDy> for ScreenGrid
 {   fn add_assign( &mut self, dxdy: DxDy )
     {   match dxdy
-        {   DxDy::Up    => { self.y -= 1; }
-            DxDy::Down  => { self.y += 1; }
-            DxDy::Right => { self.x += 1; }
-            DxDy::Left  => { self.x -= 1; }
+        {   DxDy::Up    => { self.0.y -= 1; }
+            DxDy::Down  => { self.0.y += 1; }
+            DxDy::Right => { self.0.x += 1; }
+            DxDy::Left  => { self.0.x -= 1; }
         }
     }
 }
@@ -74,10 +72,10 @@ impl AddAssign<DxDy> for ScreenGrid
 impl AddAssign<&DxDy> for ScreenGrid
 {   fn add_assign( &mut self, dxdy: &DxDy )
     {   match dxdy
-        {   DxDy::Up    => { self.y -= 1; }
-            DxDy::Down  => { self.y += 1; }
-            DxDy::Right => { self.x += 1; }
-            DxDy::Left  => { self.x -= 1; }
+        {   DxDy::Up    => { self.0.y -= 1; }
+            DxDy::Down  => { self.0.y += 1; }
+            DxDy::Right => { self.0.x += 1; }
+            DxDy::Left  => { self.0.x -= 1; }
         }
     }
 }
