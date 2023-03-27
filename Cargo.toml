@@ -1,16 +1,3 @@
-[package]
-name = "maze_traversal"
-version = "0.6.0"
-edition = "2021"
-
-[dependencies]
-bevy = "0.9"
-bevy-inspector-egui = "0.16"
-smooth-bevy-cameras = "0.6"
-rand = "0.8"
-
-# WASMの場合にどれか指定する必要がある？？
-#
-# rand = { version = "0.8.4", features = [ "wasm-bindgen" ] }
-# getrandom = { version = "0.2.4", features = [ "js" ] }
-# getrandom = { version = "0.2.4", features = [ "wasm-bindgen" ] }
+[workspace]
+resolver = "2"
+members = [ "maze3d",]
