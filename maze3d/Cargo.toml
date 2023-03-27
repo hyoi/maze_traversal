@@ -8,6 +8,7 @@ bevy = "0.9"
 bevy-inspector-egui = "0.16"
 smooth-bevy-cameras = "0.6"
 rand = "0.8"
+macros = { path = "../macros" }
 
 # WASMの場合にどれか指定する必要がある？？
 #
