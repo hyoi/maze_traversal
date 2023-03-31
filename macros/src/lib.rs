@@ -1,3 +1,4 @@
+//import external modules
 use proc_macro::TokenStream;
 use syn::*;
 use quote::*;
@@ -37,3 +38,5 @@ pub fn derive( input: TokenStream ) -> TokenStream
     };
     expand.into()
 }
+
+//End of code.

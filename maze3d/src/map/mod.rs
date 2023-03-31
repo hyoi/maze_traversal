@@ -11,6 +11,11 @@ pub struct PluginMap;
 impl Plugin for PluginMap
 {	fn build( &self, app: &mut App )
 	{	app
+        .init_resource::<Map>() //迷路情報の初期化
+        .insert_resource( misc::AfterNowLoading ( MyState::StageStart ) )
+		.add_system( generate_new_map ).init_schedule( ENTER_STAGESTART )
+		.add_system( spawn_map ).init_schedule( EXIT_STAGESTART )
+*
 		//------------------------------------------------------------------------------------------
 		.init_resource::<GameMap>()								// MAP情報のResource
 		.insert_resource( MarkAfterFetchAssets ( GameState::StageStart ) ) //Assetsロード後のState変更先
@@ -29,7 +34,7 @@ impl Plugin for PluginMap
 		(	SystemSet::on_update( GameState::MainLoop )				// ＜on_update()＞
 				// .with_system( rotate_sprite_goal )				// ゴールスプライトのアニメーション
 		)
-		//==========================================================================================
+*/		//==========================================================================================
 		// .add_system_set											// ＜GameState::Clear＞
 		// (	SystemSet::on_exit( GameState::Clear )				// ＜on_exit()＞
 		// 		.with_system( despawn_entity::<SpriteWall> )	// マップを削除(壁)

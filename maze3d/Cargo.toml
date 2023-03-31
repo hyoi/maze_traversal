@@ -4,11 +4,12 @@ version = "0.6.0"
 edition = "2021"
 
 [dependencies]
-bevy = "0.9"
-bevy-inspector-egui = "0.16"
-smooth-bevy-cameras = "0.6"
-rand = "0.8"
 macros = { path = "../macros" }
+official_examples = { path = "../official_examples" }
+bevy = "0.10"
+rand = "0.8"
+counted-array = "0.1"
+#once_cell = "1"
 
 # WASMの場合にどれか指定する必要がある？？
 #
