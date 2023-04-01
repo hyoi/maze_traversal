@@ -1,3 +1,9 @@
+//Bevy公式サンプルプログラム gamepad_viewer.rs を改造してプラグイン化
+//・main()を廃止してimpl Plugin化
+//・App::new()、DefaultPluginsのロード、.run()を廃止
+//・Camera2dのspawnを廃止
+//・Colorの設定値をrgba()へ変えて透過表示化
+
 //! Shows a visualization of gamepad buttons, sticks, and triggers
 
 use std::f32::consts::PI;
@@ -146,7 +152,7 @@ impl Plugin for GamepadViewer
 }
 
 fn setup(mut commands: Commands, meshes: Res<ButtonMeshes>, materials: Res<ButtonMaterials>) {
-    commands.spawn(Camera2dBundle::default());
+    // commands.spawn(Camera2dBundle::default());
 
     // Buttons
 
