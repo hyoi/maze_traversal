@@ -40,7 +40,7 @@ impl Plugin for InitApp
             )
         )
         .add_plugin( misc::NowLoading ) //Assetのプリフェッチとローディングアニメーション
-        //.insert_resource( misc::AfterNowLoading ( MyState::TitleDemo ) ) //for test EXIT_INITAPP
+        //.insert_resource( misc::AfterLoading ( MyState::TitleDemo ) ) //for test EXIT_INITAPP
         .add_systems
         (   (   spawn_game_frame,      //ゲームの枠を表示する
                 footer::spawn_ui_text, //footerにtextUIをspawn
