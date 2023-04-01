@@ -23,6 +23,26 @@ pub const SCREEN_PIXELS_HEIGHT: f32 = SCREEN_GRIDS_HEIGHT as f32 * PIXELS_PER_GR
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+pub static MAIN_WINDOW: Lazy<Option<Window>> = Lazy::new
+(   ||
+    {   let title = if APP_TITLE.is_empty() { CARGO_NAME } else { APP_TITLE };
+        Some
+        (   Window
+            {   title     : format!( "{title} v{CARGO_VER}" ),
+                resolution: ( SCREEN_PIXELS_WIDTH, SCREEN_PIXELS_HEIGHT ).into(),
+                resizable : false,
+
+                //WASM＆Android Chromeで表示不具合が発生する場合コメントアウトを検討する
+                //fit_canvas_to_parent: true,
+
+                ..default()
+            }
+        )
+    }
+);
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 pub const CAMERA2D_ORDER: isize = 1; //描画優先順
 pub const CAMERA3D_ORDER: isize = 0; //描画優先順
 

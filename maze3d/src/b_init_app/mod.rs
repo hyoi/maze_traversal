@@ -8,23 +8,12 @@ pub struct InitApp;
 impl Plugin for InitApp
 {   fn build( &self, app: &mut App )
     {   //アプリの基本的な設定
-        let title = if APP_TITLE.is_empty() { CARGO_NAME } else { APP_TITLE };
-        let primary_window = Some
-        (   Window
-            {   title     : format!( "{title} v{CARGO_VER}" ),
-                resolution: ( SCREEN_PIXELS_WIDTH, SCREEN_PIXELS_HEIGHT ).into(),
-                resizable : false,
-                //fit_canvas_to_parent: true, //WASM＆Android Chromeで表示不具合が発生する場合コメントアウトを検討する
-                ..default()
-            }
-        );
-
         app
         .add_state::<MyState>() //Stateの初期化
         .insert_resource( Msaa::Sample4 ) //アンチエイリアス
         .add_plugins
         (   DefaultPlugins
-            .set( WindowPlugin { primary_window, ..default() } ) //メインウィンドウ
+            .set( WindowPlugin { primary_window: MAIN_WINDOW.clone(), ..default() } ) //メインウィンドウ
             .set( ImagePlugin::default_nearest() ) //ピクセルパーフェクト
         )
         .add_plugin( FrameTimeDiagnosticsPlugin ) //FPSプラグイン
