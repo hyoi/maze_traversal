@@ -9,33 +9,38 @@ impl Plugin for InitApp
 {   fn build( &self, app: &mut App )
     {   //アプリの基本的な設定
         app
-        .add_state::<MyState>() //Stateの初期化
         .insert_resource( Msaa::Sample4 ) //アンチエイリアス
         .add_plugins
         (   DefaultPlugins
-            .set( WindowPlugin { primary_window: MAIN_WINDOW.clone(), ..default() } ) //メインウィンドウ
+            .set( WindowPlugin { primary_window: MAIN_WINDOW.clone(), ..default() } ) //main window
             .set( ImagePlugin::default_nearest() ) //ピクセルパーフェクト
         )
-        .add_plugin( FrameTimeDiagnosticsPlugin ) //FPSプラグイン
+        .add_plugin( FrameTimeDiagnosticsPlugin ) //FPS
+
         .add_systems
         (   (   spawn_cameras, //カメラをspawn
                 debug::spawn_grid.run_if( DEBUG ),
                 debug::spawn_obj3d.run_if( DEBUG ),
-            ).on_startup()
+            )
+            .on_startup()
         )
+
         .add_systems
         (   (   bevy::window::close_on_esc, //[ESC]キーで終了
                 misc::toggle_window_mode.run_if( NOT_WASM ), //FullScreen⇔Window切換(トグル)
+                footer::update_fps, //FPS表示を更新
             )
         )
+
+        .add_state::<MyState>() //Stateの初期化
+        //.insert_resource( misc::AfterLoading ( MyState::Debug ) ) //for test EXIT_INITAPP
         .add_plugin( misc::NowLoading ) //Assetのプリフェッチとローディングアニメーション
-        //.insert_resource( misc::AfterLoading ( MyState::TitleDemo ) ) //for test EXIT_INITAPP
         .add_systems
         (   (   spawn_game_frame,      //ゲームの枠を表示する
                 footer::spawn_ui_text, //footerにtextUIをspawn
-             ).in_schedule( EXIT_INITAPP )
+            )
+            .in_schedule( EXIT_INITAPP )
         )
-        .add_system( footer::update_fps ) //FPS表示を更新
         ;
     }
 }
